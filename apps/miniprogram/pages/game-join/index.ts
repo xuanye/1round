@@ -1,3 +1,13 @@
+import { ensureLogin } from '../../services/auth.service';
+import { joinPreview, joinGame, getCurrentGame, getSummary, leaveGame } from '../../services/game.service';
+import { getUser, saveRecentSession } from '../../utils/storage';
+
+type ParticipantPreview = {
+  id: string;
+  initial: string;
+  avatarUrl?: string;
+};
+
 Page({
   data: {
     icons: {
@@ -9,38 +19,131 @@ Page({
       check: '\uf058',
       arrowRight: '\uf061',
     },
-    game: {
-      id: 'mock-game-001',
-      name: '周末家庭聚会 (2024-05-20)',
-      creatorName: '老书记01',
-      creatorInitial: '老',
-      participantText: '4 / 8',
-    },
-    participants: [
-      { id: 'p1', initial: '周', avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCnx3j19hP4nb-3iIf88qb3AP11TRrIJJlvC0wSd30_mQ4nBpbk1Y2aJPl4rG0gRhfZ2YQCfWABFJlESgNggKmdG4CYXD4byY4xRXpvu1Is5ubv9yziVhks7byd6sMfKtuMWJPbxSsV0uUzc9HQnnHDldoI5aH9V1b3gRzRoKcWNtEeo-sMlgENpiqiWIMsFmbApYIN2n-Wy9mb9FVxFeevVFyWU2IOJE4Iux8eM8-f0BWewd6jjoTKLA' },
-      { id: 'p2', initial: '林', avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCbUuyQ9d_GacZDB29CmMfSJ8UUUpxvpe-kqil5623re1Jao0GqPfjKAxw1VyPtBScfxvjJaWWdVNCwvZ1RgXMlGUQznDvp0VQBf6As5MOnq0WN71H1JwthDRpd04UCcsxqxSwUeK4zysUm169l7QwQOglXe12KyTa-lTNTchBXRDQZc7r9e4mCK6BkybWua-6ziEt6gWUEBMt7MrizGxqLmg_wb_fP649OuWdE7VgbEQdhIVN3qGG6yQ' },
-      { id: 'p3', initial: '赵', avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD9kWMBbwc3Qe5TJj2fgLThcBXwPVWsp7S6SnqaynLhU1d1RiyRiDgzHWmlfRzpn5XOps3f_QR2X44g5TWTn9FqHLLmGqCrG92EhkGEGf7IFnGCY2qjRQxu8azP1mRxwyrbB9nkXU6Z9dPNoOk_0pITv_am8cWZuTX4-HVV70ODlomMIukbfkpYRSwMq0u6T7VXuoNV9hYv20aoq423b8I9gvbp9iqfX_P7XJq95wIkfXcNydW5SEFaKg' },
-      { id: 'p4', initial: '+1' },
-    ],
-    displayName: '老书记05',
+    inviteCode: '',
+    game: null as {
+      id: string;
+      name: string;
+      creatorName: string;
+      creatorInitial: string;
+      participantText: string;
+    } | null,
+    participants: [] as ParticipantPreview[],
+    displayName: '',
     joining: false,
     joined: false,
+
+    // Conflict game state
+    conflictGame: null as { id: string; name: string; canLeave: boolean } | null,
   },
+
+  async onLoad(query: Record<string, string>) {
+    let inviteCode = query.inviteCode || '';
+    if (query.scene) {
+      const scene = decodeURIComponent(query.scene);
+      const match = scene.match(/(?:code=)?([A-Za-z0-9]+)/);
+      if (match) {
+        inviteCode = match[1];
+      }
+    }
+    if (!inviteCode) {
+      wx.showToast({ title: '邀请码缺失', icon: 'none' });
+      setTimeout(() => wx.redirectTo({ url: '/pages/home/index' }), 1500);
+      return;
+    }
+    this.setData({ inviteCode });
+
+    wx.showLoading({ title: '正在获取预览...' });
+    try {
+      await ensureLogin();
+
+      // Check join preview
+      const preview = await joinPreview(inviteCode);
+      if (preview.alreadyJoined) {
+        // Redirection for users already joined
+        wx.redirectTo({ url: `/pages/game-detail/index?id=${preview.gameSessionId}&inviteCode=${inviteCode}` });
+        return;
+      }
+
+      // Check if user has another active game
+      const current = await getCurrentGame();
+      if (current && current.id !== preview.gameSessionId) {
+        const summary = await getSummary(current.id);
+        const user = getUser();
+        let myScore = 0;
+        const myPlayer = summary.players.find(p => p.userId === user?.id || (p.displayName === user?.displayName && p.userId === user?.id));
+        if (myPlayer) myScore = myPlayer.totalScore;
+        this.setData({
+          conflictGame: {
+            id: current.id,
+            name: current.name,
+            canLeave: myScore === 0,
+          },
+        });
+      }
+
+      const ownerInit = preview.ownerDisplayName ? preview.ownerDisplayName.slice(0, 1) : '创';
+      this.setData({
+        game: {
+          id: preview.gameSessionId,
+          name: preview.name,
+          creatorName: preview.ownerDisplayName,
+          creatorInitial: ownerInit,
+          participantText: `${preview.participantCount}${preview.maxParticipants ? ' / ' + preview.maxParticipants : ''}`,
+        },
+        participants: preview.participants.map(p => ({
+          id: p.id,
+          initial: p.displayName.slice(0, 1),
+        })),
+        displayName: preview.currentUserDisplayName,
+      });
+    } catch (err) {
+      wx.showModal({
+        title: '加入失败',
+        content: (err as any).message || '获取牌局预览失败',
+        showCancel: false,
+        success: () => wx.redirectTo({ url: '/pages/home/index' }),
+      });
+    } finally {
+      wx.hideLoading();
+    }
+  },
+
   onNameInput(event: WechatMiniprogram.Input) {
     this.setData({ displayName: String(event.detail.value) });
   },
+
   cancel() {
-    wx.navigateBack();
+    wx.redirectTo({ url: '/pages/home/index' });
   },
-  submit() {
-    if (!String(this.data.displayName).trim()) {
+
+  async submit() {
+    const displayName = String(this.data.displayName).trim();
+    if (!displayName) {
       wx.showToast({ title: '请输入显示名称', icon: 'none' });
       return;
     }
+
     this.setData({ joining: true });
-    setTimeout(() => {
+    wx.showLoading({ title: '正在加入牌局...' });
+
+    try {
+      // If there is a conflict game, we must leave it first (and we only get here if canLeave is true)
+      if (this.data.conflictGame) {
+        if (!this.data.conflictGame.canLeave) {
+          throw new Error('原当前牌局分值不为 0，不能退出并加入新牌局');
+        }
+        await leaveGame(this.data.conflictGame.id);
+      }
+
+      const res = await joinGame(this.data.inviteCode, displayName);
+      saveRecentSession(res.gameSessionId); // Save recent session!
       this.setData({ joining: false, joined: true });
-      wx.redirectTo({ url: `/pages/game-detail/index?id=${this.data.game.id}` });
-    }, 450);
+      wx.redirectTo({ url: `/pages/game-detail/index?id=${res.gameSessionId}&inviteCode=${this.data.inviteCode}` });
+    } catch (err) {
+      this.setData({ joining: false });
+      wx.showToast({ title: (err as any).message || '加入失败', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+    }
   },
 });

@@ -26,8 +26,8 @@
       <text class="iconfont game-icon">{{icons.users}}</text>
     </view>
 
-    <view class="creator-row">
-      <image class="creator-avatar-img" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4aBZKAnfl02gutJ01dL6tH7kiV3du8B8dOTtfnrectac-a4xx1rGL2bvvbWv_xsv5EzC_mCo-HhlCQe3SFTIbpBvJC7dgt725aOPQmJ3UkoMaalv1iFlP1hllCl-1WFPNbuSJF9ghIERbAStaRm_4l9WiZo401l_nbTlMu-8nR24at39Kuck_mBEHgoq_jDv5hdR43Qn7S_n9Pl2XkSdzBnjUsANX1GFDzOR-3ugRxMaGTcF7kvMM2w" mode="aspectFill"></image>
+    <view class="creator-row" style="display: flex;">
+      <view class="creator-avatar-img text-avatar" style="margin-right: 18rpx;">{{game.creatorInitial}}</view>
       <view>
         <view class="field-label">创建者</view>
         <view class="creator-name">{{game.creatorName}}</view>
@@ -60,19 +60,31 @@
     </view>
   </view>
 
+  <view wx:if="{{conflictGame}}" class="conflict-warning" style="margin: 20rpx 40rpx; padding: 20rpx; background: #fdf2f2; border: 1rpx solid #fbd5d5; border-radius: 12rpx; color: #ba1a1a; font-size: 26rpx; display: flex; align-items: flex-start;">
+    <text class="iconfont" style="margin-right: 10rpx; font-size: 32rpx; line-height: 1;">{{icons.info}}</text>
+    <view>
+      <block wx:if="{{conflictGame.canLeave}}">
+        你当前已在另一牌局“{{conflictGame.name}}”中。确认加入当前牌局将自动退出原牌局。
+      </block>
+      <block wx:else>
+        你当前已在另一牌局“{{conflictGame.name}}”中且累计分值不为0。必须将分值清零并退出后，才能加入新牌局。
+      </block>
+    </view>
+  </view>
+
   <view class="join-actions">
     <button
-      class="button-primary join-submit {{joined ? 'joined' : ''}}"
+      class="button-primary join-submit {{joined ? 'joined' : ''}} {{(conflictGame && !conflictGame.canLeave) ? 'disabled' : ''}}"
       bindtap="submit"
       hover-class="tap-feedback"
-      disabled="{{joining || joined}}"
+      disabled="{{joining || joined || (conflictGame && !conflictGame.canLeave)}}"
     >
       <block wx:if="{{joining}}">正在加入...</block>
       <block wx:elif="{{joined}}">
         <text class="iconfont button-icon">{{icons.check}}</text> 已成功加入
       </block>
       <block wx:else>
-        确认加入
+        {{conflictGame ? '退出原牌局并加入' : '确认加入'}}
         <text class="iconfont button-icon">{{icons.arrowRight}}</text>
       </block>
     </button>

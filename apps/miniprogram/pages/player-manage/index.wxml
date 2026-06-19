@@ -1,4 +1,7 @@
-<view class="page form-page">
-  <input value="{{displayName}}" bindinput="onInput" placeholder="玩家名称" />
-  <button class="button-primary" bindtap="submit">添加</button>
+<view class="page form-page" style="padding: 40rpx;">
+  <view class="form-card card" style="background: #ffffff; border-radius: 28rpx; padding: 30rpx; margin-bottom: 40rpx;">
+    <view class="label" style="font-size: 28rpx; font-weight: bold; color: var(--text-secondary); margin-bottom: 20rpx;">我的显示名称</view>
+    <input value="{{displayName}}" bindinput="onInput" placeholder="请输入在当前牌局中的显示名称" maxlength="12" style="height: 80rpx; border-bottom: 1rpx solid var(--border); font-size: 30rpx;" />
+  </view>
+  <button class="button-primary save-btn" hover-class="tap-feedback" bindtap="submit">保存修改</button>
 </view>

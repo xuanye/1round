@@ -65,6 +65,7 @@ func NewRouter(logger *slog.Logger, services Services) http.Handler {
 			r.Get("/game-sessions/{id}/ranking", gameHandler.Ranking)
 			r.Get("/history/game-sessions", historyHandler.List)
 			r.Get("/history/game-sessions/{id}", historyHandler.Detail)
+			r.Get("/history/stats", historyHandler.Stats)
 		})
 	})
 	r.Group(func(r chi.Router) {

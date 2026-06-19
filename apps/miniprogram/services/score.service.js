@@ -1,12 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.submitRound = submitRound;
+exports.submitScoreTransfer = submitScoreTransfer;
 const http_1 = require("./http");
-function submitRound(gameSessionId, scores, note) {
+function submitScoreTransfer(gameSessionId, receiverPlayerIds, amount, idempotencyKey) {
     return (0, http_1.request)({
-        url: `/api/game-sessions/${gameSessionId}/rounds`,
+        url: `/api/game-sessions/${gameSessionId}/score-transfers`,
         method: 'POST',
-        data: { scores, note },
+        data: { receiverPlayerIds, amount, idempotencyKey },
     });
 }
 //# sourceMappingURL=score.service.js.map

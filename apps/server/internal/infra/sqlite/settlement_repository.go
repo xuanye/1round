@@ -216,3 +216,18 @@ func (q *Queries) ListInactiveActiveSessions(ctx context.Context, thresholdCutof
 	}
 	return sessions, rows.Err()
 }
+
+// GetUserStats returns the count of settled game sessions and the maximum score achieved by the user.
+func (q *Queries) GetUserStats(ctx context.Context, userID string) (int, int, error) {
+	row := q.db.QueryRowContext(ctx,
+		`SELECT COUNT(DISTINCT gs.id), COALESCE(MAX(p.total_score), 0)
+		 FROM game_sessions gs
+		 JOIN players p ON p.game_session_id = gs.id
+		 WHERE p.user_id = ?
+		   AND gs.status = 'finished'
+		   AND gs.settled_at IS NOT NULL`, userID)
+	var count, maxScore int
+	err := row.Scan(&count, &maxScore)
+	return count, maxScore, err
+}
+

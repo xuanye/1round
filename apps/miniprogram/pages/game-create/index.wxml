@@ -6,21 +6,14 @@
       <text class="counter">{{nameLength}}/12</text>
     </view>
   </view>
-  <view class="form-card card">
-    <view class="row">
-      <view>
-        <view class="row-title">总分必须为 0</view>
-        <view class="hint-text">开启后，记录每一局的得分总和必须为 0，适合多数家庭玩法。</view>
-      </view>
-      <switch checked="{{zeroSumRequired}}" bindchange="onZeroSumChange" color="#16A34A" />
-    </view>
-  </view>
   <view class="form-card player-card card">
     <view>
-      <view class="row-title">玩家人数</view>
-      <view class="hint-text">支持 2-10 人</view>
+      <view class="row-title">玩家人数上限</view>
+      <view class="hint-text">支持 2-10 人，默认不限制</view>
     </view>
-    <view class="player-count">4 人 ›</view>
+    <picker bindchange="onMaxParticipantsChange" value="{{pickerIndex}}" range="{{pickerRange}}">
+      <view class="player-count" style="color: var(--text-primary); font-weight: 500;">{{pickerRange[pickerIndex]}} ›</view>
+    </picker>
   </view>
   <view class="tip-card">
     <view class="tip-icon"></view>

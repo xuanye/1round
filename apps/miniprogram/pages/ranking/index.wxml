@@ -12,7 +12,7 @@
       <text>总分</text>
       <text>平均分/局</text>
     </view>
-    <view wx:for="{{players}}" wx:key="id" class="rank-row">
+    <view wx:for="{{players}}" wx:key="playerId" class="rank-row">
       <view class="medal medal-{{index}}">{{index + 1}}</view>
       <view class="player-cell">
         <view class="avatar">{{item.initial}}</view>

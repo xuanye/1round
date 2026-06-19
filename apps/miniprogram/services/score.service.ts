@@ -1,14 +1,14 @@
 import { request } from './http';
 
-export type ScoreInput = {
-  playerId: string;
-  score: number;
-};
-
-export function submitRound(gameSessionId: string, scores: ScoreInput[], note?: string): Promise<{ roundId: string; roundNo: number; version: number }> {
+export function submitScoreTransfer(
+  gameSessionId: string,
+  receiverPlayerIds: string[],
+  amount: number,
+  idempotencyKey: string
+): Promise<{ id: string; sequenceNo: number; version: number }> {
   return request({
-    url: `/api/game-sessions/${gameSessionId}/rounds`,
+    url: `/api/game-sessions/${gameSessionId}/score-transfers`,
     method: 'POST',
-    data: { scores, note },
+    data: { receiverPlayerIds, amount, idempotencyKey },
   });
 }

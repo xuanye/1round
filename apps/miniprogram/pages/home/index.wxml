@@ -12,39 +12,52 @@
       <view class="hello-copy">准备好和家人们来一场愉快的博弈了吗？</view>
     </view>
     <view class="greeting-art-img">
-      <image class="greeting-img" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAkvv38dg-wZ89Iu3xQpEiqAJ08JV61P_7jHKbZgEYnP05ObnGNU-BK6QD-dfFH9dRe4fnSI2H0_MbCh39XVmI6CbU_LlRkrCpUJMOq2mmQVuY6ZMpax-tOX1UFCvRusuapCGrBB4aJ9uUFM2jYiF58MQwR61VI1e7gzBm1wOb4_XZSiM5i7MiV3ldz0Bvefq5kXsq1ULzPQQCYNXZfrd3NZyw0_M4Ppv0yrnQdE5mcYjeQImVZ7LsvQ" mode="aspectFit"></image>
+      <image class="greeting-img" src="/images/greeting-art.png" mode="aspectFit"></image>
     </view>
   </view>
 
-  <view class="current-card card">
+  <view wx:if="{{currentGame}}" class="current-card card">
     <view class="current-head">
       <view>
         <view class="game-title-row">
           <view class="live-dot animate-pulse"></view>
           <view class="game-title">{{currentGame.name}}</view>
         </view>
-        <view class="game-meta">{{currentGame.date}} · {{currentGame.participantCount}}人参与</view>
+        <view class="game-meta">邀请码: {{currentGame.inviteCode}} · {{currentGame.participantCount}}人参与</view>
       </view>
       <view class="my-score">
         <view class="score-label">当前个人分值</view>
-        <view class="score-value">+{{currentGame.myScore}}</view>
+        <view class="score-value">{{currentGame.myScore >= 0 ? '+' : ''}}{{currentGame.myScore}}</view>
       </view>
     </view>
     <button class="button-primary enter-button" hover-class="tap-feedback" bindtap="enterGame">
       <text class="iconfont button-icon">{{icons.enter}}</text>
       进入牌局
     </button>
-    <button class="exit-button disabled" hover-class="tap-feedback" bindtap="showExitTip">
+    <button wx:if="{{currentGame.canExit}}" class="exit-button" hover-class="tap-feedback" bindtap="exitGame">
       <text class="iconfont button-icon">{{icons.exit}}</text>
       退出牌局
     </button>
-    <view class="exit-tip">分值清零后可退出</view>
+    <block wx:else>
+      <button class="exit-button disabled" hover-class="tap-feedback" bindtap="showExitTip">
+        <text class="iconfont button-icon">{{icons.exit}}</text>
+        退出牌局
+      </button>
+      <view class="exit-tip">分值清零后可退出</view>
+    </block>
+  </view>
+  <view wx:else class="current-card card empty-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40rpx; min-height: 200rpx;">
+    <view class="empty-text" style="color: var(--text-muted); font-size: 28rpx; margin-bottom: 20rpx;">当前没有进行中的牌局</view>
   </view>
 
   <view class="actions">
-    <button class="create-disabled" disabled>
+    <button wx:if="{{currentGame}}" class="create-disabled" disabled>
       <text class="iconfont button-icon">{{icons.plusCircle}}</text>
       已在牌局中
+    </button>
+    <button wx:else class="button-primary create-button" hover-class="tap-feedback" bindtap="createGame">
+      <text class="iconfont button-icon">{{icons.plusCircle}}</text>
+      创建牌局
     </button>
     <view class="action-grid">
       <button class="action-card" hover-class="tap-feedback" bindtap="joinGame">

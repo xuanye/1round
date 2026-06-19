@@ -1,4 +1,8 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const auth_service_1 = require("../../services/auth.service");
+const game_service_1 = require("../../services/game.service");
+const storage_1 = require("../../utils/storage");
 Page({
     data: {
         icons: {
@@ -11,47 +15,112 @@ Page({
             home: '\uf015',
             ranking: '\ue561',
         },
-        userName: '老书记01',
-        currentGame: {
-            id: 'mock-game-001',
-            name: '周末家庭聚会',
-            date: '2024-05-20',
-            participantCount: 4,
-            myScore: 36,
-            canExit: false,
-        },
+        userName: '',
+        currentGame: null,
         stats: [
-            { label: '聚会次数', value: '12', unit: '场', tone: 'primary', iconCode: '\uf06b' },
-            { label: '最高得分', value: '+128', unit: '', tone: 'tertiary', iconCode: '\uf5a2' },
+            { label: '聚会次数', value: '0', unit: '场', tone: 'primary', iconCode: '\uf06b' },
+            { label: '最高得分', value: '0', unit: '', tone: 'tertiary', iconCode: '\uf5a2' },
         ],
-        recentGames: [
-            {
-                title: '五一快乐麻将',
-                meta: '昨天 · 5人 · 18次计分',
-                status: '已结束',
-                score: '+12',
-                iconCode: '\uf522',
-            },
-            {
-                title: '春节斗地主',
-                meta: '2024-02-10 · 3人 · 24次计分',
-                status: '已结束',
-                score: '+84',
-                iconCode: '\uf5fd',
-            },
-        ],
+        recentGames: [],
+    },
+    async onShow() {
+        wx.showLoading({ title: '加载中...' });
+        try {
+            await (0, auth_service_1.ensureLogin)();
+            const user = (0, storage_1.getUser)();
+            this.setData({ userName: (user === null || user === void 0 ? void 0 : user.displayName) || '老书记' });
+            // Fetch current game
+            const current = await (0, game_service_1.getCurrentGame)();
+            let homeCurrent = null;
+            if (current) {
+                const summary = await (0, game_service_1.getSummary)(current.id);
+                // Find my score using robust userId matching
+                let myScore = 0;
+                const myPlayer = summary.players.find(p => p.userId === (user === null || user === void 0 ? void 0 : user.id) || (p.displayName === (user === null || user === void 0 ? void 0 : user.displayName) && p.userId === (user === null || user === void 0 ? void 0 : user.id)));
+                if (myPlayer) {
+                    myScore = myPlayer.totalScore;
+                }
+                else {
+                    // Fallback matching by name
+                    const matched = summary.players.find(p => p.displayName === (user === null || user === void 0 ? void 0 : user.displayName));
+                    if (matched)
+                        myScore = matched.totalScore;
+                }
+                homeCurrent = {
+                    id: current.id,
+                    name: current.name,
+                    inviteCode: current.inviteCode,
+                    participantCount: summary.players.length,
+                    myScore: myScore,
+                    canExit: myScore === 0,
+                };
+            }
+            this.setData({ currentGame: homeCurrent });
+            // Fetch history
+            const historyPage = await (0, game_service_1.getHistory)('', 5);
+            const recent = historyPage.items.map(item => {
+                const dateStr = new Date(item.settledAt).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
+                return {
+                    id: item.id,
+                    title: item.name,
+                    meta: `${dateStr} · ${item.scoreTransferCount}次计分`,
+                    status: '已结束',
+                    score: `${item.myFinalScore >= 0 ? '+' : ''}${item.myFinalScore}`,
+                    iconCode: '\uf522',
+                };
+            });
+            this.setData({ recentGames: recent });
+            // Fetch accurate global statistics from stats API
+            const statsData = await (0, game_service_1.getHistoryStats)();
+            this.setData({
+                stats: [
+                    { label: '聚会次数', value: String(statsData.totalGames), unit: '场', tone: 'primary', iconCode: '\uf06b' },
+                    { label: '最高得分', value: `${statsData.maxScore >= 0 ? '+' : ''}${statsData.maxScore}`, unit: '', tone: 'tertiary', iconCode: '\uf5a2' },
+                ],
+            });
+        }
+        catch (err) {
+            console.error('Home page load failed:', err);
+            wx.showToast({ title: err.message || '加载失败', icon: 'none' });
+        }
+        finally {
+            wx.hideLoading();
+        }
     },
     createGame() {
         wx.navigateTo({ url: '/pages/game-create/index' });
     },
     enterGame() {
-        wx.navigateTo({ url: `/pages/game-detail/index?id=${this.data.currentGame.id}` });
+        if (!this.data.currentGame)
+            return;
+        wx.navigateTo({ url: `/pages/game-detail/index?id=${this.data.currentGame.id}&inviteCode=${this.data.currentGame.inviteCode}` });
     },
     joinGame() {
         wx.navigateTo({ url: '/pages/game-join/index' });
     },
     showExitTip() {
         wx.showToast({ title: '分值清零后可退出', icon: 'none' });
+    },
+    async exitGame() {
+        if (!this.data.currentGame)
+            return;
+        const self = this;
+        wx.showModal({
+            title: '退出牌局',
+            content: '确定要退出当前牌局吗？',
+            success: async (res) => {
+                if (res.confirm) {
+                    try {
+                        await (0, game_service_1.leaveGame)(self.data.currentGame.id);
+                        wx.showToast({ title: '已退出牌局', icon: 'success' });
+                        self.onShow(); // Reload
+                    }
+                    catch (err) {
+                        wx.showToast({ title: err.message || '退出失败', icon: 'none' });
+                    }
+                }
+            },
+        });
     },
     history() {
         wx.navigateTo({ url: '/pages/history/index' });

@@ -93,9 +93,13 @@ input {
   background: #16a34a;
 }
 
-.create-btn {
+button.create-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   height: 88rpx;
-  margin-top: auto;
+  line-height: 1;
+  margin: 56rpx 0 24rpx;
 }
 
 .safe-note {

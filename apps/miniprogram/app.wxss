@@ -36,9 +36,17 @@ button {
   transition: transform 180ms ease, opacity 180ms ease;
 }
 
+button:not([size=mini]) {
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  min-height: 0;
+}
+
 button::after {
   border: 0;
 }
+
 
 .card {
   background: #ffffff;

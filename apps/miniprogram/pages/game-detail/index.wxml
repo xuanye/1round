@@ -1,46 +1,100 @@
 <view class="page detail-page">
+  <!-- Topbar -->
   <view class="detail-topbar">
     <button class="round-button" bindtap="backHome" hover-class="tap-feedback">
       <text class="iconfont">{{icons.back}}</text>
     </button>
     <view class="detail-title">
       <view>{{game.name}}</view>
-      <text>{{game.createdAt}}</text>
+      <text>{{game.createdAtText}}</text>
     </view>
-    <button class="round-button" bindtap="showInvite" hover-class="tap-feedback">
+    <button wx:if="{{game.status === 'active'}}" class="round-button" bindtap="showInvite" hover-class="tap-feedback">
       <text class="iconfont">{{icons.qrCode}}</text>
     </button>
+    <view wx:else style="width: 76rpx;"></view>
   </view>
 
-  <view class="section-row">
-    <view class="section-label">当前参与者</view>
-    <button class="rank-link" bindtap="ranking" hover-class="tap-feedback">
-      <text class="iconfont inline-icon">{{icons.ranking}}</text>
-      排行榜
-    </button>
-  </view>
-
-  <view class="participant-list card">
-    <view wx:for="{{participants}}" wx:key="id" class="participant-row">
-      <view class="person">
-        <view class="avatar-wrap {{item.isCreator ? 'creator' : ''}}">
-          <view class="avatar">{{item.initial}}</view>
-          <text wx:if="{{item.isCreator}}" class="iconfont star-icon">{{icons.star}}</text>
+  <!-- ACTIVE MODE UI -->
+  <block wx:if="{{game.status === 'active'}}">
+    <!-- Pending Finish Request Banner -->
+    <view wx:if="{{pendingFinishRequest}}" class="finish-request-banner card">
+      <block wx:if="{{game.isCreator}}">
+        <view class="finish-banner-title">“{{pendingFinishRequest.requestedByName}}”申请结束本局</view>
+        <view class="finish-banner-actions">
+          <button class="finish-banner-btn approve" bindtap="approveFinish">确认结束</button>
+          <button class="finish-banner-btn reject" bindtap="rejectFinish">拒绝</button>
         </view>
-        <view>
-          <view class="person-name">{{item.name}}</view>
-          <view class="person-role">{{item.role}}</view>
+      </block>
+      <block wx:else>
+        <view class="finish-pending-text">
+          <text class="iconfont inline-icon animate-pulse">{{icons.history}}</text>
+          正在等待创建者确认结束（由 {{pendingFinishRequest.requestedByName}} 发起）...
         </view>
-      </view>
-      <view class="score {{item.scoreTone}}">{{item.score}}</view>
+      </block>
     </view>
-  </view>
 
-  <button class="button-primary score-entry" bindtap="inputScore" hover-class="tap-feedback">
-    <text class="iconfont button-icon">{{icons.plusCircle}}</text>
-    开始计分
-  </button>
+    <!-- Active Participants Section -->
+    <view class="section-row">
+      <view class="section-label">当前参与者 (Taps self to rename)</view>
+      <button class="rank-link" bindtap="ranking" hover-class="tap-feedback">
+        <text class="iconfont inline-icon">{{icons.ranking}}</text>
+        排行榜
+      </button>
+    </view>
 
+    <view class="participant-list card">
+      <view wx:for="{{participants}}" wx:key="id" class="participant-row" bindtap="{{item.isMe ? 'renameSelf' : ''}}">
+        <view class="person">
+          <view class="avatar-wrap {{item.isCreator ? 'creator' : ''}}">
+            <view class="avatar">{{item.initial}}</view>
+            <text wx:if="{{item.isCreator}}" class="iconfont star-icon">{{icons.star}}</text>
+          </view>
+          <view>
+            <view class="person-name">{{item.name}} {{item.isMe ? '(我)' : ''}}</view>
+            <view class="person-role">{{item.role}}</view>
+          </view>
+        </view>
+        <view class="score {{item.scoreTone}}">{{item.score}}</view>
+      </view>
+    </view>
+
+    <!-- Start Scoring -->
+    <button class="button-primary score-entry" bindtap="inputScore" hover-class="tap-feedback" disabled="{{participants.length < 2}}">
+      <text class="iconfont button-icon">{{icons.plusCircle}}</text>
+      开始计分
+    </button>
+  </block>
+
+  <!-- SETTLED MODE UI -->
+  <block wx:else>
+    <view class="section-row">
+      <view class="section-label" style="color: #ba1a1a;">已结算 (只读)</view>
+      <view class="settled-badge" style="background: rgba(186, 26, 26, 0.1); color: #ba1a1a; font-size: 22rpx; font-weight: bold; padding: 4rpx 16rpx; border-radius: 8rpx;">零和已冻结</view>
+    </view>
+
+    <!-- All Historical Participants Section -->
+    <view class="participant-list card" style="border-top: 4rpx solid #ba1a1a;">
+      <view wx:for="{{participants}}" wx:key="id" class="participant-row">
+        <view class="person">
+          <view class="avatar-wrap">
+            <view class="avatar" style="background: #efeeeb; color: #6f7976;">{{item.initial}}</view>
+          </view>
+          <view>
+            <view class="person-name">{{item.name}}</view>
+            <view class="person-role" style="color: #6f7976;">最终分值</view>
+          </view>
+        </view>
+        <view class="score {{item.scoreTone}}">{{item.score}}</view>
+      </view>
+    </view>
+
+    <!-- Share settlement result card -->
+    <button class="button-primary score-entry" open-type="share" style="background: #1f695d; box-shadow: 0 12rpx 34rpx rgba(31, 105, 93, 0.16);">
+      分享结算卡片
+    </button>
+  </block>
+
+  <!-- Score Transfers List Section -->
   <view class="history-head">
     <view class="section-label">计分明细</view>
     <text class="iconfont history-header-icon">{{icons.history}}</text>
@@ -50,24 +104,24 @@
     <view wx:for="{{transfers}}" wx:key="id" class="transfer-card">
       <text class="iconfont transfer-icon">{{item.iconCode}}</text>
       <view class="transfer-main">
-        <view class="transfer-text">
-          <text class="strong">{{item.from}}</text>
-          <text> 给 </text>
-          <text class="strong">{{item.to}}</text>
-          <text wx:if="{{item.multi}}"> 各 </text>
-          <text wx:else> </text>
-          <text class="transfer-score">{{item.score}}</text>
-        </view>
+        <view class="transfer-text">{{item.text}}</view>
         <view class="transfer-time">{{item.time}}</view>
       </view>
     </view>
+    <view wx:if="{{transfers.length === 0}}" style="text-align: center; color: var(--text-muted); font-size: 26rpx; padding: 40rpx;">
+      暂无计分记录
+    </view>
   </view>
 
+  <!-- Bottom Actions Fixed Block -->
   <view class="bottom-actions">
-    <button class="finish-button" bindtap="finish" hover-class="tap-feedback">
+    <!-- Active only finish button -->
+    <button wx:if="{{game.status === 'active'}}" class="finish-button" bindtap="finish" hover-class="tap-feedback">
       <text class="iconfont button-icon">{{icons.flag}}</text>
       结束本局
     </button>
+
+    <!-- Bottom navigation tabs -->
     <view class="bottom-nav">
       <button bindtap="backHome">
         <text class="iconfont">{{icons.home}}</text>
@@ -81,6 +135,17 @@
         <text class="iconfont">{{icons.history}}</text>
         <text class="nav-label">历史</text>
       </button>
+    </view>
+  </view>
+
+  <!-- Glassmorphic Invite QR Overlay -->
+  <view wx:if="{{showInviteOverlay}}" class="invite-overlay" bindtap="hideInvite">
+    <view class="invite-popup" catchtap="none">
+      <view class="invite-popup-title">微信扫码加入</view>
+      <canvas class="qr-image" canvas-id="inviteQR" style="width: 360rpx; height: 360rpx;"></canvas>
+      <view class="invite-code-box">{{game.inviteCode}}</view>
+      <view class="invite-popup-hint">长按或扫码上方二维码快速加入牌局</view>
+      <button class="invite-close-btn" bindtap="hideInvite" hover-class="tap-feedback">关闭</button>
     </view>
   </view>
 </view>

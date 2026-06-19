@@ -15,9 +15,11 @@ class RealtimeService {
         this.closedByPage = false;
         this.gameSessionId = gameSessionId;
         const app = getApp();
-        const url = app.globalData.baseUrl.replace(/^http/, 'ws');
-        const token = encodeURIComponent((0, storage_1.getToken)());
-        this.socket = wx.connectSocket({ url: `${url}/ws/game-sessions/${gameSessionId}?token=${token}` });
+        const baseUrl = app.globalData.baseUrl;
+        const wsProto = baseUrl.startsWith('https:') ? 'wss:' : 'ws:';
+        const cleanUrl = baseUrl.replace(/^https?:\/\//, '');
+        const socketUrl = `${wsProto}//${cleanUrl}/ws/game-sessions/${gameSessionId}?token=${encodeURIComponent((0, storage_1.getToken)())}`;
+        this.socket = wx.connectSocket({ url: socketUrl });
         this.socket.onMessage((message) => {
             const event = JSON.parse(String(message.data));
             this.handlers.forEach((handler) => handler(event));
@@ -35,6 +37,7 @@ class RealtimeService {
             this.socket.close({});
             this.socket = null;
         }
+        this.handlers = []; // Fix listener leak by clearing handlers on disconnect
     }
     onEvent(handler) {
         this.handlers.push(handler);

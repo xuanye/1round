@@ -1,20 +1,25 @@
-<view class="page">
-  <view class="tabs">
-    <view class="tab active">历史牌局</view>
-    <view class="tab">排行榜</view>
-  </view>
-  <empty-state wx:if="{{isEmpty}}" text="暂无历史牌局" />
+<view class="page" style="padding: 30rpx 40rpx;">
+  <empty-state wx:if="{{items.length === 0}}" text="暂无历史牌局" />
   <view class="history-list">
-    <view wx:for="{{ids}}" wx:key="*this" class="history-row card" data-id="{{item}}" bindtap="open">
-      <view class="calendar {{index % 2 === 0 ? 'green' : 'yellow'}}"></view>
-      <view class="history-main">
-        <view class="history-name">{{index === 0 ? '周末家庭局' : '家庭牌局'}}</view>
-        <view class="history-meta">牌局 ID {{item}}</view>
+    <view wx:for="{{items}}" wx:key="id" class="history-row card" data-id="{{item.id}}" bindtap="open" style="display: flex; align-items: center; padding: 24rpx 30rpx; margin-bottom: 20rpx; background: #ffffff; border-radius: 28rpx; box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.02);">
+      <view class="calendar {{index % 2 === 0 ? 'green' : 'yellow'}}" style="width: 12rpx; height: 80rpx; border-radius: 6rpx; background: {{index % 2 === 0 ? '#1f695d' : '#eab308'}}; margin-right: 24rpx;"></view>
+      <view class="history-main" style="flex: 1; min-width: 0;">
+        <view class="history-name" style="font-size: 30rpx; font-weight: 900; color: #1a1c1a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{item.name}}</view>
+        <view class="history-meta" style="font-size: 22rpx; color: #6f7976; margin-top: 6rpx;">{{item.dateText}} · {{item.scoreTransferCount}} 次计分</view>
       </view>
-      <view class="history-side">
-        <view class="status {{index === 0 ? 'running' : 'ended'}}">{{index === 0 ? '进行中' : '已结束'}}</view>
-        <view class="chevron">›</view>
+      <view class="history-side" style="text-align: right; margin-right: 16rpx;">
+        <view class="score" style="font-size: 34rpx; font-weight: 900; color: {{item.myFinalScore >= 0 ? '#1f695d' : '#ba1a1a'}};">
+          {{item.scoreText}}
+        </view>
+        <view style="font-size: 20rpx; color: #6f7976; margin-top: 4rpx;">结算分值</view>
       </view>
+      <text class="chevron" style="color: #bcbebc; font-size: 36rpx;">›</text>
+    </view>
+    <view wx:if="{{isLoading}}" style="text-align: center; font-size: 24rpx; color: #6f7976; padding: 20rpx 0;">
+      加载中...
+    </view>
+    <view wx:elif="{{!hasMore && items.length > 0}}" style="text-align: center; font-size: 24rpx; color: #6f7976; padding: 20rpx 0;">
+      已显示全部历史牌局
     </view>
   </view>
 </view>

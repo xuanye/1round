@@ -168,6 +168,16 @@
   flex: 0 0 64rpx;
 }
 
+.creator-avatar-img.text-avatar {
+  background: #1f695d;
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .creator-name {
   color: #1a1c1a;
   font-size: 28rpx;

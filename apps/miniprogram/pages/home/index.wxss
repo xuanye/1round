@@ -216,17 +216,28 @@
   line-height: 1;
 }
 
+.create-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 86rpx;
+  font-size: 28rpx;
+  line-height: 1;
+}
+
 .action-grid,
 .stat-grid {
   margin-top: 24rpx;
 }
 
-.action-card {
+button.action-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   flex: 1;
+  width: auto;
   min-height: 148rpx;
   color: #1f695d;
   background: #f4f3f1;
@@ -235,7 +246,7 @@
   line-height: 1.25;
 }
 
-.action-card + .action-card,
+button.action-card + button.action-card,
 .stat-card + .stat-card {
   margin-left: 24rpx;
 }

@@ -1,2 +1,11 @@
 .form-page { display: flex; flex-direction: column; gap: 24rpx; }
 input { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12rpx; padding: 24rpx; }
+
+button.save-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+  line-height: 1;
+  margin: 56rpx 0 24rpx;
+}

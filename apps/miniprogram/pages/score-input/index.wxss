@@ -30,8 +30,8 @@
   margin-right: 18rpx;
 }
 
-.back-button,
-.info-button {
+button.back-button,
+button.info-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -41,8 +41,8 @@
   background: #f4f3f1;
 }
 
-.back-button .iconfont,
-.info-button .iconfont {
+button.back-button .iconfont,
+button.info-button .iconfont {
   font-size: 38rpx !important;
 }
 
@@ -68,10 +68,11 @@
   font-weight: 900;
 }
 
-.select-all {
+button.select-all {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: auto;
   height: 56rpx;
   padding: 0 22rpx;
   color: #2a667e;

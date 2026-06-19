@@ -75,6 +75,17 @@ func (h *HistoryHandler) PublicSettlement(w http.ResponseWriter, r *http.Request
 	response.JSON(w, http.StatusOK, result)
 }
 
+func (h *HistoryHandler) Stats(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.UserID(r.Context())
+	result, err := h.query.UserStats(r.Context(), userID)
+	if err != nil {
+		response.Error(w, err)
+		return
+	}
+	response.JSON(w, http.StatusOK, result)
+}
+
+
 func parseLimit(raw string, defaultLimit int) int {
 	if raw == "" {
 		return defaultLimit

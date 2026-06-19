@@ -20,19 +20,30 @@ type Service struct {
 
 type PlayerSummary struct {
 	ID           string  `json:"id"`
+	UserID       *string `json:"userId,omitempty"`
 	DisplayName  string  `json:"displayName"`
 	TotalScore   int     `json:"totalScore"`
 	AverageScore float64 `json:"averageScore"`
 }
 
+type FinishRequestView struct {
+	ID                  string    `json:"id"`
+	RequestedByPlayerID string    `json:"requestedByPlayerId"`
+	RequestedByName     string    `json:"requestedByName"`
+	CreatedAt           time.Time `json:"createdAt"`
+}
+
 type Summary struct {
-	ID               string          `json:"id"`
-	Name             string          `json:"name"`
-	Status           string          `json:"status"`
-	ScoreTransferCnt int             `json:"scoreTransferCount"`
-	Players          []PlayerSummary `json:"players"`
-	UpdatedAt        time.Time       `json:"updatedAt"`
-	Version          int64           `json:"version"`
+	ID                   string             `json:"id"`
+	Name                 string             `json:"name"`
+	OwnerUserID          string             `json:"ownerUserId"`
+	Status               string             `json:"status"`
+	ScoreTransferCnt     int                `json:"scoreTransferCount"`
+	Players              []PlayerSummary    `json:"players"`
+	UpdatedAt            time.Time          `json:"updatedAt"`
+	Version              int64              `json:"version"`
+	PendingFinishRequest *FinishRequestView `json:"pendingFinishRequest,omitempty"`
+	PublicShareToken     *string            `json:"publicShareToken,omitempty"`
 }
 
 type RankingItem struct {
@@ -85,10 +96,54 @@ func (s *Service) Summary(ctx context.Context, userID, gameSessionID string) (Su
 	if err != nil {
 		return Summary{}, err
 	}
-	summary := Summary{ID: g.ID, Name: g.Name, Status: string(g.Status), ScoreTransferCnt: g.ScoreTransferCnt, UpdatedAt: g.UpdatedAt, Version: g.Version}
-	for _, p := range players {
-		summary.Players = append(summary.Players, PlayerSummary{ID: p.ID, DisplayName: p.DisplayName, TotalScore: p.TotalScore, AverageScore: average(p.TotalScore, g.ScoreTransferCnt)})
+	summary := Summary{
+		ID:               g.ID,
+		Name:             g.Name,
+		OwnerUserID:      g.OwnerUserID,
+		Status:           string(g.Status),
+		ScoreTransferCnt: g.ScoreTransferCnt,
+		UpdatedAt:        g.UpdatedAt,
+		Version:          g.Version,
+		PublicShareToken: g.PublicShareToken,
 	}
+	for _, p := range players {
+		summary.Players = append(summary.Players, PlayerSummary{
+			ID:           p.ID,
+			UserID:       p.UserID,
+			DisplayName:  p.DisplayName,
+			TotalScore:   p.TotalScore,
+			AverageScore: average(p.TotalScore, g.ScoreTransferCnt),
+		})
+	}
+
+	pending, err := s.q.GetPendingFinishRequest(ctx, gameSessionID)
+	if err != nil {
+		return Summary{}, err
+	}
+	if pending != nil {
+		var requesterName string
+		for _, p := range players {
+			if p.ID == pending.RequestedByPlayerID {
+				requesterName = p.DisplayName
+				break
+			}
+		}
+		if requesterName == "" {
+			reqPlayer, err := s.q.GetPlayer(ctx, gameSessionID, pending.RequestedByPlayerID)
+			if err == nil {
+				requesterName = reqPlayer.DisplayName
+			} else {
+				requesterName = "未知玩家"
+			}
+		}
+		summary.PendingFinishRequest = &FinishRequestView{
+			ID:                  pending.ID,
+			RequestedByPlayerID: pending.RequestedByPlayerID,
+			RequestedByName:     requesterName,
+			CreatedAt:           pending.CreatedAt,
+		}
+	}
+
 	return summary, nil
 }
 
@@ -285,12 +340,13 @@ func (s *Service) SettlementDetail(ctx context.Context, userID, gameSessionID st
 	}
 
 	return dto.SettlementDetail{
-		ID:             g.ID,
-		Name:           g.Name,
-		SettledAt:      settledAt,
-		Participants:   participants,
-		ScoreTransfers: transferSummaries,
-		NextCursor:     nextCursor,
+		ID:               g.ID,
+		Name:             g.Name,
+		SettledAt:        settledAt,
+		Participants:     participants,
+		ScoreTransfers:   transferSummaries,
+		NextCursor:       nextCursor,
+		PublicShareToken: g.PublicShareToken,
 	}, nil
 }
 
@@ -332,4 +388,16 @@ func (s *Service) PublicSettlement(ctx context.Context, shareToken string) (dto.
 	}, nil
 }
 
+func (s *Service) UserStats(ctx context.Context, userID string) (dto.UserStatsResponse, error) {
+	count, maxScore, err := s.q.GetUserStats(ctx, userID)
+	if err != nil {
+		return dto.UserStatsResponse{}, err
+	}
+	return dto.UserStatsResponse{
+		TotalGames: count,
+		MaxScore:   maxScore,
+	}, nil
+}
+
 var _ = domain.GameSession{}
+

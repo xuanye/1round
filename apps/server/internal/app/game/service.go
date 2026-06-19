@@ -124,7 +124,9 @@ func (s *Service) JoinPreview(ctx context.Context, userID, inviteCode string) (J
 	if session.Status == domain.GameSessionStatusFinished || session.Status == domain.GameSessionStatusVoided {
 		return JoinPreview{}, domain.ErrGameSessionFinished
 	}
-	players, err := s.q.ListHistoricalPlayers(ctx, session.ID)
+
+	// Use active participants for count and display
+	activePlayers, err := s.q.ListActivePlayers(ctx, session.ID)
 	if err != nil {
 		return JoinPreview{}, err
 	}
@@ -133,26 +135,35 @@ func (s *Service) JoinPreview(ctx context.Context, userID, inviteCode string) (J
 		GameSessionID:    session.ID,
 		Name:             session.Name,
 		MaxParticipants:  session.MaxParticipants,
-		ParticipantCount: len(players),
+		ParticipantCount: len(activePlayers),
 	}
 
 	var ownerDisplayName string
-	var currentUserDisplayName string
 	alreadyJoined := false
-	for _, p := range players {
+	for _, p := range activePlayers {
 		preview.Participants = append(preview.Participants, PlayerPreview{ID: p.ID, DisplayName: p.DisplayName})
 		if p.UserID != nil && *p.UserID == session.OwnerUserID {
 			ownerDisplayName = p.DisplayName
 		}
 		if p.UserID != nil && *p.UserID == userID {
-			currentUserDisplayName = p.DisplayName
-			if p.Active {
-				alreadyJoined = true
-			}
+			alreadyJoined = true
 		}
 	}
 	preview.OwnerDisplayName = ownerDisplayName
 	preview.AlreadyJoined = alreadyJoined
+
+	// Check historical players for current user's display name (for rejoin scenario)
+	var currentUserDisplayName string
+	historicalPlayers, err := s.q.ListHistoricalPlayers(ctx, session.ID)
+	if err != nil {
+		return JoinPreview{}, err
+	}
+	for _, p := range historicalPlayers {
+		if p.UserID != nil && *p.UserID == userID {
+			currentUserDisplayName = p.DisplayName
+			break
+		}
+	}
 
 	// If user is not yet a participant, generate a default display name
 	if currentUserDisplayName == "" {

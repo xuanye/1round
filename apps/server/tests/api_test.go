@@ -23,25 +23,46 @@ func TestFakeAuthCreateJoinAddSubmitSummaryRankingAPI(t *testing.T) {
 		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
 	})
 
-	token := loginHTTP(t, router, "owner-code")
-	game := postJSON[map[string]any](t, router, token, "/api/game-sessions", map[string]any{"name": "家庭聚会"})
+	ownerToken := loginHTTP(t, router, "owner-code")
+	game := postJSON[map[string]any](t, router, ownerToken, "/api/game-sessions", map[string]any{"name": "家庭聚会"})
 	gameID := game["id"].(string)
 	inviteCode := game["inviteCode"].(string)
-	_ = postJSON[map[string]any](t, router, token, "/api/game-sessions/join", map[string]any{"inviteCode": inviteCode})
-	p1 := postJSON[map[string]any](t, router, token, "/api/game-sessions/"+gameID+"/players", map[string]any{"displayName": "A"})
-	_ = postJSON[map[string]any](t, router, token, "/api/game-sessions/"+gameID+"/players", map[string]any{"displayName": "B"})
-	// Owner gives 5 to player A via score transfer
-	_ = postJSON[map[string]any](t, router, token, "/api/game-sessions/"+gameID+"/score-transfers", map[string]any{
-		"receiverPlayerIds": []string{p1["id"].(string)},
+
+	// Joiner joins the game
+	joinerToken := loginHTTP(t, router, "joiner-code")
+	_ = postJSON[map[string]any](t, router, joinerToken, "/api/game-sessions/join", map[string]any{"inviteCode": inviteCode, "displayName": "妈妈"})
+
+	// Get joiner's player ID from summary
+	summary := getJSON[map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/summary")
+	players := summary["players"].([]any)
+	if len(players) != 2 {
+		t.Fatalf("expected 2 players, got %d", len(players))
+	}
+	// Find joiner player (not owner)
+	var joinerPlayerID string
+	for _, p := range players {
+		pm := p.(map[string]any)
+		if pm["displayName"] == "妈妈" {
+			joinerPlayerID = pm["id"].(string)
+			break
+		}
+	}
+	if joinerPlayerID == "" {
+		t.Fatal("could not find joiner player")
+	}
+
+	// Owner gives 5 to joiner via score transfer
+	_ = postJSON[map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/score-transfers", map[string]any{
+		"receiverPlayerIds": []string{joinerPlayerID},
 		"amount":            5,
 		"idempotencyKey":    "api-test-1",
 	})
-	summary := getJSON[map[string]any](t, router, token, "/api/game-sessions/"+gameID+"/summary")
+	summary = getJSON[map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/summary")
 	if summary["scoreTransferCount"].(float64) != 1 {
 		t.Fatalf("unexpected summary: %+v", summary)
 	}
-	ranking := getJSON[[]any](t, router, token, "/api/game-sessions/"+gameID+"/ranking")
-	if len(ranking) != 3 {
+	ranking := getJSON[[]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/ranking")
+	if len(ranking) != 2 {
 		t.Fatalf("unexpected ranking: %+v", ranking)
 	}
 }
@@ -79,24 +100,26 @@ func TestLeaveRequiresZeroScoreAPI(t *testing.T) {
 	gameID := game["id"].(string)
 
 	// Join with joiner
-	joinerGameID := postJSON[map[string]any](t, router, joinerToken, "/api/game-sessions/join", map[string]any{
+	joinResult := postJSON[map[string]any](t, router, joinerToken, "/api/game-sessions/join", map[string]any{
 		"inviteCode": game["inviteCode"], "displayName": "妈妈",
 	})
-	if joinerGameID["gameSessionId"] != gameID {
-		t.Fatalf("unexpected join result: %+v", joinerGameID)
+	if joinResult["gameSessionId"] != gameID {
+		t.Fatalf("unexpected join result: %+v", joinResult)
 	}
 
-	// Get joiner's player ID
-	joinerPlayer := postJSON[map[string]any](t, router, joinerToken, "/api/game-sessions/join-preview", map[string]any{"inviteCode": game["inviteCode"]})
-	_ = joinerPlayer
-
-	// List players to find joiner's player ID
-	players := getJSON[[]map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/players")
+	// Get joiner's player ID from summary
+	summary := getJSON[map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/summary")
+	players := summary["players"].([]any)
 	var joinerPlayerID string
 	for _, p := range players {
-		if p["userId"] != nil && p["displayName"] == "妈妈" {
-			joinerPlayerID = p["id"].(string)
+		pm := p.(map[string]any)
+		if pm["displayName"] == "妈妈" {
+			joinerPlayerID = pm["id"].(string)
+			break
 		}
+	}
+	if joinerPlayerID == "" {
+		t.Fatal("could not find joiner player")
 	}
 
 	// Owner gives 5 to joiner via score transfer (makes owner's score non-zero)
@@ -106,13 +129,13 @@ func TestLeaveRequiresZeroScoreAPI(t *testing.T) {
 		"idempotencyKey":    "leave-test-api",
 	})
 
-	// Try to leave with non-zero score - should fail with 400
+	// Try to leave with non-zero score - should fail with 409
 	req, _ := http.NewRequest(http.MethodPost, "/api/game-sessions/"+gameID+"/leave", nil)
 	req.Header.Set("Authorization", "Bearer "+ownerToken)
 	rec := httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("expected 400 status, got %d body %s", rec.Code, rec.Body.String())
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("expected 409 status, got %d body %s", rec.Code, rec.Body.String())
 	}
 }
 
@@ -322,8 +345,6 @@ func TestGameScoringLifecycleE2E(t *testing.T) {
 	thirdParticipantID := thirdPreview["participants"].([]any)[2].(map[string]any)["id"].(string)
 
 	// 7. Owner submits multi-receiver score transfer to joiner and third participant.
-	_ = getJSON[[]map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/players")
-
 	_ = postJSON[map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/score-transfers", map[string]any{
 		"receiverPlayerIds": []string{joinerParticipantID, thirdParticipantID},
 		"amount":            10,

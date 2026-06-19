@@ -107,34 +107,38 @@ func (s *Service) Submit(ctx context.Context, userID, gameSessionID string, inpu
 	// New transfer: persist in one transaction
 	now := s.now()
 	transferID := uuid.NewString()
-	sequenceNo, err := s.q.NextScoreTransferSequence(ctx, gameSessionID)
-	if err != nil {
-		return SubmitResult{}, err
-	}
 	version := session.Version + 1
 	receiverCount := len(input.ReceiverPlayerIDs)
 
-	transfer := domain.ScoreTransfer{
-		ID:              transferID,
-		GameSessionID:   gameSessionID,
-		SequenceNo:      sequenceNo,
-		FromPlayerID:    sender.ID,
-		CreatedByUserID: userID,
-		IdempotencyKey:  input.IdempotencyKey,
-		Amount:          input.Amount,
-		CreatedAt:       now,
-		Receivers:       make([]domain.ScoreTransferReceiver, 0, receiverCount),
-	}
-	for i, rid := range input.ReceiverPlayerIDs {
-		transfer.Receivers = append(transfer.Receivers, domain.ScoreTransferReceiver{
-			ID:              uuid.NewString(),
-			ScoreTransferID: transferID,
-			PlayerID:        rid,
-			ReceiverOrder:   i + 1,
-		})
-	}
-
+	var sequenceNo int
 	err = s.store.InTx(ctx, func(q *sqlite.Queries) error {
+		// Allocate sequence number inside transaction to prevent concurrent conflicts
+		var err error
+		sequenceNo, err = q.NextScoreTransferSequence(ctx, gameSessionID)
+		if err != nil {
+			return err
+		}
+
+		transfer := domain.ScoreTransfer{
+			ID:              transferID,
+			GameSessionID:   gameSessionID,
+			SequenceNo:      sequenceNo,
+			FromPlayerID:    sender.ID,
+			CreatedByUserID: userID,
+			IdempotencyKey:  input.IdempotencyKey,
+			Amount:          input.Amount,
+			CreatedAt:       now,
+			Receivers:       make([]domain.ScoreTransferReceiver, 0, receiverCount),
+		}
+		for i, rid := range input.ReceiverPlayerIDs {
+			transfer.Receivers = append(transfer.Receivers, domain.ScoreTransferReceiver{
+				ID:              uuid.NewString(),
+				ScoreTransferID: transferID,
+				PlayerID:        rid,
+				ReceiverOrder:   i + 1,
+			})
+		}
+
 		// Insert the score transfer record
 		if err := q.InsertScoreTransferRaw(ctx, transfer); err != nil {
 			return err

@@ -24,7 +24,7 @@ func (q *Queries) ListPlayers(ctx context.Context, gameSessionID string) ([]doma
 }
 
 func (q *Queries) ListRanking(ctx context.Context, gameSessionID string) ([]domain.Player, error) {
-	rows, err := q.db.QueryContext(ctx, `SELECT id, game_session_id, user_id, display_name, total_score, active, joined_order, left_at, created_at, updated_at FROM players WHERE game_session_id = ? ORDER BY total_score DESC, display_name ASC`, gameSessionID)
+	rows, err := q.db.QueryContext(ctx, `SELECT id, game_session_id, user_id, display_name, total_score, active, joined_order, left_at, created_at, updated_at FROM players WHERE game_session_id = ? AND active = 1 ORDER BY total_score DESC, joined_order ASC`, gameSessionID)
 	if err != nil {
 		return nil, err
 	}

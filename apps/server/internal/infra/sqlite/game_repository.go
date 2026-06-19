@@ -41,8 +41,9 @@ func (q *Queries) GetCurrentGameForUser(ctx context.Context, userID string) (*do
 		       gs.round_count, gs.version, gs.public_share_token, gs.last_scored_at,
 		       gs.settled_at, gs.voided_at, gs.created_at, gs.updated_at
 		FROM game_sessions gs
-		JOIN game_members gm ON gm.game_session_id = gs.id
-		WHERE gm.user_id = ?
+		JOIN players p ON p.game_session_id = gs.id
+		WHERE p.user_id = ?
+		  AND p.active = 1
 		  AND gs.status = 'active'
 		ORDER BY gs.updated_at DESC
 		LIMIT 1`, userID)

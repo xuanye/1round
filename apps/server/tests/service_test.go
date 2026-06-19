@@ -32,6 +32,7 @@ type testApp struct {
 	query         *querysvc.Service
 	hub           *realtime.MemoryHub
 	db            *sql.DB
+	nowRef        *time.Time
 }
 
 func TestScoreTransferRequestValidation(t *testing.T) {
@@ -714,7 +715,9 @@ func newTestApp(t *testing.T) *testApp {
 	q := sqlite.NewQueries(db)
 	store := sqlite.NewStore(db)
 	hub := realtime.NewMemoryHub()
-	now := func() time.Time { return time.Date(2026, 6, 19, 0, 0, 0, 0, time.UTC) }
+	initial := time.Date(2026, 6, 19, 0, 0, 0, 0, time.UTC)
+	nowRef := &initial
+	now := func() time.Time { return *nowRef }
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
 	gameService := gamesvc.NewService(store, q, hub, now)
 	settlementService := settlementsvc.NewService(store, q, gameService, hub, now)
@@ -728,6 +731,7 @@ func newTestApp(t *testing.T) *testApp {
 		query:         querysvc.NewService(q, gameService),
 		hub:           hub,
 		db:            db,
+		nowRef:        nowRef,
 	}
 }
 
@@ -747,4 +751,71 @@ func createGame(t *testing.T, app *testApp, userID string, maxParticipants *int)
 		t.Fatal(err)
 	}
 	return game
+}
+
+func (app *testApp) setNow(t time.Time) {
+	*app.nowRef = t
+}
+
+func newTestAppAt(t *testing.T, initial time.Time) *testApp {
+	t.Helper()
+	app := newTestApp(t)
+	app.setNow(initial)
+	return app
+}
+
+func TestAutoVoidUnscoredGameAfter24Hours(t *testing.T) {
+	app := newTestAppAt(t, time.Date(2026, 6, 19, 0, 0, 0, 0, time.UTC))
+	ctx := context.Background()
+	user := login(t, app, "owner-code")
+	game := createGame(t, app, user, nil)
+
+	app.setNow(time.Date(2026, 6, 20, 0, 1, 0, 0, time.UTC))
+	result, err := app.settlement.SettleInactiveGames(ctx, 24*time.Hour)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Voided != 1 || result.Finished != 0 {
+		t.Fatalf("unexpected result: %+v", result)
+	}
+	g, err := app.game.GetForHistoricalMember(ctx, user, game.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g.Status != domain.GameSessionStatusVoided {
+		t.Fatalf("expected voided, got %+v", g.Status)
+	}
+}
+
+func TestAutoFinishScoredGameAfter24HoursSinceLastScore(t *testing.T) {
+	app := newTestAppAt(t, time.Date(2026, 6, 19, 0, 0, 0, 0, time.UTC))
+	ctx := context.Background()
+	owner := login(t, app, "owner-code")
+	joiner := login(t, app, "joiner-code")
+	game := createGame(t, app, owner, nil)
+	if _, err := app.game.Join(ctx, joiner, game.InviteCode, "妈妈"); err != nil {
+		t.Fatal(err)
+	}
+	p2, _ := app.query.MyParticipant(ctx, joiner, game.ID)
+	if _, err := app.scoreTransfer.Submit(ctx, owner, game.ID, scoretransfersvc.SubmitInput{
+		ReceiverPlayerIDs: []string{p2.ID}, Amount: 10, IdempotencyKey: "k1",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	app.setNow(time.Date(2026, 6, 20, 0, 1, 0, 0, time.UTC))
+	result, err := app.settlement.SettleInactiveGames(ctx, 24*time.Hour)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Finished != 1 || result.Voided != 0 {
+		t.Fatalf("unexpected result: %+v", result)
+	}
+	g, err := app.game.GetForHistoricalMember(ctx, owner, game.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g.Status != domain.GameSessionStatusFinished || g.SettledAt == nil {
+		t.Fatalf("expected finished, got %+v", g)
+	}
 }

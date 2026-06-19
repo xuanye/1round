@@ -18,6 +18,7 @@ import (
 	roundsvc "github.com/xuanye/one-round/apps/server/internal/app/round"
 	scoretransfersvc "github.com/xuanye/one-round/apps/server/internal/app/scoretransfer"
 	settlementsvc "github.com/xuanye/one-round/apps/server/internal/app/settlement"
+	"github.com/xuanye/one-round/apps/server/internal/app/scheduler"
 	"github.com/xuanye/one-round/apps/server/internal/config"
 	jwtauth "github.com/xuanye/one-round/apps/server/internal/infra/auth"
 	"github.com/xuanye/one-round/apps/server/internal/infra/clock"
@@ -72,6 +73,9 @@ func main() {
 	scoreTransferService := scoretransfersvc.NewService(store, queries, gameService, hub, now)
 	settlementService := settlementsvc.NewService(store, queries, gameService, hub, now)
 	wsHandler := wshandler.NewWebSocketHandler(gameService, hub, cfg.Realtime.ClientSendQueueSize, time.Duration(cfg.Realtime.WriteTimeoutSeconds)*time.Second)
+
+	runner := scheduler.NewAutoSettlementRunner(settlementService, logger, cfg.AutoCheckInterval(), cfg.InactivityThreshold())
+	runner.Start(ctx)
 
 	router := api.NewRouter(logger, api.Services{
 		Auth: authService, Game: gameService, Player: playerService, Round: roundService,

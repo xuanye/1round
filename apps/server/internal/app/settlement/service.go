@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,15 +15,16 @@ import (
 )
 
 type Service struct {
-	store *sqlite.Store
-	q     *sqlite.Queries
-	game  *gamesvc.Service
-	hub   realtime.Hub
-	now   func() time.Time
+	store  *sqlite.Store
+	q      *sqlite.Queries
+	game   *gamesvc.Service
+	hub    realtime.Hub
+	now    func() time.Time
+	logger *slog.Logger
 }
 
 func NewService(store *sqlite.Store, q *sqlite.Queries, game *gamesvc.Service, hub realtime.Hub, now func() time.Time) *Service {
-	return &Service{store: store, q: q, game: game, hub: hub, now: now}
+	return &Service{store: store, q: q, game: game, hub: hub, now: now, logger: slog.Default()}
 }
 
 func GenerateShareToken() (string, error) {
@@ -63,6 +65,96 @@ func (s *Service) FinishDirect(ctx context.Context, userID, gameSessionID string
 		s.hub.BroadcastToGame(ctx, gameSessionID, realtime.Event{Type: realtime.EventGameFinished, GameSessionID: gameSessionID, Version: session.Version, SentAt: now})
 	}
 	return session, nil
+}
+
+// InactiveSettlementResult reports the outcome of an auto-settlement scan.
+type InactiveSettlementResult struct {
+	Finished int `json:"finished"`
+	Voided   int `json:"voided"`
+}
+
+// SettleInactiveGames scans for active game sessions that have been inactive beyond the
+// given threshold and either voids them (if no score transfers) or finishes them (if scored).
+// It returns the number of games finished and voided.
+func (s *Service) SettleInactiveGames(ctx context.Context, threshold time.Duration) (InactiveSettlementResult, error) {
+	now := s.now()
+	cutoff := now.Add(-threshold)
+
+	candidates, err := s.q.ListInactiveActiveSessions(ctx, cutoff, 100)
+	if err != nil {
+		return InactiveSettlementResult{}, err
+	}
+
+	var result InactiveSettlementResult
+	for _, c := range candidates {
+		action, err := s.settleOneInactive(ctx, c.ID, now)
+		if err != nil {
+			s.logger.Error("auto settlement failed for game", "game_id", c.ID, "error", err)
+			continue
+		}
+		switch action {
+		case "finished":
+			result.Finished++
+		case "voided":
+			result.Voided++
+		}
+	}
+	return result, nil
+}
+
+// settleOneInactive performs an idempotent settlement for a single game session.
+// It re-reads the game within a transaction to verify it is still active before acting.
+func (s *Service) settleOneInactive(ctx context.Context, gameSessionID string, now time.Time) (string, error) {
+	var action string
+	err := s.store.InTx(ctx, func(q *sqlite.Queries) error {
+		session, err := q.GetGameSession(ctx, gameSessionID)
+		if err != nil {
+			return err
+		}
+		if session.Status != domain.GameSessionStatusActive {
+			return nil // already settled/voided by someone else
+		}
+
+		if session.ScoreTransferCnt == 0 {
+			// Void the game
+			_, err = q.VoidGameSession(ctx, gameSessionID, now)
+			if err != nil {
+				return err
+			}
+			action = "voided"
+			return nil
+		}
+
+		// Finish the game with a share token
+		shareToken, err := GenerateShareToken()
+		if err != nil {
+			return err
+		}
+		_, err = q.FinishGameSessionWithSettleAndToken(ctx, gameSessionID, shareToken, now)
+		if err != nil {
+			return err
+		}
+		action = "finished"
+		return nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	// Broadcast events outside the transaction
+	if s.hub != nil && action != "" {
+		session, err := s.q.GetGameSession(ctx, gameSessionID)
+		if err == nil {
+			switch action {
+			case "finished":
+				s.hub.BroadcastToGame(ctx, gameSessionID, realtime.Event{Type: realtime.EventGameFinished, GameSessionID: gameSessionID, Version: session.Version, SentAt: now})
+			case "voided":
+				s.hub.BroadcastToGame(ctx, gameSessionID, realtime.Event{Type: realtime.EventGameVoided, GameSessionID: gameSessionID, Version: session.Version, SentAt: now})
+			}
+		}
+	}
+
+	return action, nil
 }
 
 // RequestFinish creates a pending finish request from a non-owner participant.

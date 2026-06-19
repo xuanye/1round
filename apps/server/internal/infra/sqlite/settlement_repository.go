@@ -175,3 +175,40 @@ func (q *Queries) FinishGameSessionWithSettleAndToken(ctx context.Context, gameS
 	}
 	return q.GetGameSession(ctx, gameSessionID)
 }
+
+// ListInactiveActiveSessions returns active game sessions that are candidates for auto-settlement.
+// A session is a candidate if:
+//   - round_count = 0 (no score transfers) and created_at <= thresholdCutoff, OR
+//   - round_count > 0 (has score transfers) and last_scored_at IS NOT NULL and last_scored_at <= thresholdCutoff
+func (q *Queries) ListInactiveActiveSessions(ctx context.Context, thresholdCutoff time.Time, limit int) ([]domain.GameSession, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 100
+	}
+	cutoff := encodeTime(thresholdCutoff)
+	rows, err := q.db.QueryContext(ctx,
+		`SELECT id, name, invite_code, owner_user_id, status, max_participants,
+		        round_count, version, public_share_token, last_scored_at,
+		        settled_at, voided_at, created_at, updated_at
+		 FROM game_sessions
+		 WHERE status = 'active'
+		   AND (
+		     (round_count = 0 AND created_at <= ?)
+		     OR
+		     (round_count > 0 AND last_scored_at IS NOT NULL AND last_scored_at <= ?)
+		   )
+		 ORDER BY created_at ASC
+		 LIMIT ?`, cutoff, cutoff, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var sessions []domain.GameSession
+	for rows.Next() {
+		g, err := scanGame(rows)
+		if err != nil {
+			return nil, err
+		}
+		sessions = append(sessions, g)
+	}
+	return sessions, rows.Err()
+}

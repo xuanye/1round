@@ -3,6 +3,7 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/xuanye/one-round/apps/server/internal/domain"
 )
@@ -37,9 +38,9 @@ func (q *Queries) GetPendingFinishRequest(ctx context.Context, gameSessionID str
 	return &r, nil
 }
 
-func (q *Queries) UpdateFinishRequestStatus(ctx context.Context, id string, status domain.FinishRequestStatus, decidedAt *string, decidedByPlayerID *string) error {
+func (q *Queries) UpdateFinishRequestStatus(ctx context.Context, id string, status domain.FinishRequestStatus, decidedAt *time.Time, decidedByPlayerID *string) error {
 	_, err := q.db.ExecContext(ctx, `UPDATE finish_requests SET status = ?, decided_at = ?, decided_by_player_id = ? WHERE id = ?`,
-		status, decidedAt, decidedByPlayerID, id)
+		status, nullTimeToSQL(decidedAt), decidedByPlayerID, id)
 	return err
 }
 

@@ -71,31 +71,22 @@ func (q *Queries) NextJoinedOrder(ctx context.Context, gameSessionID string) (in
 }
 
 func (q *Queries) GetActivePlayerByUser(ctx context.Context, gameSessionID, userID string) (domain.Player, error) {
-	var p domain.Player
-	var leftAt sql.NullString
-	var createdAt, updatedAt string
-	err := q.db.QueryRowContext(ctx, `SELECT id, game_session_id, user_id, display_name, total_score, active, joined_order, left_at, created_at, updated_at FROM players WHERE game_session_id = ? AND user_id = ? AND active = 1`, gameSessionID, userID).
-		Scan(&p.ID, &p.GameSessionID, &p.UserID, &p.DisplayName, &p.TotalScore, &p.Active, &p.JoinedOrder, &leftAt, &createdAt, &updatedAt)
-	if err == sql.ErrNoRows {
-		return p, domain.ErrNotFound
-	}
-	if err != nil {
-		return p, err
-	}
-	p.LeftAt, _ = nullTimePtr(leftAt)
-	p.CreatedAt, err = decodeTime(createdAt)
-	if err != nil {
-		return p, err
-	}
-	p.UpdatedAt, err = decodeTime(updatedAt)
-	return p, err
+	return q.getPlayerByUser(ctx, gameSessionID, userID, true)
 }
 
 func (q *Queries) GetHistoricalPlayerByUser(ctx context.Context, gameSessionID, userID string) (domain.Player, error) {
+	return q.getPlayerByUser(ctx, gameSessionID, userID, false)
+}
+
+func (q *Queries) getPlayerByUser(ctx context.Context, gameSessionID, userID string, activeOnly bool) (domain.Player, error) {
 	var p domain.Player
 	var leftAt sql.NullString
 	var createdAt, updatedAt string
-	err := q.db.QueryRowContext(ctx, `SELECT id, game_session_id, user_id, display_name, total_score, active, joined_order, left_at, created_at, updated_at FROM players WHERE game_session_id = ? AND user_id = ?`, gameSessionID, userID).
+	query := `SELECT id, game_session_id, user_id, display_name, total_score, active, joined_order, left_at, created_at, updated_at FROM players WHERE game_session_id = ? AND user_id = ?`
+	if activeOnly {
+		query += ` AND active = 1`
+	}
+	err := q.db.QueryRowContext(ctx, query, gameSessionID, userID).
 		Scan(&p.ID, &p.GameSessionID, &p.UserID, &p.DisplayName, &p.TotalScore, &p.Active, &p.JoinedOrder, &leftAt, &createdAt, &updatedAt)
 	if err == sql.ErrNoRows {
 		return p, domain.ErrNotFound

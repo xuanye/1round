@@ -36,11 +36,7 @@ func (q *Queries) GetGameSessionByInviteCode(ctx context.Context, inviteCode str
 }
 
 func (q *Queries) GetCurrentGameForUser(ctx context.Context, userID string) (*domain.GameSession, error) {
-	var g domain.GameSession
-	var maxParticipants, publicShareToken, lastScoredAt, settledAt, voidedAt sql.NullString
-	var roundCount int
-	var createdAt, updatedAt string
-	err := q.db.QueryRowContext(ctx, `
+	row := q.db.QueryRowContext(ctx, `
 		SELECT gs.id, gs.name, gs.invite_code, gs.owner_user_id, gs.status, gs.max_participants,
 		       gs.round_count, gs.version, gs.public_share_token, gs.last_scored_at,
 		       gs.settled_at, gs.voided_at, gs.created_at, gs.updated_at
@@ -49,27 +45,11 @@ func (q *Queries) GetCurrentGameForUser(ctx context.Context, userID string) (*do
 		WHERE gm.user_id = ?
 		  AND gs.status = 'active'
 		ORDER BY gs.updated_at DESC
-		LIMIT 1`, userID).Scan(
-		&g.ID, &g.Name, &g.InviteCode, &g.OwnerUserID, &g.Status, &maxParticipants,
-		&roundCount, &g.Version, &publicShareToken, &lastScoredAt,
-		&settledAt, &voidedAt, &createdAt, &updatedAt)
-	if err == sql.ErrNoRows {
+		LIMIT 1`, userID)
+	g, err := scanGame(row)
+	if err == domain.ErrNotFound {
 		return nil, nil
 	}
-	if err != nil {
-		return nil, err
-	}
-	g.ScoreTransferCnt = roundCount
-	g.MaxParticipants = nullStringIntPtr(maxParticipants)
-	g.PublicShareToken = nullStringPtr(publicShareToken)
-	g.SettledAt, _ = nullTimePtr(settledAt)
-	g.VoidedAt, _ = nullTimePtr(voidedAt)
-	g.LastScoredAt, _ = nullTimePtr(lastScoredAt)
-	g.CreatedAt, err = decodeTime(createdAt)
-	if err != nil {
-		return nil, err
-	}
-	g.UpdatedAt, err = decodeTime(updatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +90,10 @@ func scanGame(row interface{ Scan(...any) error }) (domain.GameSession, error) {
 	}
 	g.ScoreTransferCnt = roundCount
 	g.Version = version
-	g.MaxParticipants = nullStringIntPtr(maxParticipants)
+	g.MaxParticipants, err = nullStringIntPtr(maxParticipants)
+	if err != nil {
+		return g, err
+	}
 	g.PublicShareToken = nullStringPtr(publicShareToken)
 	g.LastScoredAt, err = nullTimePtr(lastScoredAt)
 	if err != nil {
@@ -141,16 +124,16 @@ func nullStringPtr(v sql.NullString) *string {
 	return &v.String
 }
 
-func nullStringIntPtr(v sql.NullString) *int {
+func nullStringIntPtr(v sql.NullString) (*int, error) {
 	if !v.Valid {
-		return nil
+		return nil, nil
 	}
 	n := 0
 	_, err := fmt.Sscanf(v.String, "%d", &n)
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("invalid integer %q: %w", v.String, err)
 	}
-	return &n
+	return &n, nil
 }
 
 func nullTimePtr(v sql.NullString) (*time.Time, error) {

@@ -7,20 +7,22 @@ import (
 	"github.com/xuanye/one-round/apps/server/internal/domain"
 )
 
-func (q *Queries) InsertScoreTransfer(ctx context.Context, t domain.ScoreTransfer) error {
-	_, err := q.db.ExecContext(ctx, `INSERT INTO score_transfers (id, game_session_id, sequence_no, from_player_id, created_by_user_id, idempotency_key, amount, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-		t.ID, t.GameSessionID, t.SequenceNo, t.FromPlayerID, t.CreatedByUserID, t.IdempotencyKey, t.Amount, encodeTime(t.CreatedAt))
-	if err != nil {
-		return err
-	}
-	for i, r := range t.Receivers {
-		_, err := q.db.ExecContext(ctx, `INSERT INTO score_transfer_receivers (id, score_transfer_id, player_id, receiver_order) VALUES (?, ?, ?, ?)`,
-			r.ID, r.ScoreTransferID, r.PlayerID, i+1)
+func (s *Store) InsertScoreTransfer(ctx context.Context, t domain.ScoreTransfer) error {
+	return s.InTx(ctx, func(q *Queries) error {
+		_, err := q.db.ExecContext(ctx, `INSERT INTO score_transfers (id, game_session_id, sequence_no, from_player_id, created_by_user_id, idempotency_key, amount, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+			t.ID, t.GameSessionID, t.SequenceNo, t.FromPlayerID, t.CreatedByUserID, t.IdempotencyKey, t.Amount, encodeTime(t.CreatedAt))
 		if err != nil {
 			return err
 		}
-	}
-	return nil
+		for i, r := range t.Receivers {
+			_, err := q.db.ExecContext(ctx, `INSERT INTO score_transfer_receivers (id, score_transfer_id, player_id, receiver_order) VALUES (?, ?, ?, ?)`,
+				r.ID, r.ScoreTransferID, r.PlayerID, i+1)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 func (q *Queries) GetScoreTransfer(ctx context.Context, id string) (domain.ScoreTransfer, error) {

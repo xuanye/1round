@@ -57,13 +57,6 @@ func (s *Service) List(ctx context.Context, userID, gameSessionID string) ([]dom
 	return s.q.ListPlayers(ctx, gameSessionID)
 }
 
-func (s *Service) ActiveParticipants(ctx context.Context, userID, gameSessionID string) ([]domain.Player, error) {
-	if err := s.game.RequireMember(ctx, userID, gameSessionID); err != nil {
-		return nil, err
-	}
-	return s.q.ListActivePlayers(ctx, gameSessionID)
-}
-
 func (s *Service) Update(ctx context.Context, userID, gameSessionID, playerID, displayName string) (domain.Player, error) {
 	if err := s.game.RequireMember(ctx, userID, gameSessionID); err != nil {
 		return domain.Player{}, err

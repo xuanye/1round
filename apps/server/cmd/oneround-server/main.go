@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/pressly/goose/v3"
@@ -38,7 +40,8 @@ func main() {
 		logger.Error("load config", "error", err)
 		os.Exit(1)
 	}
-	ctx := context.Background()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 	db, err := sqlite.Open(ctx, cfg.Database.Path)
 	if err != nil {
 		logger.Error("open database", "error", err)

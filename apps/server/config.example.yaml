@@ -22,5 +22,5 @@ realtime:
   client_send_queue_size: 32
 
 settlement:
-  autoCheckIntervalSeconds: 300
-  inactivityHours: 24
+  auto_check_interval_seconds: 300
+  inactivity_hours: 24

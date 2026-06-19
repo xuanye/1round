@@ -33,8 +33,8 @@ type Config struct {
 		ClientSendQueueSize int `yaml:"client_send_queue_size"`
 	} `yaml:"realtime"`
 	Settlement struct {
-		AutoCheckIntervalSeconds int `yaml:"autoCheckIntervalSeconds"`
-		InactivityHours          int `yaml:"inactivityHours"`
+		AutoCheckIntervalSeconds int `yaml:"auto_check_interval_seconds"`
+		InactivityHours          int `yaml:"inactivity_hours"`
 	} `yaml:"settlement"`
 }
 
@@ -119,4 +119,6 @@ func applyEnv(cfg *Config) {
 	setBool("ONEROUND_WECHAT_USE_FAKE_AUTH", &cfg.Wechat.UseFakeAuth)
 	setString("ONEROUND_AUTH_SIGNING_KEY", &cfg.Auth.SigningKey)
 	setInt("ONEROUND_AUTH_TOKEN_TTL_HOURS", &cfg.Auth.TokenTTLHours)
+	setInt("ONEROUND_SETTLEMENT_AUTO_CHECK_INTERVAL_SECONDS", &cfg.Settlement.AutoCheckIntervalSeconds)
+	setInt("ONEROUND_SETTLEMENT_INACTIVITY_HOURS", &cfg.Settlement.InactivityHours)
 }

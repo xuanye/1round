@@ -624,6 +624,57 @@ func TestOnlyOnePendingFinishRequest(t *testing.T) {
 	}
 }
 
+func TestHistoryOnlyListsSettledGamesForParticipant(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	owner := login(t, app, "owner-code")
+	other := login(t, app, "other-code")
+	game := createGame(t, app, owner, nil)
+	if _, err := app.settlement.FinishDirect(ctx, owner, game.ID); err != nil {
+		t.Fatal(err)
+	}
+
+	ownerHistory, err := app.query.History(ctx, owner, nil, 20)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ownerHistory.Items) != 1 || ownerHistory.Items[0].ID != game.ID {
+		t.Fatalf("unexpected owner history: %+v", ownerHistory)
+	}
+	otherHistory, err := app.query.History(ctx, other, nil, 20)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(otherHistory.Items) != 0 {
+		t.Fatalf("unexpected other history: %+v", otherHistory)
+	}
+}
+
+func TestPublicSettlementShareOmitsAvatarsAndTransferDetails(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	owner := login(t, app, "owner-code")
+	game := createGame(t, app, owner, nil)
+	finished, err := app.settlement.FinishDirect(ctx, owner, game.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	share, err := app.query.PublicSettlement(ctx, *finished.PublicShareToken)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if share.GameSessionID != game.ID || len(share.Participants) != 1 {
+		t.Fatalf("unexpected share: %+v", share)
+	}
+	if share.Participants[0].AvatarURL != nil {
+		t.Fatalf("public share leaked avatar: %+v", share.Participants[0])
+	}
+	if len(share.ScoreTransfers) != 0 {
+		t.Fatalf("public share leaked transfer details: %+v", share.ScoreTransfers)
+	}
+}
+
 func TestHubBroadcastOnlyTargetsRoom(t *testing.T) {
 	hub := realtime.NewMemoryHub()
 	c1 := &realtime.Client{Send: make(chan realtime.Event, 1)}

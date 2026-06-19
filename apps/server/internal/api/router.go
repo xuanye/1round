@@ -43,6 +43,9 @@ func NewRouter(logger *slog.Logger, services Services) http.Handler {
 	playerHandler := handler.NewPlayerHandler(services.Player)
 	roundHandler := handler.NewRoundHandler(services.Round, services.Query)
 	scoreTransferHandler := handler.NewScoreTransferHandler(services.ScoreTransfer, services.Query)
+	historyHandler := handler.NewHistoryHandler(services.Query)
+
+	r.Get("/api/public/settlements/{shareToken}", historyHandler.PublicSettlement)
 
 	r.Route("/api", func(r chi.Router) {
 		r.Post("/auth/wechat-login", authHandler.WechatLogin)
@@ -69,6 +72,8 @@ func NewRouter(logger *slog.Logger, services Services) http.Handler {
 			r.Post("/game-sessions/{id}/score-transfers", scoreTransferHandler.Submit)
 			r.Get("/game-sessions/{id}/score-transfers", scoreTransferHandler.List)
 			r.Get("/game-sessions/{id}/ranking", gameHandler.Ranking)
+			r.Get("/history/game-sessions", historyHandler.List)
+			r.Get("/history/game-sessions/{id}", historyHandler.Detail)
 		})
 	})
 	r.Group(func(r chi.Router) {

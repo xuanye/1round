@@ -1,0 +1,46 @@
+package dto
+
+import "time"
+
+type HistoryPage struct {
+	Items      []HistoryItem `json:"items"`
+	NextCursor *string       `json:"nextCursor,omitempty"`
+}
+
+type HistoryItem struct {
+	ID                 string    `json:"id"`
+	Name               string    `json:"name"`
+	SettledAt          time.Time `json:"settledAt"`
+	ScoreTransferCount int       `json:"scoreTransferCount"`
+	MyFinalScore       int       `json:"myFinalScore"`
+}
+
+type SettlementDetail struct {
+	ID             string                  `json:"id"`
+	Name           string                  `json:"name"`
+	SettledAt      time.Time               `json:"settledAt"`
+	Participants   []SettlementParticipant `json:"participants"`
+	ScoreTransfers []ScoreTransferSummary  `json:"scoreTransfers"`
+	NextCursor     *int                    `json:"nextCursor,omitempty"`
+}
+
+type SettlementParticipant struct {
+	ID          string  `json:"id"`
+	DisplayName string  `json:"displayName"`
+	AvatarURL   *string `json:"avatarUrl,omitempty"`
+	FinalScore  int     `json:"finalScore"`
+}
+
+type ScoreTransferSummary struct {
+	ID        string `json:"id"`
+	Amount    int    `json:"amount"`
+	CreatedAt string `json:"createdAt"`
+}
+
+type PublicSettlement struct {
+	GameSessionID  string                  `json:"gameSessionId"`
+	Name           string                  `json:"name"`
+	SettledAt      time.Time               `json:"settledAt"`
+	Participants   []SettlementParticipant `json:"participants"`
+	ScoreTransfers []ScoreTransferSummary  `json:"scoreTransfers"`
+}

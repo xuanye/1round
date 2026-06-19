@@ -13,6 +13,7 @@ import (
 	playersvc "github.com/xuanye/one-round/apps/server/internal/app/player"
 	querysvc "github.com/xuanye/one-round/apps/server/internal/app/query"
 	roundsvc "github.com/xuanye/one-round/apps/server/internal/app/round"
+	scoretransfersvc "github.com/xuanye/one-round/apps/server/internal/app/scoretransfer"
 	"github.com/xuanye/one-round/apps/server/internal/domain"
 	jwtauth "github.com/xuanye/one-round/apps/server/internal/infra/auth"
 	"github.com/xuanye/one-round/apps/server/internal/infra/sqlite"
@@ -21,13 +22,14 @@ import (
 )
 
 type testApp struct {
-	auth   *authsvc.Service
-	game   *gamesvc.Service
-	player *playersvc.Service
-	round  *roundsvc.Service
-	query  *querysvc.Service
-	hub    *realtime.MemoryHub
-	db     *sql.DB
+	auth          *authsvc.Service
+	game          *gamesvc.Service
+	player        *playersvc.Service
+	round         *roundsvc.Service
+	scoreTransfer *scoretransfersvc.Service
+	query         *querysvc.Service
+	hub           *realtime.MemoryHub
+	db            *sql.DB
 }
 
 func TestScoreTransferRequestValidation(t *testing.T) {
@@ -392,6 +394,105 @@ func TestLastZeroScoreParticipantLeaveVoidsUnscoredGame(t *testing.T) {
 	}
 }
 
+func TestScoreTransferDebitsActorAndCreditsReceivers(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	owner := login(t, app, "owner-code")
+	u2 := login(t, app, "u2-code")
+	u3 := login(t, app, "u3-code")
+	game := createGame(t, app, owner, nil)
+	if _, err := app.game.Join(ctx, u2, game.InviteCode, "妈妈"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := app.game.Join(ctx, u3, game.InviteCode, "孩子"); err != nil {
+		t.Fatal(err)
+	}
+	p1, _ := app.query.MyParticipant(ctx, owner, game.ID)
+	p2, _ := app.query.MyParticipant(ctx, u2, game.ID)
+	p3, _ := app.query.MyParticipant(ctx, u3, game.ID)
+
+	result, err := app.scoreTransfer.Submit(ctx, owner, game.ID, scoretransfersvc.SubmitInput{
+		ReceiverPlayerIDs: []string{p2.ID, p3.ID},
+		Amount:            20,
+		IdempotencyKey:    "submit-1",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.SequenceNo != 1 || result.Version != 2 {
+		t.Fatalf("unexpected result: %+v", result)
+	}
+	summary, err := app.query.Summary(ctx, owner, game.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	scores := map[string]int{}
+	for _, p := range summary.Players {
+		scores[p.ID] = p.TotalScore
+	}
+	if scores[p1.ID] != -40 || scores[p2.ID] != 20 || scores[p3.ID] != 20 {
+		t.Fatalf("unexpected scores: %+v", scores)
+	}
+}
+
+func TestScoreTransferIsIdempotentByUserAndKey(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	owner := login(t, app, "owner-code")
+	joiner := login(t, app, "joiner-code")
+	game := createGame(t, app, owner, nil)
+	if _, err := app.game.Join(ctx, joiner, game.InviteCode, "妈妈"); err != nil {
+		t.Fatal(err)
+	}
+	p2, _ := app.query.MyParticipant(ctx, joiner, game.ID)
+	input := scoretransfersvc.SubmitInput{ReceiverPlayerIDs: []string{p2.ID}, Amount: 10, IdempotencyKey: "same-key"}
+
+	first, err := app.scoreTransfer.Submit(ctx, owner, game.ID, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := app.scoreTransfer.Submit(ctx, owner, game.ID, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first.ID != second.ID || first.Version != second.Version {
+		t.Fatalf("expected same idempotent result: first=%+v second=%+v", first, second)
+	}
+	summary, _ := app.query.Summary(ctx, owner, game.ID)
+	if summary.ScoreTransferCnt != 1 {
+		t.Fatalf("expected one transfer, got %+v", summary)
+	}
+}
+
+func TestScoreTransferRejectsSelfAndInactiveReceiver(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	owner := login(t, app, "owner-code")
+	joiner := login(t, app, "joiner-code")
+	game := createGame(t, app, owner, nil)
+	if _, err := app.game.Join(ctx, joiner, game.InviteCode, "妈妈"); err != nil {
+		t.Fatal(err)
+	}
+	ownerPlayer, _ := app.query.MyParticipant(ctx, owner, game.ID)
+	joinerPlayer, _ := app.query.MyParticipant(ctx, joiner, game.ID)
+
+	_, err := app.scoreTransfer.Submit(ctx, owner, game.ID, scoretransfersvc.SubmitInput{
+		ReceiverPlayerIDs: []string{ownerPlayer.ID}, Amount: 10, IdempotencyKey: "self",
+	})
+	if err != domain.ErrInvalidPlayer {
+		t.Fatalf("expected invalid self receiver, got %v", err)
+	}
+	if err := app.player.Leave(ctx, joiner, game.ID); err != nil {
+		t.Fatal(err)
+	}
+	_, err = app.scoreTransfer.Submit(ctx, owner, game.ID, scoretransfersvc.SubmitInput{
+		ReceiverPlayerIDs: []string{joinerPlayer.ID}, Amount: 10, IdempotencyKey: "inactive",
+	})
+	if err != domain.ErrParticipantInactive {
+		t.Fatalf("expected inactive receiver error, got %v", err)
+	}
+}
+
 func TestOwnerTransferOnLeave(t *testing.T) {
 	app := newTestApp(t)
 	ctx := context.Background()
@@ -509,13 +610,14 @@ func newTestApp(t *testing.T) *testApp {
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
 	gameService := gamesvc.NewService(store, q, hub, now)
 	return &testApp{
-		auth:   authsvc.NewService(q, wechat.FakeClient{}, tokens, now),
-		game:   gameService,
-		player: playersvc.NewService(store, q, gameService, hub, now),
-		round:  roundsvc.NewService(store, q, gameService, hub, now),
-		query:  querysvc.NewService(q, gameService),
-		hub:    hub,
-		db:     db,
+		auth:          authsvc.NewService(q, wechat.FakeClient{}, tokens, now),
+		game:          gameService,
+		player:        playersvc.NewService(store, q, gameService, hub, now),
+		round:         roundsvc.NewService(store, q, gameService, hub, now),
+		scoreTransfer: scoretransfersvc.NewService(store, q, gameService, hub, now),
+		query:         querysvc.NewService(q, gameService),
+		hub:           hub,
+		db:            db,
 	}
 }
 

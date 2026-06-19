@@ -3,26 +3,33 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/xuanye/one-round/apps/server/internal/domain"
 )
 
 func (s *Store) InsertScoreTransfer(ctx context.Context, t domain.ScoreTransfer) error {
 	return s.InTx(ctx, func(q *Queries) error {
-		_, err := q.db.ExecContext(ctx, `INSERT INTO score_transfers (id, game_session_id, sequence_no, from_player_id, created_by_user_id, idempotency_key, amount, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-			t.ID, t.GameSessionID, t.SequenceNo, t.FromPlayerID, t.CreatedByUserID, t.IdempotencyKey, t.Amount, encodeTime(t.CreatedAt))
+		return q.InsertScoreTransferRaw(ctx, t)
+	})
+}
+
+// InsertScoreTransferRaw inserts a score transfer and its receivers.
+// It must be called within an existing transaction (e.g. via Store.InTx).
+func (q *Queries) InsertScoreTransferRaw(ctx context.Context, t domain.ScoreTransfer) error {
+	_, err := q.db.ExecContext(ctx, `INSERT INTO score_transfers (id, game_session_id, sequence_no, from_player_id, created_by_user_id, idempotency_key, amount, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		t.ID, t.GameSessionID, t.SequenceNo, t.FromPlayerID, t.CreatedByUserID, t.IdempotencyKey, t.Amount, encodeTime(t.CreatedAt))
+	if err != nil {
+		return err
+	}
+	for _, r := range t.Receivers {
+		_, err := q.db.ExecContext(ctx, `INSERT INTO score_transfer_receivers (id, score_transfer_id, player_id, receiver_order) VALUES (?, ?, ?, ?)`,
+			r.ID, r.ScoreTransferID, r.PlayerID, r.ReceiverOrder)
 		if err != nil {
 			return err
 		}
-		for i, r := range t.Receivers {
-			_, err := q.db.ExecContext(ctx, `INSERT INTO score_transfer_receivers (id, score_transfer_id, player_id, receiver_order) VALUES (?, ?, ?, ?)`,
-				r.ID, r.ScoreTransferID, r.PlayerID, i+1)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	})
+	}
+	return nil
 }
 
 func (q *Queries) GetScoreTransfer(ctx context.Context, id string) (domain.ScoreTransfer, error) {
@@ -78,7 +85,27 @@ func (q *Queries) NextScoreTransferSequence(ctx context.Context, gameSessionID s
 }
 
 func (q *Queries) ListScoreTransfers(ctx context.Context, gameSessionID string, limit int) ([]domain.ScoreTransfer, error) {
-	rows, err := q.db.QueryContext(ctx, `SELECT id, game_session_id, sequence_no, from_player_id, created_by_user_id, idempotency_key, amount, created_at FROM score_transfers WHERE game_session_id = ? ORDER BY sequence_no DESC LIMIT ?`, gameSessionID, limit)
+	return q.ListScoreTransfersPaginated(ctx, gameSessionID, nil, limit)
+}
+
+// ListScoreTransfersPaginated returns score transfers for a game, optionally
+// filtered by beforeSequenceNo for cursor-based pagination, ordered by
+// sequence_no DESC.
+func (q *Queries) ListScoreTransfersPaginated(ctx context.Context, gameSessionID string, beforeSequenceNo *int, limit int) ([]domain.ScoreTransfer, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 20
+	}
+	var seqNo interface{}
+	if beforeSequenceNo != nil {
+		seqNo = *beforeSequenceNo
+	}
+	rows, err := q.db.QueryContext(ctx,
+		`SELECT id, game_session_id, sequence_no, from_player_id, created_by_user_id, idempotency_key, amount, created_at
+		 FROM score_transfers
+		 WHERE game_session_id = ?
+		   AND (? IS NULL OR sequence_no < ?)
+		 ORDER BY sequence_no DESC
+		 LIMIT ?`, gameSessionID, seqNo, seqNo, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -102,4 +129,62 @@ func (q *Queries) ListScoreTransfers(ctx context.Context, gameSessionID string, 
 		transfers = append(transfers, t)
 	}
 	return transfers, rows.Err()
+}
+
+func (q *Queries) GetScoreTransferByIdempotencyKey(ctx context.Context, gameSessionID, userID, key string) (domain.ScoreTransfer, error) {
+	var t domain.ScoreTransfer
+	var createdAt string
+	err := q.db.QueryRowContext(ctx,
+		`SELECT id, game_session_id, sequence_no, from_player_id, created_by_user_id, idempotency_key, amount, created_at
+		 FROM score_transfers
+		 WHERE game_session_id = ? AND created_by_user_id = ? AND idempotency_key = ?`,
+		gameSessionID, userID, key).
+		Scan(&t.ID, &t.GameSessionID, &t.SequenceNo, &t.FromPlayerID, &t.CreatedByUserID, &t.IdempotencyKey, &t.Amount, &createdAt)
+	if err == sql.ErrNoRows {
+		return t, domain.ErrNotFound
+	}
+	if err != nil {
+		return t, err
+	}
+	t.CreatedAt, err = decodeTime(createdAt)
+	if err != nil {
+		return t, err
+	}
+	receivers, err := q.listScoreTransferReceivers(ctx, t.ID)
+	if err != nil {
+		return t, err
+	}
+	t.Receivers = receivers
+	return t, nil
+}
+
+func (q *Queries) GetScoreTransferCount(ctx context.Context, gameSessionID string) (int, error) {
+	var n int
+	err := q.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM score_transfers WHERE game_session_id = ?`, gameSessionID).Scan(&n)
+	if err == sql.ErrNoRows {
+		return 0, nil
+	}
+	return n, err
+}
+
+// DebitPlayerScore decreases a player's total_score. Must be called in a transaction.
+func (q *Queries) DebitPlayerScore(ctx context.Context, gameSessionID, playerID string, amount int, now time.Time) error {
+	_, err := q.db.ExecContext(ctx, `UPDATE players SET total_score = total_score - ?, updated_at = ? WHERE id = ? AND game_session_id = ?`,
+		amount, encodeTime(now), playerID, gameSessionID)
+	return err
+}
+
+// CreditPlayerScore increases a player's total_score. Must be called in a transaction.
+func (q *Queries) CreditPlayerScore(ctx context.Context, gameSessionID, playerID string, amount int, now time.Time) error {
+	_, err := q.db.ExecContext(ctx, `UPDATE players SET total_score = total_score + ?, updated_at = ? WHERE id = ? AND game_session_id = ?`,
+		amount, encodeTime(now), playerID, gameSessionID)
+	return err
+}
+
+// IncrementGameSessionForTransfer bumps round_count, version, updated_at, and last_scored_at.
+// Must be called in a transaction.
+func (q *Queries) IncrementGameSessionForTransfer(ctx context.Context, gameSessionID string, nextVersion int64, now time.Time) error {
+	_, err := q.db.ExecContext(ctx, `UPDATE game_sessions SET round_count = round_count + 1, version = ?, updated_at = ?, last_scored_at = ? WHERE id = ?`,
+		nextVersion, encodeTime(now), encodeTime(now), gameSessionID)
+	return err
 }

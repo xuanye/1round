@@ -12,7 +12,8 @@ const (
 	EventGameVoided            = "game.voided"
 	EventParticipantJoined     = "participant.joined"
 	EventParticipantUpdated    = "participant.updated"
-	EventParticipantLeft       = "participant.left"
+	EventParticipantLeft            = "participant.left"
+	EventScoreTransferSubmitted     = "score_transfer.submitted"
 )
 
 type Event struct {

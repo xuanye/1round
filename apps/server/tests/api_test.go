@@ -19,7 +19,7 @@ func TestFakeAuthCreateJoinAddSubmitSummaryRankingAPI(t *testing.T) {
 	app := newTestApp(t)
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
 	router := api.NewRouter(slog.Default(), api.Services{
-		Auth: app.auth, Game: app.game, Player: app.player, Round: app.round, Query: app.query,
+		Auth: app.auth, Game: app.game, Player: app.player, Round: app.round, ScoreTransfer: app.scoreTransfer, Query: app.query,
 		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
 	})
 
@@ -53,7 +53,7 @@ func TestLeaveGameAPI(t *testing.T) {
 	app := newTestApp(t)
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
 	router := api.NewRouter(slog.Default(), api.Services{
-		Auth: app.auth, Game: app.game, Player: app.player, Round: app.round, Query: app.query,
+		Auth: app.auth, Game: app.game, Player: app.player, Round: app.round, ScoreTransfer: app.scoreTransfer, Query: app.query,
 		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
 	})
 
@@ -72,7 +72,7 @@ func TestLeaveRequiresZeroScoreAPI(t *testing.T) {
 	app := newTestApp(t)
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
 	router := api.NewRouter(slog.Default(), api.Services{
-		Auth: app.auth, Game: app.game, Player: app.player, Round: app.round, Query: app.query,
+		Auth: app.auth, Game: app.game, Player: app.player, Round: app.round, ScoreTransfer: app.scoreTransfer, Query: app.query,
 		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
 	})
 
@@ -119,7 +119,7 @@ func TestCurrentPreviewJoinAndProfileAPI(t *testing.T) {
 	app := newTestApp(t)
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
 	router := api.NewRouter(slog.Default(), api.Services{
-		Auth: app.auth, Game: app.game, Player: app.player, Query: app.query,
+		Auth: app.auth, Game: app.game, Player: app.player, ScoreTransfer: app.scoreTransfer, Query: app.query,
 		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
 	})
 

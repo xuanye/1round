@@ -12,17 +12,19 @@ import (
 	playersvc "github.com/xuanye/one-round/apps/server/internal/app/player"
 	querysvc "github.com/xuanye/one-round/apps/server/internal/app/query"
 	roundsvc "github.com/xuanye/one-round/apps/server/internal/app/round"
+	scoretransfersvc "github.com/xuanye/one-round/apps/server/internal/app/scoretransfer"
 	jwtauth "github.com/xuanye/one-round/apps/server/internal/infra/auth"
 )
 
 type Services struct {
-	Auth      *authsvc.Service
-	Game      *gamesvc.Service
-	Player    *playersvc.Service
-	Round     *roundsvc.Service
-	Query     *querysvc.Service
-	Tokens    *jwtauth.JWTService
-	WebSocket *handler.WebSocketHandler
+	Auth         *authsvc.Service
+	Game         *gamesvc.Service
+	Player       *playersvc.Service
+	Round        *roundsvc.Service
+	ScoreTransfer *scoretransfersvc.Service
+	Query        *querysvc.Service
+	Tokens       *jwtauth.JWTService
+	WebSocket    *handler.WebSocketHandler
 }
 
 func NewRouter(logger *slog.Logger, services Services) http.Handler {
@@ -38,6 +40,7 @@ func NewRouter(logger *slog.Logger, services Services) http.Handler {
 	gameHandler := handler.NewGameHandler(services.Game, services.Query, services.Player)
 	playerHandler := handler.NewPlayerHandler(services.Player)
 	roundHandler := handler.NewRoundHandler(services.Round, services.Query)
+	scoreTransferHandler := handler.NewScoreTransferHandler(services.ScoreTransfer, services.Query)
 
 	r.Route("/api", func(r chi.Router) {
 		r.Post("/auth/wechat-login", authHandler.WechatLogin)
@@ -58,6 +61,8 @@ func NewRouter(logger *slog.Logger, services Services) http.Handler {
 			r.Delete("/game-sessions/{id}/players/{playerId}", playerHandler.Delete)
 			r.Post("/game-sessions/{id}/rounds", roundHandler.Submit)
 			r.Get("/game-sessions/{id}/rounds/recent", roundHandler.Recent)
+			r.Post("/game-sessions/{id}/score-transfers", scoreTransferHandler.Submit)
+			r.Get("/game-sessions/{id}/score-transfers", scoreTransferHandler.List)
 			r.Get("/game-sessions/{id}/ranking", gameHandler.Ranking)
 		})
 	})

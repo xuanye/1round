@@ -1,10 +1,12 @@
 <view class="page home-page">
   <view class="topbar">
     <view class="brand">
-      <view class="brand-mark">牌</view>
+      <text class="material-symbols-outlined brand-icon">playing_cards</text>
       <view class="brand-name">一局一分</view>
     </view>
-    <button class="icon-button" hover-class="tap-feedback">⚙</button>
+    <button class="icon-button" hover-class="tap-feedback">
+      <text class="material-symbols-outlined">settings</text>
+    </button>
   </view>
 
   <view class="greeting">
@@ -12,10 +14,8 @@
       <view class="hello">你好，{{userName}}</view>
       <view class="hello-copy">准备好和家人们来一场愉快的博弈了吗？</view>
     </view>
-    <view class="greeting-art">
-      <view class="tile tile-a">友</view>
-      <view class="tile tile-b">分</view>
-      <view class="tile tile-c">和</view>
+    <view class="greeting-art-img">
+      <image class="greeting-img" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAkvv38dg-wZ89Iu3xQpEiqAJ08JV61P_7jHKbZgEYnP05ObnGNU-BK6QD-dfFH9dRe4fnSI2H0_MbCh39XVmI6CbU_LlRkrCpUJMOq2mmQVuY6ZMpax-tOX1UFCvRusuapCGrBB4aJ9uUFM2jYiF58MQwR61VI1e7gzBm1wOb4_XZSiM5i7MiV3ldz0Bvefq5kXsq1ULzPQQCYNXZfrd3NZyw0_M4Ppv0yrnQdE5mcYjeQImVZ7LsvQ" mode="aspectFit"></image>
     </view>
   </view>
 
@@ -23,7 +23,7 @@
     <view class="current-head">
       <view>
         <view class="game-title-row">
-          <view class="live-dot"></view>
+          <view class="live-dot animate-pulse"></view>
           <view class="game-title">{{currentGame.name}}</view>
         </view>
         <view class="game-meta">{{currentGame.date}} · {{currentGame.participantCount}}人参与</view>
@@ -33,22 +33,29 @@
         <view class="score-value">+{{currentGame.myScore}}</view>
       </view>
     </view>
-    <button class="button-primary enter-button" hover-class="tap-feedback" bindtap="enterGame">进入牌局</button>
+    <button class="button-primary enter-button" hover-class="tap-feedback" bindtap="enterGame">
+      <text class="material-symbols-outlined button-icon">login</text>
+      进入牌局
+    </button>
     <button class="exit-button disabled" hover-class="tap-feedback" bindtap="showExitTip">
+      <text class="material-symbols-outlined button-icon">logout</text>
       退出牌局
     </button>
     <view class="exit-tip">分值清零后可退出</view>
   </view>
 
   <view class="actions">
-    <button class="create-disabled" disabled>已在牌局中</button>
+    <button class="create-disabled" disabled>
+      <text class="material-symbols-outlined button-icon">add_circle</text>
+      已在牌局中
+    </button>
     <view class="action-grid">
       <button class="action-card" hover-class="tap-feedback" bindtap="joinGame">
-        <view class="action-icon">＋</view>
+        <text class="material-symbols-outlined action-icon">group_add</text>
         <view>加入牌局</view>
       </button>
       <button class="action-card" hover-class="tap-feedback" bindtap="history">
-        <view class="action-icon">↺</view>
+        <text class="material-symbols-outlined action-icon">history</text>
         <view>历史记录</view>
       </button>
     </view>
@@ -60,7 +67,7 @@
       <view wx:for="{{stats}}" wx:key="label" class="stat-card card {{item.tone}}">
         <view class="stat-top">
           <view>{{item.label}}</view>
-          <view class="stat-icon">{{item.icon}}</view>
+          <text class="material-symbols-outlined stat-icon">{{item.icon}}</text>
         </view>
         <view class="stat-number">{{item.value}}<text>{{item.unit}}</text></view>
       </view>
@@ -74,7 +81,7 @@
     </view>
     <view class="recent-list">
       <view wx:for="{{recentGames}}" wx:key="title" class="recent-card card" hover-class="tap-feedback">
-        <view class="recent-icon">{{item.icon}}</view>
+        <text class="material-symbols-outlined recent-icon">{{item.icon}}</text>
         <view class="recent-main">
           <view class="recent-row">
             <view class="recent-title">{{item.title}}</view>
@@ -91,8 +98,17 @@
   </view>
 
   <view class="bottom-nav">
-    <button class="nav-item active">⌂<text>首页</text></button>
-    <button class="nav-item" bindtap="enterGame">≋<text>数据</text></button>
-    <button class="nav-item" bindtap="history">◷<text>历史</text></button>
+    <button class="nav-item active">
+      <text class="material-symbols-outlined">home</text>
+      <text>首页</text>
+    </button>
+    <button class="nav-item" bindtap="enterGame">
+      <text class="material-symbols-outlined">leaderboard</text>
+      <text>数据</text>
+    </button>
+    <button class="nav-item" bindtap="history">
+      <text class="material-symbols-outlined">history</text>
+      <text>历史</text>
+    </button>
   </view>
 </view>

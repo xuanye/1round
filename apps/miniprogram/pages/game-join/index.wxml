@@ -4,10 +4,12 @@
 
   <view class="join-topbar">
     <view class="join-brand">
-      <view class="join-brand-mark">局</view>
+      <text class="material-symbols-outlined join-brand-icon">sports_kabaddi</text>
       <view>OneRound</view>
     </view>
-    <button class="close-button" bindtap="cancel" hover-class="tap-feedback">×</button>
+    <button class="close-button" bindtap="cancel" hover-class="tap-feedback">
+      <text class="material-symbols-outlined">close</text>
+    </button>
   </view>
 
   <view class="join-title">
@@ -21,11 +23,11 @@
         <view class="field-label">牌局名称</view>
         <view class="game-name">{{game.name}}</view>
       </view>
-      <view class="game-icon">群</view>
+      <text class="material-symbols-outlined game-icon">groups</text>
     </view>
 
     <view class="creator-row">
-      <view class="creator-avatar">{{game.creatorInitial}}</view>
+      <image class="creator-avatar-img" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4aBZKAnfl02gutJ01dL6tH7kiV3du8B8dOTtfnrectac-a4xx1rGL2bvvbWv_xsv5EzC_mCo-HhlCQe3SFTIbpBvJC7dgt725aOPQmJ3UkoMaalv1iFlP1hllCl-1WFPNbuSJF9ghIERbAStaRm_4l9WiZo401l_nbTlMu-8nR24at39Kuck_mBEHgoq_jDv5hdR43Qn7S_n9Pl2XkSdzBnjUsANX1GFDzOR-3ugRxMaGTcF7kvMM2w" mode="aspectFill"></image>
       <view>
         <view class="field-label">创建者</view>
         <view class="creator-name">{{game.creatorName}}</view>
@@ -39,16 +41,22 @@
       <text>{{game.participantText}}</text>
     </view>
     <view class="avatar-stack">
-      <view wx:for="{{participants}}" wx:key="id" class="stack-avatar">{{item.initial}}</view>
+      <block wx:for="{{participants}}" wx:key="id">
+        <image wx:if="{{item.avatarUrl}}" class="stack-avatar" src="{{item.avatarUrl}}" mode="aspectFill"></image>
+        <view wx:else class="stack-avatar text-avatar">{{item.initial}}</view>
+      </block>
     </view>
 
     <view class="name-block">
       <view class="field-label">我的显示名称</view>
       <view class="input-shell">
         <input value="{{displayName}}" bindinput="onNameInput" maxlength="12" />
-        <text>✎</text>
+        <text class="material-symbols-outlined edit-icon">edit</text>
       </view>
-      <view class="name-tip">名称在牌局内必须唯一</view>
+      <view class="name-tip">
+        <text class="material-symbols-outlined info-icon">info</text>
+        名称在牌局内必须唯一
+      </view>
     </view>
   </view>
 
@@ -59,7 +67,14 @@
       hover-class="tap-feedback"
       disabled="{{joining || joined}}"
     >
-      {{joining ? '正在加入...' : joined ? '已成功加入' : '确认加入 →'}}
+      <block wx:if="{{joining}}">正在加入...</block>
+      <block wx:elif="{{joined}}">
+        <text class="material-symbols-outlined button-icon">check_circle</text> 已成功加入
+      </block>
+      <block wx:else>
+        确认加入
+        <text class="material-symbols-outlined button-icon">arrow_forward</text>
+      </block>
     </button>
     <button class="cancel-button" bindtap="cancel" hover-class="tap-feedback">取消</button>
   </view>

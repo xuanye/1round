@@ -61,16 +61,9 @@
   font-weight: 900;
 }
 
-.join-brand-mark {
-  margin-right: 14rpx;
-  width: 44rpx;
-  height: 44rpx;
-  border-radius: 50%;
-  color: #ffffff;
-  background: #1f695d;
-  font-size: 22rpx;
-  line-height: 44rpx;
-  text-align: center;
+.join-brand-icon {
+  font-size: 44rpx !important;
+  color: #1f695d;
 }
 
 .close-button {
@@ -81,8 +74,10 @@
   height: 72rpx;
   color: #3f4946;
   background: #f4f3f1;
-  font-size: 38rpx;
-  line-height: 72rpx;
+}
+
+.close-button .material-symbols-outlined {
+  font-size: 36rpx !important;
 }
 
 .join-title {
@@ -143,10 +138,10 @@
   border-radius: 18rpx;
   color: #1f695d;
   background: rgba(91, 160, 146, 0.18);
-  font-size: 24rpx;
-  font-weight: 900;
+  font-size: 38rpx !important;
   line-height: 64rpx;
   text-align: center;
+  display: block;
 }
 
 .creator-row {
@@ -159,20 +154,11 @@
   margin-right: 18rpx;
 }
 
-.creator-avatar,
-.stack-avatar {
-  border-radius: 50%;
-  color: #00332c;
-  background: #a9f0e0;
-  font-weight: 900;
-  text-align: center;
-}
-
-.creator-avatar {
+.creator-avatar-img {
   width: 64rpx;
   height: 64rpx;
-  font-size: 24rpx;
-  line-height: 64rpx;
+  border-radius: 50%;
+  flex: 0 0 64rpx;
 }
 
 .creator-name {
@@ -212,14 +198,20 @@
   height: 72rpx;
   margin-left: -12rpx;
   border: 4rpx solid #faf9f6;
-  font-size: 22rpx;
-  line-height: 72rpx;
+  border-radius: 50%;
   box-shadow: 0 8rpx 24rpx rgba(31, 105, 93, 0.1);
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
-.stack-avatar:nth-child(2) { background: #bfe9ff; color: #001f2a; }
-.stack-avatar:nth-child(3) { background: #ffdcc4; color: #492300; }
-.stack-avatar:nth-child(4) { background: #e3e2e0; color: #3f4946; }
+.stack-avatar.text-avatar {
+  color: #3f4946;
+  background: #e3e2e0;
+  font-size: 22rpx;
+  font-weight: 900;
+  line-height: 64rpx;
+  text-align: center;
+}
 
 .name-block {
   margin-top: 38rpx;
@@ -245,15 +237,23 @@
   font-weight: 700;
 }
 
-.input-shell text {
+.input-shell .edit-icon {
   color: #3f4946;
-  font-size: 34rpx;
+  font-size: 38rpx !important;
 }
 
 .name-tip {
   margin-top: 12rpx;
   color: #3f4946;
   font-size: 22rpx;
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.name-tip .info-icon {
+  font-size: 26rpx !important;
+  color: #3f4946;
 }
 
 .join-actions {
@@ -268,6 +268,11 @@
   height: 104rpx;
   font-size: 30rpx;
   line-height: 104rpx;
+  gap: 12rpx;
+}
+
+.join-submit .button-icon {
+  font-size: 36rpx !important;
 }
 
 .join-submit.joined {

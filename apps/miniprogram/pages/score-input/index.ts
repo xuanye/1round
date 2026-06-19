@@ -4,15 +4,16 @@ type Receiver = {
   currentScore: number;
   initial: string;
   selected: boolean;
+  avatarUrl?: string;
 };
 
 Page({
   data: {
     id: 'mock-game-001',
     receivers: [
-      { id: 'p1', displayName: '陈晓明', currentScore: 1250, initial: '陈', selected: false },
-      { id: 'p2', displayName: '林雨萌', currentScore: 890, initial: '林', selected: false },
-      { id: 'p3', displayName: '赵刚', currentScore: 2100, initial: '赵', selected: false },
+      { id: 'p1', displayName: '陈晓明', currentScore: 1250, initial: '陈', selected: false, avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDektPOpIegFaoK9by-AsDJt7SHjJcOmLqjox3GQBDEgN6QdBLc73dzPRxvV4bCj15TFGiCEXsxXzifTYfdTfQqCJt7141EXnzBnFlCtsh9brM9ka_ct-KxCNZmgvnaWYrTfBb06iUapRX3r3s1utDfICg6vNZ96X1Suc0J9OAWDeXyg0cTWSkccacetudc0iB-DyE1iPsVSQcIO-sREsjZrF2xuV4RHZd-P7Ku7SVisJnfmRvttANrRg' },
+      { id: 'p2', displayName: '林雨萌', currentScore: 890, initial: '林', selected: false, avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXvABv5NYK2D_VYIXy6Vn5h2af5iqEuAk-czqTpQ-MW1d7sHHws7uo-D6gD0l-pM9tGUaI_q-LFx671cuYNJyuPe1YL5UydFEwwgwrZNuHT1IxCCh1RwNeWCOCaeS2x_kNPlzlmnE9zZbtfb_FJHOu9RXKYqmk4DwI-ccpjheHo-8hWWTB-QxdNq0QSdfz4N9Fp3f58inRYCva1Ca5FIse73bbnJ0EectQBGfINrGOQeR9Hx9hwjCtazodg' },
+      { id: 'p3', displayName: '赵刚', currentScore: 2100, initial: '赵', selected: false, avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA9QA-q1wJKZrHMHD1ePyWtiUtEClsMAkRAfmf-JZncqSxz2NCeLckjXVucMi6dbuOH_ea0KyV5D4QTCWSPwKKNs6YnrbRyWd1dwiHga4RP4GYBjg4v2KNKzZwAd0Y32UetmtxJ5EyZhBJu0yjuvUnjRxrEXmVWs9VpQ3oBzbqkDnrFoNRrCCAe4X_ZZl_-G1UD9jIiNWSejFFZjkNhNM9ueh5nn6OoOwhds_MIdYYs7JpBB2wzC6HULg' },
     ] as Receiver[],
     scoreText: '0',
     selectedCount: 0,

@@ -1,16 +1,23 @@
 <view class="page detail-page">
   <view class="detail-topbar">
-    <button class="round-button" bindtap="backHome" hover-class="tap-feedback">‹</button>
+    <button class="round-button" bindtap="backHome" hover-class="tap-feedback">
+      <text class="material-symbols-outlined">arrow_back</text>
+    </button>
     <view class="detail-title">
       <view>{{game.name}}</view>
       <text>{{game.createdAt}}</text>
     </view>
-    <button class="round-button" bindtap="showInvite" hover-class="tap-feedback">▦</button>
+    <button class="round-button" bindtap="showInvite" hover-class="tap-feedback">
+      <text class="material-symbols-outlined">qr_code_2</text>
+    </button>
   </view>
 
   <view class="section-row">
     <view class="section-label">当前参与者</view>
-    <button class="rank-link" bindtap="ranking" hover-class="tap-feedback">排行榜</button>
+    <button class="rank-link" bindtap="ranking" hover-class="tap-feedback">
+      <text class="material-symbols-outlined inline-icon">leaderboard</text>
+      排行榜
+    </button>
   </view>
 
   <view class="participant-list card">
@@ -18,7 +25,7 @@
       <view class="person">
         <view class="avatar-wrap {{item.isCreator ? 'creator' : ''}}">
           <view class="avatar">{{item.initial}}</view>
-          <view wx:if="{{item.isCreator}}" class="star">★</view>
+          <text wx:if="{{item.isCreator}}" class="material-symbols-outlined star-icon">star</text>
         </view>
         <view>
           <view class="person-name">{{item.name}}</view>
@@ -29,16 +36,19 @@
     </view>
   </view>
 
-  <button class="button-primary score-entry" bindtap="inputScore" hover-class="tap-feedback">＋ 开始计分</button>
+  <button class="button-primary score-entry" bindtap="inputScore" hover-class="tap-feedback">
+    <text class="material-symbols-outlined button-icon">add_circle</text>
+    开始计分
+  </button>
 
   <view class="history-head">
     <view class="section-label">计分明细</view>
-    <text>◷</text>
+    <text class="material-symbols-outlined history-header-icon">history</text>
   </view>
 
   <view class="transfer-list">
     <view wx:for="{{transfers}}" wx:key="id" class="transfer-card">
-      <view class="transfer-icon">{{item.icon}}</view>
+      <text class="material-symbols-outlined transfer-icon">{{item.icon}}</text>
       <view class="transfer-main">
         <view class="transfer-text">
           <text class="strong">{{item.from}}</text>
@@ -54,11 +64,23 @@
   </view>
 
   <view class="bottom-actions">
-    <button class="finish-button" bindtap="finish" hover-class="tap-feedback">⚑ 结束本局</button>
+    <button class="finish-button" bindtap="finish" hover-class="tap-feedback">
+      <text class="material-symbols-outlined button-icon">flag</text>
+      结束本局
+    </button>
     <view class="bottom-nav">
-      <button bindtap="backHome">⌂<text>首页</text></button>
-      <button class="active">≋<text>牌局</text></button>
-      <button bindtap="ranking">◷<text>历史</text></button>
+      <button bindtap="backHome">
+        <text class="material-symbols-outlined">home</text>
+        <text>首页</text>
+      </button>
+      <button class="active">
+        <text class="material-symbols-outlined">insights</text>
+        <text>牌局</text>
+      </button>
+      <button bindtap="ranking">
+        <text class="material-symbols-outlined">history</text>
+        <text>历史</text>
+      </button>
     </view>
   </view>
 </view>

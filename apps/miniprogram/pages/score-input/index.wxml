@@ -1,10 +1,14 @@
 <view class="page score-page">
   <view class="score-topbar">
     <view class="score-title-row">
-      <button class="back-button" bindtap="goBack" hover-class="tap-feedback">‹</button>
+      <button class="back-button" bindtap="goBack" hover-class="tap-feedback">
+        <text class="material-symbols-outlined">arrow_back</text>
+      </button>
       <view class="score-title">给他人记分</view>
     </view>
-    <button class="info-button" hover-class="tap-feedback">i</button>
+    <button class="info-button" hover-class="tap-feedback">
+      <text class="material-symbols-outlined">info</text>
+    </button>
   </view>
 
   <view class="receiver-head">
@@ -23,12 +27,13 @@
       bindtap="toggleReceiver"
       hover-class="tap-feedback"
     >
-      <view class="receiver-avatar">{{item.initial}}</view>
+      <image wx:if="{{item.avatarUrl}}" class="receiver-avatar" src="{{item.avatarUrl}}" mode="aspectFill"></image>
+      <view wx:else class="receiver-avatar text-avatar">{{item.initial}}</view>
       <view class="receiver-main">
         <view class="receiver-name">{{item.displayName}}</view>
         <view class="receiver-score">当前: {{item.currentScore}}</view>
       </view>
-      <view wx:if="{{item.selected}}" class="check-mark">✓</view>
+      <text wx:if="{{item.selected}}" class="material-symbols-outlined check-mark">check_circle</text>
     </view>
   </view>
 
@@ -43,13 +48,17 @@
 
   <view class="num-pad">
     <button wx:for="{{numKeys}}" wx:key="*this" data-value="{{item}}" bindtap="pressKey" hover-class="tap-feedback">{{item}}</button>
-    <button class="clear-key" data-value="clear" bindtap="pressKey" hover-class="tap-feedback">⌫</button>
+    <button class="clear-key" data-value="clear" bindtap="pressKey" hover-class="tap-feedback">
+      <text class="material-symbols-outlined">backspace</text>
+    </button>
     <button data-value="0" bindtap="pressKey" hover-class="tap-feedback">0</button>
-    <view class="done-key">✓✓</view>
+    <view class="done-key">
+      <text class="material-symbols-outlined">done_all</text>
+    </view>
   </view>
 
   <view wx:if="{{selectedCount > 0 && scoreText !== '0'}}" class="preview-card">
-    <view class="preview-icon">⇄</view>
+    <text class="material-symbols-outlined preview-icon">swap_horiz</text>
     <view>
       <view class="preview-title">分发给 {{selectedCount}} 位好友</view>
       <view class="preview-deduction">{{deductionText}}</view>

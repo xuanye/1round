@@ -10,8 +10,8 @@ Page({
       canExit: false,
     },
     stats: [
-      { label: '聚会次数', value: '12', unit: '场', tone: 'primary', icon: '◎' },
-      { label: '最高得分', value: '+128', unit: '', tone: 'tertiary', icon: '★' },
+      { label: '聚会次数', value: '12', unit: '场', tone: 'primary', icon: 'celebration' },
+      { label: '最高得分', value: '+128', unit: '', tone: 'tertiary', icon: 'military_tech' },
     ],
     recentGames: [
       {
@@ -19,14 +19,14 @@ Page({
         meta: '昨天 · 5人 · 18次计分',
         status: '已结束',
         score: '+12',
-        icon: '麻',
+        icon: 'casino',
       },
       {
         title: '春节斗地主',
         meta: '2024-02-10 · 3人 · 24次计分',
         status: '已结束',
         score: '+84',
-        icon: '斗',
+        icon: 'style',
       },
     ],
   },

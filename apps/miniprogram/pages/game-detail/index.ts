@@ -13,9 +13,9 @@ Page({
       { id: 'p3', initial: '华', name: '大华', role: '已加入', score: '-70', scoreTone: 'muted', isCreator: false },
     ],
     transfers: [
-      { id: 't1', icon: '⇄', from: '小明', to: '大华', multi: false, score: '+20', time: '10:45 AM' },
-      { id: 't2', icon: '群', from: '小红', to: '小明、大华', multi: true, score: '+50', time: '10:30 AM' },
-      { id: 't3', icon: '⇄', from: '大华', to: '小红', multi: false, score: '+15', time: '10:15 AM' },
+      { id: 't1', icon: 'swap_horiz', from: '小明', to: '大华', multi: false, score: '+20', time: '10:45 AM' },
+      { id: 't2', icon: 'group', from: '小红', to: '小明、大华', multi: true, score: '+50', time: '10:30 AM' },
+      { id: 't3', icon: 'swap_horiz', from: '大华', to: '小红', multi: false, score: '+15', time: '10:15 AM' },
     ],
   },
   onLoad(query: Record<string, string>) {

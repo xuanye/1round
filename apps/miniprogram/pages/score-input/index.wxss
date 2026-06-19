@@ -28,10 +28,6 @@
   gap: 18rpx;
 }
 
-.back-button {
-  margin-right: 18rpx;
-}
-
 .back-button,
 .info-button {
   display: flex;
@@ -41,13 +37,11 @@
   height: 72rpx;
   color: #1f695d;
   background: #f4f3f1;
-  font-size: 40rpx;
-  line-height: 72rpx;
 }
 
-.info-button {
-  color: #3f4946;
-  font-size: 30rpx;
+.back-button .material-symbols-outlined,
+.info-button .material-symbols-outlined {
+  font-size: 38rpx !important;
 }
 
 .score-title {
@@ -116,6 +110,9 @@
   height: 72rpx;
   flex: 0 0 72rpx;
   border-radius: 50%;
+}
+
+.receiver-avatar.text-avatar {
   color: #00332c;
   background: #ffffff;
   font-size: 26rpx;
@@ -148,8 +145,7 @@
   right: 16rpx;
   top: 16rpx;
   color: #1f695d;
-  font-size: 26rpx;
-  font-weight: 900;
+  font-size: 32rpx !important;
 }
 
 .score-input-section {
@@ -215,6 +211,17 @@
   font-weight: 900;
   line-height: 104rpx;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 0;
+}
+
+.num-pad button .material-symbols-outlined,
+.done-key .material-symbols-outlined {
+  font-size: 44rpx !important;
+  line-height: 1;
 }
 
 .num-pad .clear-key {
@@ -242,10 +249,10 @@
   border-radius: 50%;
   color: #29657e;
   background: rgba(41, 101, 126, 0.1);
-  font-size: 28rpx;
-  font-weight: 900;
+  font-size: 42rpx !important;
   line-height: 72rpx;
   text-align: center;
+  display: block;
 }
 
 .preview-title {

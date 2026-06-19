@@ -32,8 +32,10 @@
   height: 76rpx;
   color: #1f695d;
   background: #f4f3f1;
-  font-size: 42rpx;
-  line-height: 76rpx;
+}
+
+.round-button .material-symbols-outlined {
+  font-size: 38rpx !important;
 }
 
 .detail-title {
@@ -72,6 +74,11 @@
   color: #1f695d;
   background: transparent;
   font-size: 26rpx;
+}
+
+.rank-link .inline-icon {
+  font-size: 30rpx !important;
+  margin-right: 6rpx;
 }
 
 .participant-list {
@@ -122,7 +129,7 @@
   background: #ffdcc4;
 }
 
-.star {
+.star-icon {
   position: absolute;
   right: -8rpx;
   bottom: -8rpx;
@@ -130,11 +137,12 @@
   height: 34rpx;
   border: 4rpx solid #ffffff;
   border-radius: 50%;
-  color: #ffffff;
+  color: #ffffff !important;
   background: #8e4e14;
-  font-size: 18rpx;
+  font-size: 20rpx !important;
   line-height: 34rpx;
   text-align: center;
+  display: block;
 }
 
 .person-name {
@@ -168,11 +176,21 @@
   margin-top: 30rpx;
   font-size: 36rpx;
   line-height: 108rpx;
+  gap: 12rpx;
+  transition: transform 100ms ease;
 }
 
-.history-head text {
+.score-entry:active {
+  transform: scale(0.96);
+}
+
+.score-entry .button-icon {
+  font-size: 40rpx !important;
+}
+
+.history-head .history-header-icon {
   color: #6f7976;
-  font-size: 34rpx;
+  font-size: 34rpx !important;
 }
 
 .transfer-list {
@@ -201,10 +219,10 @@
   border-radius: 50%;
   color: #1f695d;
   background: rgba(31, 105, 93, 0.1);
-  font-size: 24rpx;
-  font-weight: 900;
+  font-size: 36rpx !important;
   line-height: 60rpx;
   text-align: center;
+  display: block;
 }
 
 .transfer-main {
@@ -247,6 +265,16 @@
   font-size: 28rpx;
   line-height: 88rpx;
   box-shadow: 0 12rpx 34rpx rgba(186, 26, 26, 0.16);
+  gap: 12rpx;
+  transition: transform 100ms ease;
+}
+
+.finish-button:active {
+  transform: scale(0.96);
+}
+
+.finish-button .button-icon {
+  font-size: 36rpx !important;
 }
 
 .bottom-nav {
@@ -277,6 +305,12 @@
 }
 
 .bottom-nav .active {
-  color: #00332c;
-  background: #5ba092;
+  color: #1f695d;
+  background: transparent;
+  font-weight: bold;
+}
+
+.bottom-nav button .material-symbols-outlined {
+  font-size: 44rpx !important;
+  margin-bottom: 4rpx;
 }

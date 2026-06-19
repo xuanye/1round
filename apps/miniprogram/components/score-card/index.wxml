@@ -1,4 +1,0 @@
-<view class="card">
-  <view class="label">{{label}}</view>
-  <view class="value">{{value}}</view>
-</view>

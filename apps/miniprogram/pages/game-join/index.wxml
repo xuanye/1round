@@ -4,11 +4,11 @@
 
   <view class="join-topbar">
     <view class="join-brand">
-      <text class="icon icon-sports_kabaddi join-brand-icon"></text>
+      <text class="iconfont join-brand-icon">{{icons.dice}}</text>
       <view>OneRound</view>
     </view>
     <button class="close-button" bindtap="cancel" hover-class="tap-feedback">
-      <text class="icon icon-close"></text>
+      <text class="iconfont">{{icons.close}}</text>
     </button>
   </view>
 
@@ -23,7 +23,7 @@
         <view class="field-label">牌局名称</view>
         <view class="game-name">{{game.name}}</view>
       </view>
-      <text class="icon icon-groups game-icon"></text>
+      <text class="iconfont game-icon">{{icons.users}}</text>
     </view>
 
     <view class="creator-row">
@@ -51,10 +51,10 @@
       <view class="field-label">我的显示名称</view>
       <view class="input-shell">
         <input value="{{displayName}}" bindinput="onNameInput" maxlength="12" />
-        <text class="icon icon-edit edit-icon"></text>
+        <text class="iconfont edit-icon">{{icons.edit}}</text>
       </view>
       <view class="name-tip">
-        <text class="icon icon-info info-icon"></text>
+        <text class="iconfont info-icon">{{icons.info}}</text>
         名称在牌局内必须唯一
       </view>
     </view>
@@ -69,11 +69,11 @@
     >
       <block wx:if="{{joining}}">正在加入...</block>
       <block wx:elif="{{joined}}">
-        <text class="icon icon-check_circle button-icon"></text> 已成功加入
+        <text class="iconfont button-icon">{{icons.check}}</text> 已成功加入
       </block>
       <block wx:else>
         确认加入
-        <text class="icon icon-arrow_forward button-icon"></text>
+        <text class="iconfont button-icon">{{icons.arrowRight}}</text>
       </block>
     </button>
     <button class="cancel-button" bindtap="cancel" hover-class="tap-feedback">取消</button>

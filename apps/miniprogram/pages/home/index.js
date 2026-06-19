@@ -1,6 +1,16 @@
 "use strict";
 Page({
     data: {
+        icons: {
+            dice: '\uf522',
+            enter: '\uf2f6',
+            exit: '\uf2f5',
+            plusCircle: '\uf055',
+            userPlus: '\uf234',
+            history: '\uf1da',
+            home: '\uf015',
+            ranking: '\ue561',
+        },
         userName: '老书记01',
         currentGame: {
             id: 'mock-game-001',
@@ -11,8 +21,8 @@ Page({
             canExit: false,
         },
         stats: [
-            { label: '聚会次数', value: '12', unit: '场', tone: 'primary', icon: 'celebration' },
-            { label: '最高得分', value: '+128', unit: '', tone: 'tertiary', icon: 'military_tech' },
+            { label: '聚会次数', value: '12', unit: '场', tone: 'primary', iconCode: '\uf06b' },
+            { label: '最高得分', value: '+128', unit: '', tone: 'tertiary', iconCode: '\uf5a2' },
         ],
         recentGames: [
             {
@@ -20,14 +30,14 @@ Page({
                 meta: '昨天 · 5人 · 18次计分',
                 status: '已结束',
                 score: '+12',
-                icon: 'casino',
+                iconCode: '\uf522',
             },
             {
                 title: '春节斗地主',
                 meta: '2024-02-10 · 3人 · 24次计分',
                 status: '已结束',
                 score: '+84',
-                icon: 'style',
+                iconCode: '\uf5fd',
             },
         ],
     },

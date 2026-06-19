@@ -25,7 +25,9 @@
 
 .score-title-row {
   align-items: center;
-  gap: 18rpx;
+  flex: 1;
+  min-width: 0;
+  margin-right: 18rpx;
 }
 
 .back-button,
@@ -39,15 +41,19 @@
   background: #f4f3f1;
 }
 
-.back-button .icon,
-.info-button .icon {
+.back-button .iconfont,
+.info-button .iconfont {
   font-size: 38rpx !important;
 }
 
 .score-title {
+  min-width: 0;
   color: #1f695d;
   font-size: 36rpx;
   font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .receiver-head {
@@ -85,7 +91,6 @@
 .receiver-card {
   position: relative;
   align-items: center;
-  gap: 16rpx;
   width: 50%;
   box-sizing: border-box;
   min-height: 112rpx;
@@ -122,6 +127,7 @@
 }
 
 .receiver-main {
+  flex: 1;
   min-width: 0;
 }
 
@@ -138,6 +144,9 @@
   margin-top: 4rpx;
   color: #3f4946;
   font-size: 20rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .check-mark {
@@ -218,8 +227,8 @@
   padding: 0;
 }
 
-.num-pad button .icon,
-.done-key .icon {
+.num-pad button .iconfont,
+.done-key .iconfont {
   font-size: 44rpx !important;
   line-height: 1;
 }
@@ -234,7 +243,6 @@
 
 .preview-card {
   align-items: center;
-  gap: 20rpx;
   margin-top: 30rpx;
   padding: 24rpx;
   border: 1rpx solid rgba(42, 101, 126, 0.12);
@@ -256,9 +264,13 @@
 }
 
 .preview-title {
+  min-width: 0;
   color: #2a667e;
   font-size: 28rpx;
   font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .preview-deduction {
@@ -289,7 +301,7 @@
   color: #3f4946;
   background: #bec9c5;
   font-size: 34rpx;
-  line-height: 112rpx;
+  line-height: 1;
 }
 
 .submit-button.active {

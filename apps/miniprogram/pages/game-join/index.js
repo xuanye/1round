@@ -1,6 +1,15 @@
 "use strict";
 Page({
     data: {
+        icons: {
+            dice: '\uf522',
+            close: '\uf00d',
+            users: '\uf0c0',
+            edit: '\uf304',
+            info: '\uf05a',
+            check: '\uf058',
+            arrowRight: '\uf061',
+        },
         game: {
             id: 'mock-game-001',
             name: '周末家庭聚会 (2024-05-20)',

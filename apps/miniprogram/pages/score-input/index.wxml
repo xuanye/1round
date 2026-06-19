@@ -2,12 +2,12 @@
   <view class="score-topbar">
     <view class="score-title-row">
       <button class="back-button" bindtap="goBack" hover-class="tap-feedback">
-        <text class="icon icon-arrow_back"></text>
+        <text class="iconfont">{{icons.back}}</text>
       </button>
       <view class="score-title">给他人记分</view>
     </view>
     <button class="info-button" hover-class="tap-feedback">
-      <text class="icon icon-info"></text>
+      <text class="iconfont">{{icons.info}}</text>
     </button>
   </view>
 
@@ -33,7 +33,7 @@
         <view class="receiver-name">{{item.displayName}}</view>
         <view class="receiver-score">当前: {{item.currentScore}}</view>
       </view>
-      <text wx:if="{{item.selected}}" class="icon icon-check_circle check-mark"></text>
+      <text wx:if="{{item.selected}}" class="iconfont check-mark">{{icons.check}}</text>
     </view>
   </view>
 
@@ -49,16 +49,16 @@
   <view class="num-pad">
     <button wx:for="{{numKeys}}" wx:key="*this" data-value="{{item}}" bindtap="pressKey" hover-class="tap-feedback">{{item}}</button>
     <button class="clear-key" data-value="clear" bindtap="pressKey" hover-class="tap-feedback">
-      <text class="icon icon-backspace"></text>
+      <text class="iconfont">{{icons.deleteLeft}}</text>
     </button>
     <button data-value="0" bindtap="pressKey" hover-class="tap-feedback">0</button>
     <view class="done-key">
-      <text class="icon icon-done_all"></text>
+      <text class="iconfont">{{icons.doneAll}}</text>
     </view>
   </view>
 
   <view wx:if="{{selectedCount > 0 && scoreText !== '0'}}" class="preview-card">
-    <text class="icon icon-swap_horiz preview-icon"></text>
+    <text class="iconfont preview-icon">{{icons.transfer}}</text>
     <view>
       <view class="preview-title">分发给 {{selectedCount}} 位好友</view>
       <view class="preview-deduction">{{deductionText}}</view>

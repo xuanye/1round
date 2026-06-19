@@ -9,6 +9,14 @@ type Receiver = {
 
 Page({
   data: {
+    icons: {
+      back: '\uf060',
+      info: '\uf05a',
+      check: '\uf058',
+      deleteLeft: '\uf55a',
+      doneAll: '\uf560',
+      transfer: '\uf362',
+    },
     id: 'mock-game-001',
     receivers: [
       { id: 'p1', displayName: '陈晓明', currentScore: 1250, initial: '陈', selected: false, avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDektPOpIegFaoK9by-AsDJt7SHjJcOmLqjox3GQBDEgN6QdBLc73dzPRxvV4bCj15TFGiCEXsxXzifTYfdTfQqCJt7141EXnzBnFlCtsh9brM9ka_ct-KxCNZmgvnaWYrTfBb06iUapRX3r3s1utDfICg6vNZ96X1Suc0J9OAWDeXyg0cTWSkccacetudc0iB-DyE1iPsVSQcIO-sREsjZrF2xuV4RHZd-P7Ku7SVisJnfmRvttANrRg' },

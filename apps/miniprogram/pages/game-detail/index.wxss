@@ -34,11 +34,13 @@
   background: #f4f3f1;
 }
 
-.round-button .icon {
+.round-button .iconfont {
   font-size: 38rpx !important;
 }
 
 .detail-title {
+  min-width: 0;
+  max-width: 430rpx;
   text-align: center;
 }
 
@@ -46,11 +48,18 @@
   color: #1f695d;
   font-size: 36rpx;
   font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .detail-title text {
+  display: block;
   color: #3f4946;
   font-size: 22rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .section-row,
@@ -99,7 +108,8 @@
 
 .person {
   align-items: center;
-  gap: 22rpx;
+  flex: 1;
+  min-width: 0;
 }
 
 .avatar-wrap {
@@ -146,9 +156,13 @@
 }
 
 .person-name {
+  min-width: 0;
   color: #1a1c1a;
   font-size: 30rpx;
   font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .person-role,
@@ -159,6 +173,8 @@
 }
 
 .score {
+  flex-shrink: 0;
+  margin-left: 20rpx;
   font-size: 38rpx;
   font-weight: 900;
 }
@@ -175,8 +191,7 @@
   height: 108rpx;
   margin-top: 30rpx;
   font-size: 36rpx;
-  line-height: 108rpx;
-  gap: 12rpx;
+  line-height: 1;
   transition: transform 100ms ease;
 }
 
@@ -185,6 +200,7 @@
 }
 
 .score-entry .button-icon {
+  margin-right: 12rpx;
   font-size: 40rpx !important;
 }
 
@@ -196,7 +212,6 @@
 .transfer-list {
   display: flex;
   flex-direction: column;
-  gap: 20rpx;
   margin-top: 20rpx;
 }
 
@@ -206,7 +221,6 @@
 
 .transfer-card {
   align-items: flex-start;
-  gap: 20rpx;
   padding: 28rpx;
   border-radius: 28rpx;
   background: #f4f3f1;
@@ -234,6 +248,7 @@
   color: #1a1c1a;
   font-size: 30rpx;
   line-height: 1.45;
+  word-break: break-all;
 }
 
 .strong,
@@ -263,9 +278,8 @@
   color: #ffffff;
   background: #ba1a1a;
   font-size: 28rpx;
-  line-height: 88rpx;
+  line-height: 1;
   box-shadow: 0 12rpx 34rpx rgba(186, 26, 26, 0.16);
-  gap: 12rpx;
   transition: transform 100ms ease;
 }
 
@@ -274,6 +288,7 @@
 }
 
 .finish-button .button-icon {
+  margin-right: 12rpx;
   font-size: 36rpx !important;
 }
 
@@ -298,10 +313,11 @@
   line-height: 1;
 }
 
-.bottom-nav text {
+.bottom-nav .nav-label {
   display: block;
   margin-top: 6rpx;
   font-size: 22rpx;
+  line-height: 1.15;
 }
 
 .bottom-nav .active {
@@ -310,7 +326,7 @@
   font-weight: bold;
 }
 
-.bottom-nav button .icon {
+.bottom-nav button .iconfont {
   font-size: 44rpx !important;
-  margin-bottom: 4rpx;
+  line-height: 44rpx;
 }

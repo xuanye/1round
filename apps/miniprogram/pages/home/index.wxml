@@ -1,12 +1,9 @@
 <view class="page home-page">
   <view class="topbar">
     <view class="brand">
-      <text class="icon icon-playing_cards brand-icon"></text>
+      <text class="iconfont brand-icon">{{icons.dice}}</text>
       <view class="brand-name">一局一分</view>
     </view>
-    <button class="icon-button" hover-class="tap-feedback">
-      <text class="icon icon-settings"></text>
-    </button>
   </view>
 
   <view class="greeting">
@@ -34,11 +31,11 @@
       </view>
     </view>
     <button class="button-primary enter-button" hover-class="tap-feedback" bindtap="enterGame">
-      <text class="icon icon-login button-icon"></text>
+      <text class="iconfont button-icon">{{icons.enter}}</text>
       进入牌局
     </button>
     <button class="exit-button disabled" hover-class="tap-feedback" bindtap="showExitTip">
-      <text class="icon icon-logout button-icon"></text>
+      <text class="iconfont button-icon">{{icons.exit}}</text>
       退出牌局
     </button>
     <view class="exit-tip">分值清零后可退出</view>
@@ -46,16 +43,16 @@
 
   <view class="actions">
     <button class="create-disabled" disabled>
-      <text class="icon icon-add_circle button-icon"></text>
+      <text class="iconfont button-icon">{{icons.plusCircle}}</text>
       已在牌局中
     </button>
     <view class="action-grid">
       <button class="action-card" hover-class="tap-feedback" bindtap="joinGame">
-        <text class="icon icon-group_add action-icon"></text>
+        <text class="iconfont action-icon">{{icons.userPlus}}</text>
         <view>加入牌局</view>
       </button>
       <button class="action-card" hover-class="tap-feedback" bindtap="history">
-        <text class="icon icon-history action-icon"></text>
+        <text class="iconfont action-icon">{{icons.history}}</text>
         <view>历史记录</view>
       </button>
     </view>
@@ -67,7 +64,7 @@
       <view wx:for="{{stats}}" wx:key="label" class="stat-card card {{item.tone}}">
         <view class="stat-top">
           <view>{{item.label}}</view>
-          <text class="icon icon-{{item.icon}} stat-icon"></text>
+          <text class="iconfont stat-icon">{{item.iconCode}}</text>
         </view>
         <view class="stat-number">{{item.value}}<text>{{item.unit}}</text></view>
       </view>
@@ -81,7 +78,7 @@
     </view>
     <view class="recent-list">
       <view wx:for="{{recentGames}}" wx:key="title" class="recent-card card" hover-class="tap-feedback">
-        <text class="icon icon-{{item.icon}} recent-icon"></text>
+        <text class="iconfont recent-icon">{{item.iconCode}}</text>
         <view class="recent-main">
           <view class="recent-row">
             <view class="recent-title">{{item.title}}</view>
@@ -99,16 +96,16 @@
 
   <view class="bottom-nav">
     <button class="nav-item active">
-      <text class="icon icon-home"></text>
-      <text>首页</text>
+      <text class="iconfont">{{icons.home}}</text>
+      <text class="nav-label">首页</text>
     </button>
     <button class="nav-item" bindtap="enterGame">
-      <text class="icon icon-leaderboard"></text>
-      <text>数据</text>
+      <text class="iconfont">{{icons.ranking}}</text>
+      <text class="nav-label">数据</text>
     </button>
     <button class="nav-item" bindtap="history">
-      <text class="icon icon-history"></text>
-      <text>历史</text>
+      <text class="iconfont">{{icons.history}}</text>
+      <text class="nav-label">历史</text>
     </button>
   </view>
 </view>

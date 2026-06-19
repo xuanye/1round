@@ -25,35 +25,34 @@
 
 .brand {
   align-items: center;
-  gap: 14rpx;
+  flex: 1;
+  min-width: 0;
 }
 
 .brand-icon {
+  width: 52rpx;
+  height: 52rpx;
+  margin-right: 14rpx;
   font-size: 48rpx !important;
+  line-height: 52rpx;
+  text-align: center;
   color: #1f695d;
 }
 
 .brand-name {
+  min-width: 0;
   color: #1f695d;
   font-size: 36rpx;
   font-weight: 900;
-}
-
-.icon-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 72rpx;
-  height: 72rpx;
-  color: #3f4946;
-  background: transparent;
-  line-height: 72rpx;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .greeting {
   align-items: center;
   justify-content: space-between;
-  gap: 28rpx;
   margin-top: 28rpx;
   padding: 40rpx;
   border-radius: 32rpx;
@@ -102,7 +101,6 @@
 .current-head {
   align-items: flex-start;
   justify-content: space-between;
-  gap: 24rpx;
 }
 
 .current-head > view:first-child {
@@ -113,7 +111,6 @@
 
 .game-title-row {
   align-items: center;
-  gap: 12rpx;
 }
 
 .live-dot {
@@ -125,9 +122,13 @@
 }
 
 .game-title {
+  min-width: 0;
   color: #1a1c1a;
   font-size: 30rpx;
   font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .game-meta,
@@ -164,7 +165,7 @@
   height: 96rpx;
   margin-top: 30rpx;
   font-size: 30rpx;
-  line-height: 96rpx;
+  line-height: 1;
 }
 
 .exit-button {
@@ -174,7 +175,7 @@
   color: rgba(63, 73, 70, 0.42);
   background: transparent;
   font-size: 24rpx;
-  line-height: 48rpx;
+  line-height: 1;
 }
 
 .exit-tip {
@@ -190,11 +191,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12rpx;
   box-sizing: border-box;
 }
 
 .button-icon {
+  margin-right: 12rpx;
   font-size: 38rpx !important;
   line-height: 1;
 }
@@ -212,12 +213,11 @@
   color: rgba(63, 73, 70, 0.5);
   background: #e3e2e0;
   font-size: 28rpx;
-  line-height: 86rpx;
+  line-height: 1;
 }
 
 .action-grid,
 .stat-grid {
-  gap: 24rpx;
   margin-top: 24rpx;
 }
 
@@ -232,6 +232,7 @@
   background: #f4f3f1;
   border-radius: 32rpx;
   font-size: 28rpx;
+  line-height: 1.25;
 }
 
 .action-card + .action-card,
@@ -265,10 +266,18 @@
 
 .stat-top {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   color: #3f4946;
   font-size: 22rpx;
   font-weight: 700;
+}
+
+.stat-top > view {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .stat-icon {
@@ -316,13 +325,11 @@
 .recent-list {
   display: flex;
   flex-direction: column;
-  gap: 22rpx;
   margin-top: 22rpx;
 }
 
 .recent-card {
   align-items: center;
-  gap: 24rpx;
   padding: 28rpx;
 }
 
@@ -353,19 +360,32 @@
 }
 
 .recent-row {
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 16rpx;
 }
 
 .recent-title {
+  flex: 1;
+  min-width: 0;
   margin-right: 16rpx;
   color: #1a1c1a;
   font-size: 28rpx;
   font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-status,
+.recent-score {
+  flex-shrink: 0;
 }
 
 .recent-meta {
   margin-top: 8rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .recent-score {
@@ -406,9 +426,11 @@
   line-height: 1;
 }
 
-.nav-item text {
+.nav-item .nav-label {
+  display: block;
   margin-top: 6rpx;
   font-size: 22rpx;
+  line-height: 1.15;
 }
 
 .nav-item.active {
@@ -417,7 +439,7 @@
   font-weight: bold;
 }
 
-.nav-item .icon {
+.nav-item .iconfont {
   font-size: 44rpx !important;
-  margin-bottom: 4rpx;
+  line-height: 44rpx;
 }

@@ -55,14 +55,18 @@
 
 .join-brand {
   align-items: center;
-  gap: 14rpx;
   color: #1f695d;
   font-size: 32rpx;
   font-weight: 900;
+  min-width: 0;
 }
 
 .join-brand-icon {
+  width: 48rpx;
+  height: 48rpx;
+  margin-right: 14rpx;
   font-size: 44rpx !important;
+  line-height: 48rpx;
   color: #1f695d;
 }
 
@@ -76,7 +80,7 @@
   background: #f4f3f1;
 }
 
-.close-button .icon {
+.close-button .iconfont {
   font-size: 36rpx !important;
 }
 
@@ -108,7 +112,6 @@
 .game-info {
   align-items: flex-start;
   justify-content: space-between;
-  gap: 24rpx;
 }
 
 .game-info > view:first-child {
@@ -130,6 +133,11 @@
   font-size: 36rpx;
   font-weight: 900;
   line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .game-icon {
@@ -146,7 +154,6 @@
 
 .creator-row {
   align-items: center;
-  gap: 18rpx;
   margin-top: 28rpx;
 }
 
@@ -231,6 +238,7 @@
 
 .input-shell input {
   flex: 1;
+  min-width: 0;
   height: 100%;
   color: #1a1c1a;
   font-size: 34rpx;
@@ -248,10 +256,11 @@
   font-size: 22rpx;
   display: flex;
   align-items: center;
-  gap: 6rpx;
+  line-height: 1.35;
 }
 
 .name-tip .info-icon {
+  margin-right: 8rpx;
   font-size: 26rpx !important;
   color: #3f4946;
 }
@@ -267,7 +276,7 @@
   width: 100%;
   height: 104rpx;
   font-size: 30rpx;
-  line-height: 104rpx;
+  line-height: 1;
   gap: 12rpx;
 }
 

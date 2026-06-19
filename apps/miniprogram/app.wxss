@@ -1,4 +1,4 @@
-@import "icons.wxss";
+@import "./iconfont.wxss";
 
 page {
   background: #faf9f6;
@@ -57,21 +57,6 @@ button::after {
 .tap-feedback {
   opacity: 0.86;
   transform: scale(0.985);
-}
-
-/* Material Symbols alias to support legacy styled overrides in the app */
-.material-symbols-outlined {
-  display: inline-block;
-  width: 1em;
-  height: 1em;
-  background-color: currentColor;
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  vertical-align: middle;
 }
 
 /* Pulse Animation for Live Dot */

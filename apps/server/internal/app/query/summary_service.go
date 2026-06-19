@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	gamesvc "github.com/xuanye/one-round/apps/server/internal/app/game"
 	"github.com/xuanye/one-round/apps/server/internal/api/dto"
+	gamesvc "github.com/xuanye/one-round/apps/server/internal/app/game"
 	"github.com/xuanye/one-round/apps/server/internal/domain"
 	"github.com/xuanye/one-round/apps/server/internal/infra/sqlite"
 )
@@ -45,13 +45,13 @@ type RankingItem struct {
 }
 
 type ScoreTransferView struct {
-	ID           string   `json:"id"`
-	SequenceNo   int      `json:"sequenceNo"`
-	FromPlayerID string   `json:"fromPlayerId"`
-	ReceiverIDs  []string `json:"receiverPlayerIds"`
-	Amount       int      `json:"amount"`
+	ID           string    `json:"id"`
+	SequenceNo   int       `json:"sequenceNo"`
+	FromPlayerID string    `json:"fromPlayerId"`
+	ReceiverIDs  []string  `json:"receiverPlayerIds"`
+	Amount       int       `json:"amount"`
 	CreatedAt    time.Time `json:"createdAt"`
-	Text         string   `json:"text"`
+	Text         string    `json:"text"`
 }
 
 func NewService(q *sqlite.Queries, game *gamesvc.Service) *Service {
@@ -81,7 +81,7 @@ func (s *Service) Summary(ctx context.Context, userID, gameSessionID string) (Su
 	if err != nil {
 		return Summary{}, err
 	}
-	players, err := s.q.ListRanking(ctx, gameSessionID)
+	players, err := s.q.ListActivePlayers(ctx, gameSessionID)
 	if err != nil {
 		return Summary{}, err
 	}

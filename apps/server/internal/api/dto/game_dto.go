@@ -17,14 +17,14 @@ type JoinPreviewRequest struct {
 }
 
 type CurrentGameResponse struct {
-	ID               string  `json:"id"`
-	Name             string  `json:"name"`
-	InviteCode       string  `json:"inviteCode"`
-	OwnerUserID      string  `json:"ownerUserId"`
-	Status           string  `json:"status"`
-	MaxParticipants  *int    `json:"maxParticipants"`
-	ScoreTransferCnt int     `json:"scoreTransferCount"`
-	Version          int64   `json:"version"`
+	ID               string    `json:"id"`
+	Name             string    `json:"name"`
+	InviteCode       string    `json:"inviteCode"`
+	OwnerUserID      string    `json:"ownerUserId"`
+	Status           string    `json:"status"`
+	MaxParticipants  *int      `json:"maxParticipants"`
+	ScoreTransferCnt int       `json:"scoreTransferCount"`
+	Version          int64     `json:"version"`
 	CreatedAt        time.Time `json:"createdAt"`
 	UpdatedAt        time.Time `json:"updatedAt"`
 }

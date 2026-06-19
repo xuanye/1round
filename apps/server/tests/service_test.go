@@ -595,10 +595,14 @@ func TestOwnerCanFinishDirectlyAndFreezeGame(t *testing.T) {
 	owner := login(t, app, "owner-code")
 	joiner := login(t, app, "joiner-code")
 	game := createGame(t, app, owner, nil)
-	if _, err := app.game.Join(ctx, joiner, game.InviteCode, "妈妈"); err != nil { t.Fatal(err) }
+	if _, err := app.game.Join(ctx, joiner, game.InviteCode, "妈妈"); err != nil {
+		t.Fatal(err)
+	}
 
 	finished, err := app.settlement.FinishDirect(ctx, owner, game.ID)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	if finished.Status != domain.GameSessionStatusFinished || finished.SettledAt == nil || finished.PublicShareToken == nil {
 		t.Fatalf("unexpected finished game: %+v", finished)
 	}
@@ -614,15 +618,21 @@ func TestNonOwnerCreatesFinishRequestAndOwnerCanReject(t *testing.T) {
 	owner := login(t, app, "owner-code")
 	joiner := login(t, app, "joiner-code")
 	game := createGame(t, app, owner, nil)
-	if _, err := app.game.Join(ctx, joiner, game.InviteCode, "妈妈"); err != nil { t.Fatal(err) }
+	if _, err := app.game.Join(ctx, joiner, game.InviteCode, "妈妈"); err != nil {
+		t.Fatal(err)
+	}
 
 	req, err := app.settlement.RequestFinish(ctx, joiner, game.ID)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	if req.Status != domain.FinishRequestStatusPending {
 		t.Fatalf("unexpected request: %+v", req)
 	}
 	req, err = app.settlement.RejectFinishRequest(ctx, owner, game.ID, req.ID)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	if req.Status != domain.FinishRequestStatusRejected {
 		t.Fatalf("unexpected rejected request: %+v", req)
 	}
@@ -635,9 +645,15 @@ func TestOnlyOnePendingFinishRequest(t *testing.T) {
 	u2 := login(t, app, "u2-code")
 	u3 := login(t, app, "u3-code")
 	game := createGame(t, app, owner, nil)
-	if _, err := app.game.Join(ctx, u2, game.InviteCode, "妈妈"); err != nil { t.Fatal(err) }
-	if _, err := app.game.Join(ctx, u3, game.InviteCode, "孩子"); err != nil { t.Fatal(err) }
-	if _, err := app.settlement.RequestFinish(ctx, u2, game.ID); err != nil { t.Fatal(err) }
+	if _, err := app.game.Join(ctx, u2, game.InviteCode, "妈妈"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := app.game.Join(ctx, u3, game.InviteCode, "孩子"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := app.settlement.RequestFinish(ctx, u2, game.ID); err != nil {
+		t.Fatal(err)
+	}
 	_, err := app.settlement.RequestFinish(ctx, u3, game.ID)
 	if err != domain.ErrFinishRequestPending {
 		t.Fatalf("expected pending request conflict, got %v", err)

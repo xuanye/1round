@@ -284,6 +284,16 @@ func TestGameScoringLifecycleE2E(t *testing.T) {
 	if preview["gameSessionId"] != gameID {
 		t.Fatalf("unexpected preview game id: %+v", preview)
 	}
+	// Ensure score-related fields are absent from join preview.
+	if _, ok := preview["totalScore"]; ok {
+		t.Fatalf("join preview should not contain totalScore: %+v", preview)
+	}
+	if _, ok := preview["scoreTransferCount"]; ok {
+		t.Fatalf("join preview should not contain scoreTransferCount: %+v", preview)
+	}
+	if _, ok := preview["transfers"]; ok {
+		t.Fatalf("join preview should not contain transfers: %+v", preview)
+	}
 
 	// 6. Joiner confirms join.
 	joined := postJSON[map[string]any](t, router, joinerToken, "/api/game-sessions/join", map[string]any{
@@ -299,50 +309,67 @@ func TestGameScoringLifecycleE2E(t *testing.T) {
 	})
 	joinerParticipantID := joinerPlayer["participants"].([]any)[1].(map[string]any)["id"].(string)
 
-	// 7. Owner submits score transfer to joiner.
+	// 6b. Third participant logs in and joins.
+	thirdToken := loginHTTP(t, router, "third-code")
+	_ = postJSON[map[string]any](t, router, thirdToken, "/api/game-sessions/join", map[string]any{
+		"inviteCode": inviteCode, "displayName": "爸爸",
+	})
+
+	// Get third participant's player ID.
+	thirdPreview := postJSON[map[string]any](t, router, thirdToken, "/api/game-sessions/join-preview", map[string]any{
+		"inviteCode": inviteCode,
+	})
+	thirdParticipantID := thirdPreview["participants"].([]any)[2].(map[string]any)["id"].(string)
+
+	// 7. Owner submits multi-receiver score transfer to joiner and third participant.
 	_ = getJSON[[]map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/players")
 
 	_ = postJSON[map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/score-transfers", map[string]any{
-		"receiverPlayerIds": []string{joinerParticipantID},
+		"receiverPlayerIds": []string{joinerParticipantID, thirdParticipantID},
 		"amount":            10,
 		"idempotencyKey":    "e2e-transfer-1",
 	})
 
-	// 8. Summary shows participants by score desc and transfer details.
+	// 8. Summary shows participants by join order (owner first, joiners after) and transfer details.
 	summary := getJSON[map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/summary")
 	participants := summary["players"].([]any)
-	if len(participants) != 2 {
+	if len(participants) != 3 {
 		t.Fatalf("unexpected participants: %+v", participants)
 	}
-	// ListRanking sorts by total_score DESC, display_name ASC.
-	// Joiner (+10) first, owner (-10) second.
-	joinerSummary := participants[0].(map[string]any)
-	ownerSummary := participants[1].(map[string]any)
-	if ownerSummary["totalScore"].(float64) != -10 {
+	// Summary returns participants by join order: owner first, joiner second, third third.
+	ownerSummary := participants[0].(map[string]any)
+	joinerSummary := participants[1].(map[string]any)
+	thirdSummary := participants[2].(map[string]any)
+	if ownerSummary["totalScore"].(float64) != -20 {
 		t.Fatalf("unexpected owner score: %+v", ownerSummary)
 	}
 	if joinerSummary["totalScore"].(float64) != 10 {
 		t.Fatalf("unexpected joiner score: %+v", joinerSummary)
 	}
+	if thirdSummary["totalScore"].(float64) != 10 {
+		t.Fatalf("unexpected third score: %+v", thirdSummary)
+	}
 	if summary["scoreTransferCount"].(float64) != 1 {
 		t.Fatalf("unexpected score transfer count: %+v", summary)
 	}
 
-	// Check ranking: score desc means joiner first, then owner
+	// Check ranking: score desc, display name asc for ties.
 	ranking := getJSON[[]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/ranking")
-	if len(ranking) != 2 {
+	if len(ranking) != 3 {
 		t.Fatalf("unexpected ranking: %+v", ranking)
 	}
+	// Both receivers (+10) tie; display name ASC for tie-break.
 	first := ranking[0].(map[string]any)
-	if first["displayName"] != "妈妈" {
-		t.Fatalf("unexpected first in ranking: %+v", first)
-	}
 	if first["totalScore"].(float64) != 10 {
 		t.Fatalf("unexpected first score: %+v", first)
 	}
 	second := ranking[1].(map[string]any)
-	if second["totalScore"].(float64) != -10 {
+	if second["totalScore"].(float64) != 10 {
 		t.Fatalf("unexpected second score: %+v", second)
+	}
+	ownerRanking := ranking[2].(map[string]any)
+	if ownerRanking["totalScore"].(float64) != -20 {
+		t.Fatalf("unexpected owner ranking score: %+v", ownerRanking)
 	}
 
 	// 9. Non-owner creates finish request.
@@ -385,7 +412,7 @@ func TestGameScoringLifecycleE2E(t *testing.T) {
 		t.Fatalf("unexpected public share: %+v", public)
 	}
 	publicParticipants := public["participants"].([]any)
-	if len(publicParticipants) != 2 {
+	if len(publicParticipants) != 3 {
 		t.Fatalf("unexpected public participants: %+v", publicParticipants)
 	}
 

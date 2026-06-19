@@ -14,6 +14,7 @@ import (
 	querysvc "github.com/xuanye/one-round/apps/server/internal/app/query"
 	roundsvc "github.com/xuanye/one-round/apps/server/internal/app/round"
 	scoretransfersvc "github.com/xuanye/one-round/apps/server/internal/app/scoretransfer"
+	settlementsvc "github.com/xuanye/one-round/apps/server/internal/app/settlement"
 	"github.com/xuanye/one-round/apps/server/internal/domain"
 	jwtauth "github.com/xuanye/one-round/apps/server/internal/infra/auth"
 	"github.com/xuanye/one-round/apps/server/internal/infra/sqlite"
@@ -27,6 +28,7 @@ type testApp struct {
 	player        *playersvc.Service
 	round         *roundsvc.Service
 	scoreTransfer *scoretransfersvc.Service
+	settlement    *settlementsvc.Service
 	query         *querysvc.Service
 	hub           *realtime.MemoryHub
 	db            *sql.DB
@@ -567,6 +569,61 @@ func TestLastScoredParticipantLeaveFinishesGame(t *testing.T) {
 	}
 }
 
+func TestOwnerCanFinishDirectlyAndFreezeGame(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	owner := login(t, app, "owner-code")
+	joiner := login(t, app, "joiner-code")
+	game := createGame(t, app, owner, nil)
+	if _, err := app.game.Join(ctx, joiner, game.InviteCode, "妈妈"); err != nil { t.Fatal(err) }
+
+	finished, err := app.settlement.FinishDirect(ctx, owner, game.ID)
+	if err != nil { t.Fatal(err) }
+	if finished.Status != domain.GameSessionStatusFinished || finished.SettledAt == nil || finished.PublicShareToken == nil {
+		t.Fatalf("unexpected finished game: %+v", finished)
+	}
+	_, err = app.game.Join(ctx, login(t, app, "third-code"), game.InviteCode, "孩子")
+	if err != domain.ErrGameSessionFinished {
+		t.Fatalf("expected finished join rejection, got %v", err)
+	}
+}
+
+func TestNonOwnerCreatesFinishRequestAndOwnerCanReject(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	owner := login(t, app, "owner-code")
+	joiner := login(t, app, "joiner-code")
+	game := createGame(t, app, owner, nil)
+	if _, err := app.game.Join(ctx, joiner, game.InviteCode, "妈妈"); err != nil { t.Fatal(err) }
+
+	req, err := app.settlement.RequestFinish(ctx, joiner, game.ID)
+	if err != nil { t.Fatal(err) }
+	if req.Status != domain.FinishRequestStatusPending {
+		t.Fatalf("unexpected request: %+v", req)
+	}
+	req, err = app.settlement.RejectFinishRequest(ctx, owner, game.ID, req.ID)
+	if err != nil { t.Fatal(err) }
+	if req.Status != domain.FinishRequestStatusRejected {
+		t.Fatalf("unexpected rejected request: %+v", req)
+	}
+}
+
+func TestOnlyOnePendingFinishRequest(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	owner := login(t, app, "owner-code")
+	u2 := login(t, app, "u2-code")
+	u3 := login(t, app, "u3-code")
+	game := createGame(t, app, owner, nil)
+	if _, err := app.game.Join(ctx, u2, game.InviteCode, "妈妈"); err != nil { t.Fatal(err) }
+	if _, err := app.game.Join(ctx, u3, game.InviteCode, "孩子"); err != nil { t.Fatal(err) }
+	if _, err := app.settlement.RequestFinish(ctx, u2, game.ID); err != nil { t.Fatal(err) }
+	_, err := app.settlement.RequestFinish(ctx, u3, game.ID)
+	if err != domain.ErrFinishRequestPending {
+		t.Fatalf("expected pending request conflict, got %v", err)
+	}
+}
+
 func TestHubBroadcastOnlyTargetsRoom(t *testing.T) {
 	hub := realtime.NewMemoryHub()
 	c1 := &realtime.Client{Send: make(chan realtime.Event, 1)}
@@ -609,12 +666,14 @@ func newTestApp(t *testing.T) *testApp {
 	now := func() time.Time { return time.Date(2026, 6, 19, 0, 0, 0, 0, time.UTC) }
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
 	gameService := gamesvc.NewService(store, q, hub, now)
+	settlementService := settlementsvc.NewService(store, q, gameService, hub, now)
 	return &testApp{
 		auth:          authsvc.NewService(q, wechat.FakeClient{}, tokens, now),
 		game:          gameService,
 		player:        playersvc.NewService(store, q, gameService, hub, now),
 		round:         roundsvc.NewService(store, q, gameService, hub, now),
 		scoreTransfer: scoretransfersvc.NewService(store, q, gameService, hub, now),
+		settlement:    settlementService,
 		query:         querysvc.NewService(q, gameService),
 		hub:           hub,
 		db:            db,

@@ -29,4 +29,7 @@ var (
 	ErrOwnerRequired                = errors.New("owner required")
 	ErrPublicShareUnavailable       = errors.New("public share unavailable")
 	ErrAlreadyDeactivated           = errors.New("player already deactivated")
+	ErrNotOwner                     = errors.New("not owner")
+	ErrFinishRequestNotFound        = errors.New("finish request not found")
+	ErrGameSessionActive            = errors.New("game session active")
 )

@@ -71,3 +71,36 @@ func (q *Queries) ListFinishRequests(ctx context.Context, gameSessionID string) 
 	}
 	return requests, rows.Err()
 }
+
+func (q *Queries) GetFinishRequest(ctx context.Context, id string) (domain.FinishRequest, error) {
+	var r domain.FinishRequest
+	var createdAt string
+	var decidedAt sql.NullString
+	var decidedByPlayerID sql.NullString
+	err := q.db.QueryRowContext(ctx, `SELECT id, game_session_id, requested_by_player_id, status, created_at, decided_at, decided_by_player_id FROM finish_requests WHERE id = ?`, id).
+		Scan(&r.ID, &r.GameSessionID, &r.RequestedByPlayerID, &r.Status, &createdAt, &decidedAt, &decidedByPlayerID)
+	if err == sql.ErrNoRows {
+		return r, domain.ErrNotFound
+	}
+	if err != nil {
+		return r, err
+	}
+	r.CreatedAt, err = decodeTime(createdAt)
+	if err != nil {
+		return r, err
+	}
+	r.DecidedAt, _ = nullTimePtr(decidedAt)
+	if decidedByPlayerID.Valid {
+		r.DecidedByPlayerID = &decidedByPlayerID.String
+	}
+	return r, nil
+}
+
+func (q *Queries) FinishGameSessionWithSettleAndToken(ctx context.Context, gameSessionID string, shareToken string, now time.Time) (domain.GameSession, error) {
+	_, err := q.db.ExecContext(ctx, `UPDATE game_sessions SET status = ?, settled_at = ?, public_share_token = ?, version = version + 1, updated_at = ? WHERE id = ?`,
+		domain.GameSessionStatusFinished, encodeTime(now), shareToken, encodeTime(now), gameSessionID)
+	if err != nil {
+		return domain.GameSession{}, err
+	}
+	return q.GetGameSession(ctx, gameSessionID)
+}

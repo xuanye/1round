@@ -17,6 +17,7 @@ import (
 	querysvc "github.com/xuanye/one-round/apps/server/internal/app/query"
 	roundsvc "github.com/xuanye/one-round/apps/server/internal/app/round"
 	scoretransfersvc "github.com/xuanye/one-round/apps/server/internal/app/scoretransfer"
+	settlementsvc "github.com/xuanye/one-round/apps/server/internal/app/settlement"
 	"github.com/xuanye/one-round/apps/server/internal/config"
 	jwtauth "github.com/xuanye/one-round/apps/server/internal/infra/auth"
 	"github.com/xuanye/one-round/apps/server/internal/infra/clock"
@@ -69,11 +70,12 @@ func main() {
 	playerService := playersvc.NewService(store, queries, gameService, hub, now)
 	roundService := roundsvc.NewService(store, queries, gameService, hub, now)
 	scoreTransferService := scoretransfersvc.NewService(store, queries, gameService, hub, now)
+	settlementService := settlementsvc.NewService(store, queries, gameService, hub, now)
 	wsHandler := wshandler.NewWebSocketHandler(gameService, hub, cfg.Realtime.ClientSendQueueSize, time.Duration(cfg.Realtime.WriteTimeoutSeconds)*time.Second)
 
 	router := api.NewRouter(logger, api.Services{
 		Auth: authService, Game: gameService, Player: playerService, Round: roundService,
-		ScoreTransfer: scoreTransferService, Query: queryService, Tokens: tokens, WebSocket: wsHandler,
+		ScoreTransfer: scoreTransferService, Settlement: settlementService, Query: queryService, Tokens: tokens, WebSocket: wsHandler,
 	})
 	logger.Info("starting server", "addr", cfg.Server.HTTPAddr)
 	if err := http.ListenAndServe(cfg.Server.HTTPAddr, router); err != nil {

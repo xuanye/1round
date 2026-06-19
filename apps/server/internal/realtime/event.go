@@ -14,6 +14,8 @@ const (
 	EventParticipantUpdated    = "participant.updated"
 	EventParticipantLeft            = "participant.left"
 	EventScoreTransferSubmitted     = "score_transfer.submitted"
+	EventFinishRequested           = "finish_requested"
+	EventFinishRequestRejected     = "finish_request_rejected"
 )
 
 type Event struct {

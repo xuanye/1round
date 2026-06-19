@@ -13,6 +13,7 @@ import (
 	querysvc "github.com/xuanye/one-round/apps/server/internal/app/query"
 	roundsvc "github.com/xuanye/one-round/apps/server/internal/app/round"
 	scoretransfersvc "github.com/xuanye/one-round/apps/server/internal/app/scoretransfer"
+	settlementsvc "github.com/xuanye/one-round/apps/server/internal/app/settlement"
 	jwtauth "github.com/xuanye/one-round/apps/server/internal/infra/auth"
 )
 
@@ -22,6 +23,7 @@ type Services struct {
 	Player       *playersvc.Service
 	Round        *roundsvc.Service
 	ScoreTransfer *scoretransfersvc.Service
+	Settlement   *settlementsvc.Service
 	Query        *querysvc.Service
 	Tokens       *jwtauth.JWTService
 	WebSocket    *handler.WebSocketHandler
@@ -37,7 +39,7 @@ func NewRouter(logger *slog.Logger, services Services) http.Handler {
 	})
 
 	authHandler := handler.NewAuthHandler(services.Auth)
-	gameHandler := handler.NewGameHandler(services.Game, services.Query, services.Player)
+	gameHandler := handler.NewGameHandler(services.Game, services.Query, services.Player, services.Settlement)
 	playerHandler := handler.NewPlayerHandler(services.Player)
 	roundHandler := handler.NewRoundHandler(services.Round, services.Query)
 	scoreTransferHandler := handler.NewScoreTransferHandler(services.ScoreTransfer, services.Query)
@@ -53,6 +55,9 @@ func NewRouter(logger *slog.Logger, services Services) http.Handler {
 			r.Get("/game-sessions/{id}", gameHandler.Get)
 			r.Get("/game-sessions/{id}/summary", gameHandler.Summary)
 			r.Post("/game-sessions/{id}/finish", gameHandler.Finish)
+			r.Post("/game-sessions/{id}/finish-requests", gameHandler.RequestFinish)
+			r.Post("/game-sessions/{id}/finish-requests/{requestId}/approve", gameHandler.ApproveFinishRequest)
+			r.Post("/game-sessions/{id}/finish-requests/{requestId}/reject", gameHandler.RejectFinishRequest)
 			r.Post("/game-sessions/{id}/leave", gameHandler.Leave)
 			r.Patch("/game-sessions/{id}/my-profile", playerHandler.UpdateMyProfile)
 			r.Post("/game-sessions/{id}/players", playerHandler.Add)

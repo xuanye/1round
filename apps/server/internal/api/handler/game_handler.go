@@ -41,12 +41,39 @@ func (h *GameHandler) Join(w http.ResponseWriter, r *http.Request) {
 		response.Error(w, err)
 		return
 	}
-	id, err := h.game.Join(r.Context(), middleware.UserID(r.Context()), req.InviteCode)
+	id, err := h.game.Join(r.Context(), middleware.UserID(r.Context()), req.InviteCode, req.DisplayName)
 	if err != nil {
 		response.Error(w, err)
 		return
 	}
 	response.JSON(w, http.StatusOK, map[string]string{"gameSessionId": id})
+}
+
+func (h *GameHandler) Current(w http.ResponseWriter, r *http.Request) {
+	result, err := h.game.Current(r.Context(), middleware.UserID(r.Context()))
+	if err != nil {
+		response.Error(w, err)
+		return
+	}
+	if result == nil {
+		response.Empty(w)
+		return
+	}
+	response.JSON(w, http.StatusOK, result)
+}
+
+func (h *GameHandler) JoinPreview(w http.ResponseWriter, r *http.Request) {
+	var req dto.JoinPreviewRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.Error(w, err)
+		return
+	}
+	result, err := h.game.JoinPreview(r.Context(), middleware.UserID(r.Context()), req.InviteCode)
+	if err != nil {
+		response.Error(w, err)
+		return
+	}
+	response.JSON(w, http.StatusOK, result)
 }
 
 func (h *GameHandler) Get(w http.ResponseWriter, r *http.Request) {

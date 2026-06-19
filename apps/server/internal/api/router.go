@@ -44,10 +44,13 @@ func NewRouter(logger *slog.Logger, services Services) http.Handler {
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Auth(services.Tokens))
 			r.Post("/game-sessions", gameHandler.Create)
+			r.Get("/game-sessions/current", gameHandler.Current)
 			r.Post("/game-sessions/join", gameHandler.Join)
+			r.Post("/game-sessions/join-preview", gameHandler.JoinPreview)
 			r.Get("/game-sessions/{id}", gameHandler.Get)
 			r.Get("/game-sessions/{id}/summary", gameHandler.Summary)
 			r.Post("/game-sessions/{id}/finish", gameHandler.Finish)
+			r.Patch("/game-sessions/{id}/my-profile", playerHandler.UpdateMyProfile)
 			r.Post("/game-sessions/{id}/players", playerHandler.Add)
 			r.Get("/game-sessions/{id}/players", playerHandler.List)
 			r.Patch("/game-sessions/{id}/players/{playerId}", playerHandler.Update)

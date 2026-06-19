@@ -52,6 +52,16 @@ func (s *Service) Create(ctx context.Context, userID, name string, maxParticipan
 	if strings.TrimSpace(name) == "" {
 		return domain.GameSession{}, domain.ErrInvalidArgument
 	}
+	if maxParticipants != nil && (*maxParticipants < 2 || *maxParticipants > 10) {
+		return domain.GameSession{}, domain.ErrInvalidArgument
+	}
+	current, err := s.q.GetCurrentGameForUser(ctx, userID)
+	if err != nil {
+		return domain.GameSession{}, err
+	}
+	if current != nil {
+		return domain.GameSession{}, domain.ErrActiveGameExists
+	}
 	now := s.now()
 	code, err := GenerateInviteCode()
 	if err != nil {
@@ -64,7 +74,7 @@ func (s *Service) Create(ctx context.Context, userID, name string, maxParticipan
 	}
 	member := domain.GameMember{ID: uuid.NewString(), GameSessionID: session.ID, UserID: userID, Role: domain.GameMemberRoleOwner, JoinedAt: now}
 	ownerPlayer := domain.Player{
-		ID: uuid.NewString(), GameSessionID: session.ID, UserID: &userID, DisplayName: "房主",
+		ID: uuid.NewString(), GameSessionID: session.ID, UserID: &userID, DisplayName: defaultDisplayName(userID),
 		Active: true, JoinedOrder: 1, TotalScore: 0, CreatedAt: now, UpdatedAt: now,
 	}
 	err = s.store.InTx(ctx, func(q *sqlite.Queries) error {
@@ -80,16 +90,188 @@ func (s *Service) Current(ctx context.Context, userID string) (*domain.GameSessi
 	return s.q.GetCurrentGameForUser(ctx, userID)
 }
 
-func (s *Service) Join(ctx context.Context, userID, inviteCode string) (string, error) {
+type JoinPreview struct {
+	GameSessionID          string          `json:"gameSessionId"`
+	Name                   string          `json:"name"`
+	OwnerDisplayName       string          `json:"ownerDisplayName"`
+	ParticipantCount       int             `json:"participantCount"`
+	MaxParticipants        *int            `json:"maxParticipants"`
+	Participants           []PlayerPreview `json:"participants"`
+	CurrentUserDisplayName string          `json:"currentUserDisplayName"`
+	AlreadyJoined          bool            `json:"alreadyJoined"`
+}
+
+type PlayerPreview struct {
+	ID          string `json:"id"`
+	DisplayName string `json:"displayName"`
+}
+
+func defaultDisplayName(userID string) string {
+	if len(userID) >= 2 {
+		return "老书记" + userID[len(userID)-2:]
+	}
+	return "老书记00"
+}
+
+func (s *Service) JoinPreview(ctx context.Context, userID, inviteCode string) (JoinPreview, error) {
+	session, err := s.q.GetGameSessionByInviteCode(ctx, strings.ToUpper(strings.TrimSpace(inviteCode)))
+	if err != nil {
+		return JoinPreview{}, err
+	}
+	if session.Status == domain.GameSessionStatusFinished || session.Status == domain.GameSessionStatusVoided {
+		return JoinPreview{}, domain.ErrGameSessionFinished
+	}
+	players, err := s.q.ListHistoricalPlayers(ctx, session.ID)
+	if err != nil {
+		return JoinPreview{}, err
+	}
+
+	preview := JoinPreview{
+		GameSessionID:    session.ID,
+		Name:             session.Name,
+		MaxParticipants:  session.MaxParticipants,
+		ParticipantCount: len(players),
+	}
+
+	var ownerDisplayName string
+	var currentUserDisplayName string
+	alreadyJoined := false
+	for _, p := range players {
+		preview.Participants = append(preview.Participants, PlayerPreview{ID: p.ID, DisplayName: p.DisplayName})
+		if p.UserID != nil && *p.UserID == session.OwnerUserID {
+			ownerDisplayName = p.DisplayName
+		}
+		if p.UserID != nil && *p.UserID == userID {
+			currentUserDisplayName = p.DisplayName
+			if p.Active {
+				alreadyJoined = true
+			}
+		}
+	}
+	preview.OwnerDisplayName = ownerDisplayName
+	preview.AlreadyJoined = alreadyJoined
+
+	// If user is not yet a participant, generate a default display name
+	if currentUserDisplayName == "" {
+		currentUserDisplayName = defaultDisplayName(userID)
+	}
+	preview.CurrentUserDisplayName = currentUserDisplayName
+
+	return preview, nil
+}
+
+func (s *Service) Join(ctx context.Context, userID, inviteCode, displayName string) (string, error) {
 	session, err := s.q.GetGameSessionByInviteCode(ctx, strings.ToUpper(strings.TrimSpace(inviteCode)))
 	if err != nil {
 		return "", err
 	}
-	if session.Status == domain.GameSessionStatusFinished {
+	if session.Status == domain.GameSessionStatusFinished || session.Status == domain.GameSessionStatusVoided {
 		return "", domain.ErrGameSessionFinished
 	}
-	err = s.q.AddGameMember(ctx, domain.GameMember{ID: uuid.NewString(), GameSessionID: session.ID, UserID: userID, Role: domain.GameMemberRoleMember, JoinedAt: s.now()})
-	return session.ID, err
+
+	// Check if user is already an active participant in this game (early return, no displayName needed)
+	existingPlayer, err := s.q.GetActivePlayerByUser(ctx, session.ID, userID)
+	if err != nil && err != domain.ErrNotFound {
+		return "", err
+	}
+	if err == nil {
+		// Already active in this game
+		_ = existingPlayer
+		return session.ID, nil
+	}
+
+	if strings.TrimSpace(displayName) == "" {
+		return "", domain.ErrInvalidArgument
+	}
+
+	// Check if user has another current game (different from this one)
+	current, err := s.q.GetCurrentGameForUser(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+	if current != nil && current.ID != session.ID {
+		return "", domain.ErrActiveGameExists
+	}
+
+	// Check capacity (count active participants only)
+	activeCount, err := s.q.CountActiveParticipants(ctx, session.ID)
+	if err != nil {
+		return "", err
+	}
+	if session.MaxParticipants != nil && activeCount >= *session.MaxParticipants {
+		return "", domain.ErrGameCapacityFull
+	}
+
+	displayName = strings.TrimSpace(displayName)
+
+	// Check if user was a historical (inactive) participant -- reactivate
+	historicalPlayer, err := s.q.GetHistoricalPlayerByUser(ctx, session.ID, userID)
+	if err != nil && err != domain.ErrNotFound {
+		return "", err
+	}
+	if err == nil {
+		// Reactivate: name unique check excluding self
+		if err := s.checkDisplayNameUnique(ctx, session.ID, displayName, historicalPlayer.ID); err != nil {
+			return "", err
+		}
+		now := s.now()
+		err = s.store.InTx(ctx, func(q *sqlite.Queries) error {
+			if err := q.ReactivatePlayer(ctx, historicalPlayer.ID, session.ID, displayName, 0, now); err != nil {
+				return err
+			}
+			return q.AddGameMember(ctx, domain.GameMember{ID: uuid.NewString(), GameSessionID: session.ID, UserID: userID, Role: domain.GameMemberRoleMember, JoinedAt: now})
+		})
+		if err != nil {
+			return "", err
+		}
+		if s.hub != nil {
+			s.hub.BroadcastToGame(ctx, session.ID, realtime.Event{Type: realtime.EventParticipantJoined, GameSessionID: session.ID, Version: session.Version, SentAt: s.now()})
+		}
+		return session.ID, nil
+	}
+
+	// Brand new participant
+	if err := s.checkDisplayNameUnique(ctx, session.ID, displayName, ""); err != nil {
+		return "", err
+	}
+	now := s.now()
+	joinedOrder, err := s.q.NextJoinedOrder(ctx, session.ID)
+	if err != nil {
+		return "", err
+	}
+	p := domain.Player{
+		ID: uuid.NewString(), GameSessionID: session.ID, UserID: &userID, DisplayName: displayName,
+		Active: true, JoinedOrder: joinedOrder, TotalScore: 0, CreatedAt: now, UpdatedAt: now,
+	}
+	err = s.store.InTx(ctx, func(q *sqlite.Queries) error {
+		if err := q.CreatePlayer(ctx, p); err != nil {
+			return err
+		}
+		return q.AddGameMember(ctx, domain.GameMember{ID: uuid.NewString(), GameSessionID: session.ID, UserID: userID, Role: domain.GameMemberRoleMember, JoinedAt: now})
+	})
+	if err != nil {
+		return "", err
+	}
+	if s.hub != nil {
+		s.hub.BroadcastToGame(ctx, session.ID, realtime.Event{Type: realtime.EventParticipantJoined, GameSessionID: session.ID, Version: session.Version, SentAt: s.now()})
+	}
+	return session.ID, nil
+}
+
+func (s *Service) checkDisplayNameUnique(ctx context.Context, gameSessionID, displayName, excludePlayerID string) error {
+	players, err := s.q.ListHistoricalPlayers(ctx, gameSessionID)
+	if err != nil {
+		return err
+	}
+	for _, p := range players {
+		if p.ID == excludePlayerID {
+			continue
+		}
+		if p.DisplayName == displayName {
+			return domain.ErrDuplicateDisplayName
+		}
+	}
+	return nil
 }
 
 func (s *Service) GetForMember(ctx context.Context, userID, gameSessionID string) (domain.GameSession, error) {

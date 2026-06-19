@@ -49,6 +49,36 @@ func TestFakeAuthCreateJoinAddSubmitSummaryRankingAPI(t *testing.T) {
 	}
 }
 
+func TestCurrentPreviewJoinAndProfileAPI(t *testing.T) {
+	app := newTestApp(t)
+	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
+	router := api.NewRouter(slog.Default(), api.Services{
+		Auth: app.auth, Game: app.game, Player: app.player, Query: app.query,
+		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
+	})
+
+	ownerToken := loginHTTP(t, router, "owner-code")
+	game := postJSON[map[string]any](t, router, ownerToken, "/api/game-sessions", map[string]any{"name": "家庭聚会", "maxParticipants": 2})
+	current := getJSON[map[string]any](t, router, ownerToken, "/api/game-sessions/current")
+	if current["id"] != game["id"] {
+		t.Fatalf("unexpected current game: %+v", current)
+	}
+
+	joinerToken := loginHTTP(t, router, "joiner-code")
+	preview := postJSON[map[string]any](t, router, joinerToken, "/api/game-sessions/join-preview", map[string]any{"inviteCode": game["inviteCode"]})
+	if preview["participantCount"].(float64) != 1 {
+		t.Fatalf("unexpected preview: %+v", preview)
+	}
+	joined := postJSON[map[string]any](t, router, joinerToken, "/api/game-sessions/join", map[string]any{"inviteCode": game["inviteCode"], "displayName": "妈妈"})
+	if joined["gameSessionId"] != game["id"] {
+		t.Fatalf("unexpected join: %+v", joined)
+	}
+	updated := patchJSON[map[string]any](t, router, joinerToken, "/api/game-sessions/"+game["id"].(string)+"/my-profile", map[string]any{"displayName": "阿姨"})
+	if updated["displayName"] != "阿姨" {
+		t.Fatalf("unexpected profile: %+v", updated)
+	}
+}
+
 func loginHTTP(t *testing.T, router http.Handler, code string) string {
 	t.Helper()
 	result := postJSON[map[string]any](t, router, "", "/api/auth/wechat-login", map[string]any{"code": code})
@@ -81,6 +111,22 @@ func getJSON[T any](t *testing.T, router http.Handler, token, path string) T {
 	router.ServeHTTP(rec, req)
 	if rec.Code < 200 || rec.Code >= 300 {
 		t.Fatalf("GET %s status %d body %s", path, rec.Code, rec.Body.String())
+	}
+	return decodeData[T](t, rec.Body.Bytes())
+}
+
+func patchJSON[T any](t *testing.T, router http.Handler, token, path string, payload any) T {
+	t.Helper()
+	body, _ := json.Marshal(payload)
+	req := httptest.NewRequest(http.MethodPatch, path, bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code < 200 || rec.Code >= 300 {
+		t.Fatalf("PATCH %s status %d body %s", path, rec.Code, rec.Body.String())
 	}
 	return decodeData[T](t, rec.Body.Bytes())
 }

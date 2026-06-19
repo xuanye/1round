@@ -6,5 +6,10 @@ type CreateGameRequest struct {
 }
 
 type JoinGameRequest struct {
+	InviteCode  string `json:"inviteCode"`
+	DisplayName string `json:"displayName"`
+}
+
+type JoinPreviewRequest struct {
 	InviteCode string `json:"inviteCode"`
 }

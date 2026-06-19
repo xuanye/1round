@@ -198,6 +198,59 @@ func TestNonMemberCannotReadSummary(t *testing.T) {
 	}
 }
 
+func TestUserCanHaveOnlyOneCurrentGame(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	user := login(t, app, "owner-code")
+	_ = createGame(t, app, user, nil)
+
+	_, err := app.game.Create(ctx, user, "第二局", nil)
+	if err != domain.ErrActiveGameExists {
+		t.Fatalf("expected active game conflict, got %v", err)
+	}
+}
+
+func TestJoinPreviewDoesNotCreateParticipant(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	owner := login(t, app, "owner-code")
+	joiner := login(t, app, "joiner-code")
+	game := createGame(t, app, owner, nil)
+
+	preview, err := app.game.JoinPreview(ctx, joiner, game.InviteCode)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if preview.GameSessionID != game.ID || preview.ParticipantCount != 1 || preview.CurrentUserDisplayName == "" {
+		t.Fatalf("unexpected preview: %+v", preview)
+	}
+	participants, err := app.query.ActiveParticipants(ctx, owner, game.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(participants) != 1 {
+		t.Fatalf("preview created participant: %+v", participants)
+	}
+}
+
+func TestJoinEnforcesCapacityAndDisplayNameUniqueness(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	owner := login(t, app, "owner-code")
+	max := 2
+	game := createGame(t, app, owner, &max)
+	joiner := login(t, app, "joiner-code")
+
+	if _, err := app.game.Join(ctx, joiner, game.InviteCode, "妈妈"); err != nil {
+		t.Fatal(err)
+	}
+	third := login(t, app, "third-code")
+	_, err := app.game.Join(ctx, third, game.InviteCode, "爸爸")
+	if err != domain.ErrGameCapacityFull {
+		t.Fatalf("expected capacity full, got %v", err)
+	}
+}
+
 func TestHubBroadcastOnlyTargetsRoom(t *testing.T) {
 	hub := realtime.NewMemoryHub()
 	c1 := &realtime.Client{Send: make(chan realtime.Event, 1)}

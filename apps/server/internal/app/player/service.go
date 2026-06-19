@@ -70,3 +70,48 @@ func (s *Service) Delete(ctx context.Context, userID, gameSessionID, playerID st
 	}
 	return s.q.DeletePlayer(ctx, gameSessionID, playerID)
 }
+
+func (s *Service) UpdateMyProfile(ctx context.Context, userID, gameSessionID, displayName string) (domain.Player, error) {
+	if strings.TrimSpace(displayName) == "" {
+		return domain.Player{}, domain.ErrInvalidArgument
+	}
+	session, err := s.q.GetGameSession(ctx, gameSessionID)
+	if err != nil {
+		return domain.Player{}, err
+	}
+	if session.Status == domain.GameSessionStatusFinished || session.Status == domain.GameSessionStatusVoided {
+		return domain.Player{}, domain.ErrGameSessionFinished
+	}
+
+	// User must be a historical participant
+	player, err := s.q.GetHistoricalPlayerByUser(ctx, gameSessionID, userID)
+	if err != nil {
+		return domain.Player{}, err
+	}
+
+	displayName = strings.TrimSpace(displayName)
+
+	// Check display name uniqueness excluding self
+	historicalPlayers, err := s.q.ListHistoricalPlayers(ctx, gameSessionID)
+	if err != nil {
+		return domain.Player{}, err
+	}
+	for _, p := range historicalPlayers {
+		if p.ID == player.ID {
+			continue
+		}
+		if p.DisplayName == displayName {
+			return domain.Player{}, domain.ErrDuplicateDisplayName
+		}
+	}
+
+	now := s.now()
+	updated, err := s.q.UpdatePlayer(ctx, gameSessionID, player.ID, displayName)
+	if err != nil {
+		return domain.Player{}, err
+	}
+	if s.hub != nil {
+		s.hub.BroadcastToGame(ctx, gameSessionID, realtime.Event{Type: realtime.EventParticipantUpdated, GameSessionID: gameSessionID, Version: session.Version, SentAt: now})
+	}
+	return updated, nil
+}

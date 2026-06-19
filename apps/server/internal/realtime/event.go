@@ -8,7 +8,9 @@ const (
 	EventPlayerUpdated  = "player.updated"
 	EventPlayerRemoved  = "player.removed"
 	EventRoundSubmitted = "round.submitted"
-	EventGameFinished   = "game.finished"
+	EventGameFinished          = "game.finished"
+	EventParticipantJoined     = "participant.joined"
+	EventParticipantUpdated    = "participant.updated"
 )
 
 type Event struct {

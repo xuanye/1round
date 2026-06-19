@@ -3,6 +3,7 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/xuanye/one-round/apps/server/internal/domain"
 )
@@ -104,11 +105,21 @@ func (q *Queries) getPlayerByUser(ctx context.Context, gameSessionID, userID str
 }
 
 func (q *Queries) UpdatePlayer(ctx context.Context, gameSessionID, playerID, displayName string) (domain.Player, error) {
-	_, err := q.db.ExecContext(ctx, `UPDATE players SET display_name = ?, updated_at = datetime('now') WHERE id = ? AND game_session_id = ?`, displayName, playerID, gameSessionID)
+	return q.UpdatePlayerAt(ctx, gameSessionID, playerID, displayName, time.Now().UTC())
+}
+
+func (q *Queries) UpdatePlayerAt(ctx context.Context, gameSessionID, playerID, displayName string, now time.Time) (domain.Player, error) {
+	_, err := q.db.ExecContext(ctx, `UPDATE players SET display_name = ?, updated_at = ? WHERE id = ? AND game_session_id = ?`, displayName, encodeTime(now), playerID, gameSessionID)
 	if err != nil {
 		return domain.Player{}, err
 	}
 	return q.GetPlayer(ctx, gameSessionID, playerID)
+}
+
+func (q *Queries) ReactivatePlayer(ctx context.Context, playerID, gameSessionID, displayName string, totalScore int, now time.Time) error {
+	_, err := q.db.ExecContext(ctx, `UPDATE players SET active = 1, display_name = ?, total_score = ?, left_at = NULL, updated_at = ? WHERE id = ? AND game_session_id = ?`,
+		displayName, totalScore, encodeTime(now), playerID, gameSessionID)
+	return err
 }
 
 func (q *Queries) DeletePlayer(ctx context.Context, gameSessionID, playerID string) error {

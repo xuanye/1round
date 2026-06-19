@@ -32,6 +32,10 @@ type Config struct {
 		PingIntervalSeconds int `yaml:"ping_interval_seconds"`
 		ClientSendQueueSize int `yaml:"client_send_queue_size"`
 	} `yaml:"realtime"`
+	Settlement struct {
+		AutoCheckIntervalSeconds int `yaml:"auto_check_interval_seconds"`
+		InactivityHours          int `yaml:"inactivity_hours"`
+	} `yaml:"settlement"`
 }
 
 func Default() Config {
@@ -47,6 +51,8 @@ func Default() Config {
 	cfg.Realtime.PongTimeoutSeconds = 60
 	cfg.Realtime.PingIntervalSeconds = 30
 	cfg.Realtime.ClientSendQueueSize = 32
+	cfg.Settlement.AutoCheckIntervalSeconds = 300
+	cfg.Settlement.InactivityHours = 24
 	return cfg
 }
 
@@ -66,6 +72,22 @@ func Load(path string) (Config, error) {
 
 func (c Config) TokenTTL() time.Duration {
 	return time.Duration(c.Auth.TokenTTLHours) * time.Hour
+}
+
+func (c Config) AutoCheckInterval() time.Duration {
+	secs := c.Settlement.AutoCheckIntervalSeconds
+	if secs <= 0 {
+		secs = 300
+	}
+	return time.Duration(secs) * time.Second
+}
+
+func (c Config) InactivityThreshold() time.Duration {
+	hours := c.Settlement.InactivityHours
+	if hours <= 0 {
+		hours = 24
+	}
+	return time.Duration(hours) * time.Hour
 }
 
 func applyEnv(cfg *Config) {
@@ -97,4 +119,6 @@ func applyEnv(cfg *Config) {
 	setBool("ONEROUND_WECHAT_USE_FAKE_AUTH", &cfg.Wechat.UseFakeAuth)
 	setString("ONEROUND_AUTH_SIGNING_KEY", &cfg.Auth.SigningKey)
 	setInt("ONEROUND_AUTH_TOKEN_TTL_HOURS", &cfg.Auth.TokenTTLHours)
+	setInt("ONEROUND_SETTLEMENT_AUTO_CHECK_INTERVAL_SECONDS", &cfg.Settlement.AutoCheckIntervalSeconds)
+	setInt("ONEROUND_SETTLEMENT_INACTIVITY_HOURS", &cfg.Settlement.InactivityHours)
 }

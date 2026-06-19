@@ -3,12 +3,18 @@ package realtime
 import "time"
 
 const (
-	EventGameUpdated    = "game.updated"
-	EventPlayerAdded    = "player.added"
-	EventPlayerUpdated  = "player.updated"
-	EventPlayerRemoved  = "player.removed"
-	EventRoundSubmitted = "round.submitted"
-	EventGameFinished   = "game.finished"
+	EventGameUpdated            = "game.updated"
+	EventPlayerAdded            = "player.added"
+	EventPlayerUpdated          = "player.updated"
+	EventPlayerRemoved          = "player.removed"
+	EventGameFinished           = "game.finished"
+	EventGameVoided             = "game.voided"
+	EventParticipantJoined      = "participant.joined"
+	EventParticipantUpdated     = "participant.updated"
+	EventParticipantLeft        = "participant.left"
+	EventScoreTransferSubmitted = "score_transfer.submitted"
+	EventFinishRequested        = "finish_requested"
+	EventFinishRequestRejected  = "finish_request_rejected"
 )
 
 type Event struct {

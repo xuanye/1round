@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"nhooyr.io/websocket"
+	"github.com/coder/websocket"
 )
 
 type Hub interface {

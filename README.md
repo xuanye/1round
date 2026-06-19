@@ -56,7 +56,7 @@ export ONEROUND_AUTH_SIGNING_KEY="$(openssl rand -base64 48)"
 wscat -c "ws://localhost:8080/ws/game-sessions/<id>?token=<jwt>"
 ```
 
-提交 `/api/game-sessions/<id>/rounds` 后，同一房间客户端会收到 `round.submitted`，客户端应重新请求 summary。
+提交 `/api/game-sessions/<id>/score-transfers` 后，同一房间客户端会收到 `score_transfer.submitted`，客户端应重新请求 summary。
 
 ## 小程序启动
 

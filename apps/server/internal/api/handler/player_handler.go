@@ -64,3 +64,17 @@ func (h *PlayerHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	response.JSON(w, http.StatusOK, dto.DeletePlayerResponse{Deleted: true})
 }
+
+func (h *PlayerHandler) UpdateMyProfile(w http.ResponseWriter, r *http.Request) {
+	var req dto.PlayerRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.Error(w, err)
+		return
+	}
+	result, err := h.player.UpdateMyProfile(r.Context(), middleware.UserID(r.Context()), chi.URLParam(r, "id"), req.DisplayName)
+	if err != nil {
+		response.Error(w, err)
+		return
+	}
+	response.JSON(w, http.StatusOK, result)
+}

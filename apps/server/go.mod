@@ -3,13 +3,13 @@ module github.com/xuanye/one-round/apps/server
 go 1.24.0
 
 require (
+	github.com/coder/websocket v1.8.15
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
 	github.com/pressly/goose/v3 v3.25.0
 	gopkg.in/yaml.v3 v3.0.1
 	modernc.org/sqlite v1.39.1
-	nhooyr.io/websocket v1.8.17
 )
 
 require (

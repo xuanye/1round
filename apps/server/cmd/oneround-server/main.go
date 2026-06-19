@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/pressly/goose/v3"
@@ -15,7 +17,9 @@ import (
 	gamesvc "github.com/xuanye/one-round/apps/server/internal/app/game"
 	playersvc "github.com/xuanye/one-round/apps/server/internal/app/player"
 	querysvc "github.com/xuanye/one-round/apps/server/internal/app/query"
-	roundsvc "github.com/xuanye/one-round/apps/server/internal/app/round"
+	"github.com/xuanye/one-round/apps/server/internal/app/scheduler"
+	scoretransfersvc "github.com/xuanye/one-round/apps/server/internal/app/scoretransfer"
+	settlementsvc "github.com/xuanye/one-round/apps/server/internal/app/settlement"
 	"github.com/xuanye/one-round/apps/server/internal/config"
 	jwtauth "github.com/xuanye/one-round/apps/server/internal/infra/auth"
 	"github.com/xuanye/one-round/apps/server/internal/infra/clock"
@@ -35,13 +39,18 @@ func main() {
 		logger.Error("load config", "error", err)
 		os.Exit(1)
 	}
-	ctx := context.Background()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 	db, err := sqlite.Open(ctx, cfg.Database.Path)
 	if err != nil {
 		logger.Error("open database", "error", err)
 		os.Exit(1)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			logger.Error("close database", "error", err)
+		}
+	}()
 	if err := goose.SetDialect("sqlite"); err != nil {
 		logger.Error("set migration dialect", "error", err)
 		os.Exit(1)
@@ -65,13 +74,17 @@ func main() {
 	gameService := gamesvc.NewService(store, queries, hub, now)
 	queryService := querysvc.NewService(queries, gameService)
 	authService := authsvc.NewService(queries, wechatClient, tokens, now)
-	playerService := playersvc.NewService(queries, gameService, hub, now)
-	roundService := roundsvc.NewService(store, queries, gameService, hub, now)
+	playerService := playersvc.NewService(store, queries, gameService, hub, now)
+	scoreTransferService := scoretransfersvc.NewService(store, queries, gameService, hub, now)
+	settlementService := settlementsvc.NewService(store, queries, gameService, hub, now)
 	wsHandler := wshandler.NewWebSocketHandler(gameService, hub, cfg.Realtime.ClientSendQueueSize, time.Duration(cfg.Realtime.WriteTimeoutSeconds)*time.Second)
 
+	runner := scheduler.NewAutoSettlementRunner(settlementService, logger, cfg.AutoCheckInterval(), cfg.InactivityThreshold())
+	runner.Start(ctx)
+
 	router := api.NewRouter(logger, api.Services{
-		Auth: authService, Game: gameService, Player: playerService, Round: roundService,
-		Query: queryService, Tokens: tokens, WebSocket: wsHandler,
+		Auth: authService, Game: gameService, Player: playerService,
+		ScoreTransfer: scoreTransferService, Settlement: settlementService, Query: queryService, Tokens: tokens, WebSocket: wsHandler,
 	})
 	logger.Info("starting server", "addr", cfg.Server.HTTPAddr)
 	if err := http.ListenAndServe(cfg.Server.HTTPAddr, router); err != nil {

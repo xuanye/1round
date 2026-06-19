@@ -12,7 +12,6 @@ import (
 	gamesvc "github.com/xuanye/one-round/apps/server/internal/app/game"
 	playersvc "github.com/xuanye/one-round/apps/server/internal/app/player"
 	querysvc "github.com/xuanye/one-round/apps/server/internal/app/query"
-	roundsvc "github.com/xuanye/one-round/apps/server/internal/app/round"
 	scoretransfersvc "github.com/xuanye/one-round/apps/server/internal/app/scoretransfer"
 	settlementsvc "github.com/xuanye/one-round/apps/server/internal/app/settlement"
 	"github.com/xuanye/one-round/apps/server/internal/domain"
@@ -26,7 +25,6 @@ type testApp struct {
 	auth          *authsvc.Service
 	game          *gamesvc.Service
 	player        *playersvc.Service
-	round         *roundsvc.Service
 	scoreTransfer *scoretransfersvc.Service
 	settlement    *settlementsvc.Service
 	query         *querysvc.Service
@@ -116,40 +114,64 @@ func TestCurrentGameExcludesFinishedAndVoidedGames(t *testing.T) {
 	}
 }
 
-func TestSubmitRoundAccumulatesScoresAndRanking(t *testing.T) {
+func TestSubmitScoreTransferAccumulatesScoresAndRanking(t *testing.T) {
 	app := newTestApp(t)
 	ctx := context.Background()
 	user := login(t, app, "owner-code")
 	game := createGame(t, app, user, nil)
-	players, _ := app.player.List(ctx, user, game.ID)
-	// Find owner player and add two more
-	var ownerPlayer domain.Player
-	for _, p := range players {
-		if p.UserID != nil && *p.UserID == user {
-			ownerPlayer = p
-			break
-		}
-	}
-	p1, _ := app.player.Add(ctx, user, game.ID, "爸爸")
-	p2, _ := app.player.Add(ctx, user, game.ID, "妈妈")
 
-	result, err := app.round.Submit(ctx, user, game.ID, []roundsvc.ScoreInput{
-		{PlayerID: ownerPlayer.ID, Score: 0},
-		{PlayerID: p1.ID, Score: 12},
-		{PlayerID: p2.ID, Score: -12},
-	}, nil)
+	u2 := login(t, app, "u2-code")
+	u3 := login(t, app, "u3-code")
+	if _, err := app.game.Join(ctx, u2, game.InviteCode, "爸爸"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := app.game.Join(ctx, u3, game.InviteCode, "妈妈"); err != nil {
+		t.Fatal(err)
+	}
+
+	p1, _ := app.query.MyParticipant(ctx, u2, game.ID)
+	p2, _ := app.query.MyParticipant(ctx, u3, game.ID)
+
+	// Owner gives 12 to p1
+	result, err := app.scoreTransfer.Submit(ctx, user, game.ID, scoretransfersvc.SubmitInput{
+		ReceiverPlayerIDs: []string{p1.ID},
+		Amount:            12,
+		IdempotencyKey:    "transfer-1",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result.RoundNo != 1 || result.Version != 2 {
-		t.Fatalf("unexpected round result: %+v", result)
+	if result.SequenceNo != 1 || result.Version != 2 {
+		t.Fatalf("unexpected result: %+v", result)
 	}
+
+	// p2 gives 12 to p1
+	result2, err := app.scoreTransfer.Submit(ctx, u3, game.ID, scoretransfersvc.SubmitInput{
+		ReceiverPlayerIDs: []string{p1.ID},
+		Amount:            12,
+		IdempotencyKey:    "transfer-2",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result2.SequenceNo != 2 || result2.Version != 3 {
+		t.Fatalf("unexpected result2: %+v", result2)
+	}
+
 	summary, err := app.query.Summary(ctx, user, game.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if summary.Players[0].DisplayName != "爸爸" || summary.Players[0].TotalScore != 12 {
-		t.Fatalf("unexpected leading player: %+v", summary.Players)
+	// Owner: -12 (gave 12 to p1), p1: +24 (received 12+12), p2: -12 (gave 12 to p1)
+	scores := map[string]int{}
+	for _, p := range summary.Players {
+		scores[p.ID] = p.TotalScore
+	}
+	if scores[p1.ID] != 24 {
+		t.Fatalf("unexpected p1 score: %+v", scores)
+	}
+	if scores[p2.ID] != -12 {
+		t.Fatalf("unexpected p2 score: %+v", scores)
 	}
 	ranking, err := app.query.Ranking(ctx, user, game.ID)
 	if err != nil {
@@ -163,29 +185,26 @@ func TestSubmitRoundAccumulatesScoresAndRanking(t *testing.T) {
 	}
 }
 
-func TestFinishedGameRejectsRound(t *testing.T) {
+func TestFinishedGameRejectsScoreTransfer(t *testing.T) {
 	app := newTestApp(t)
 	ctx := context.Background()
 	user := login(t, app, "owner-code")
 	game := createGame(t, app, user, nil)
-	players, _ := app.player.List(ctx, user, game.ID)
-	var ownerPlayer domain.Player
-	for _, p := range players {
-		if p.UserID != nil && *p.UserID == user {
-			ownerPlayer = p
-			break
-		}
+
+	u2 := login(t, app, "u2-code")
+	if _, err := app.game.Join(ctx, u2, game.InviteCode, "A"); err != nil {
+		t.Fatal(err)
 	}
-	p1, _ := app.player.Add(ctx, user, game.ID, "A")
-	p2, _ := app.player.Add(ctx, user, game.ID, "B")
+	p2, _ := app.query.MyParticipant(ctx, u2, game.ID)
+
 	if _, err := app.settlement.FinishDirect(ctx, user, game.ID); err != nil {
 		t.Fatal(err)
 	}
-	_, err := app.round.Submit(ctx, user, game.ID, []roundsvc.ScoreInput{
-		{PlayerID: ownerPlayer.ID, Score: 0},
-		{PlayerID: p1.ID, Score: 1},
-		{PlayerID: p2.ID, Score: -1},
-	}, nil)
+	_, err := app.scoreTransfer.Submit(ctx, user, game.ID, scoretransfersvc.SubmitInput{
+		ReceiverPlayerIDs: []string{p2.ID},
+		Amount:            1,
+		IdempotencyKey:    "finished-key",
+	})
 	if err != domain.ErrGameSessionFinished {
 		t.Fatalf("expected finished error, got %v", err)
 	}
@@ -345,23 +364,14 @@ func TestLeaveRequiresZeroScore(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Get all active players
-	activePlayers, _ := app.query.ActiveParticipants(ctx, owner, game.ID)
-	var ownerPID, joinerPID string
-	for _, p := range activePlayers {
-		if p.UserID != nil && *p.UserID == owner {
-			ownerPID = p.ID
-		}
-		if p.UserID != nil && *p.UserID == joiner {
-			joinerPID = p.ID
-		}
-	}
+	joinerP, _ := app.query.MyParticipant(ctx, joiner, game.ID)
 
-	// Submit a round to give owner a non-zero score
-	_, err := app.round.Submit(ctx, owner, game.ID, []roundsvc.ScoreInput{
-		{PlayerID: ownerPID, Score: 10},
-		{PlayerID: joinerPID, Score: -10},
-	}, nil)
+	// Owner gives 10 to joiner, making owner's score non-zero
+	_, err := app.scoreTransfer.Submit(ctx, owner, game.ID, scoretransfersvc.SubmitInput{
+		ReceiverPlayerIDs: []string{joinerP.ID},
+		Amount:            10,
+		IdempotencyKey:    "leave-test",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -529,28 +539,37 @@ func TestLastScoredParticipantLeaveFinishesGame(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Get all active players
-	activePlayers, _ := app.query.ActiveParticipants(ctx, owner, game.ID)
-	var ownerPID, joinerPID string
-	for _, p := range activePlayers {
-		if p.UserID != nil && *p.UserID == owner {
-			ownerPID = p.ID
-		}
-		if p.UserID != nil && *p.UserID == joiner {
-			joinerPID = p.ID
-		}
-	}
+	ownerP, _ := app.query.MyParticipant(ctx, owner, game.ID)
+	joinerP, _ := app.query.MyParticipant(ctx, joiner, game.ID)
 
-	// Submit a round (scored game with zero scores)
-	_, err := app.round.Submit(ctx, owner, game.ID, []roundsvc.ScoreInput{
-		{PlayerID: ownerPID, Score: 0},
-		{PlayerID: joinerPID, Score: 0},
-	}, nil)
-	if err != nil {
+	// Owner gives 1 to joiner, joiner gives 1 back to owner
+	// Net result: both have 0 score, but the game is "scored"
+	if _, err := app.scoreTransfer.Submit(ctx, owner, game.ID, scoretransfersvc.SubmitInput{
+		ReceiverPlayerIDs: []string{joinerP.ID},
+		Amount:            1,
+		IdempotencyKey:    "scored-transfer-1",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := app.scoreTransfer.Submit(ctx, joiner, game.ID, scoretransfersvc.SubmitInput{
+		ReceiverPlayerIDs: []string{ownerP.ID},
+		Amount:            1,
+		IdempotencyKey:    "scored-transfer-2",
+	}); err != nil {
 		t.Fatal(err)
 	}
 
-	// Both leave
+	// Verify both have zero score now
+	ownerP2, _ := app.query.MyParticipant(ctx, owner, game.ID)
+	joinerP2, _ := app.query.MyParticipant(ctx, joiner, game.ID)
+	if ownerP2.TotalScore != 0 {
+		t.Fatalf("expected owner score 0, got %d", ownerP2.TotalScore)
+	}
+	if joinerP2.TotalScore != 0 {
+		t.Fatalf("expected joiner score 0, got %d", joinerP2.TotalScore)
+	}
+
+	// Both leave with zero score
 	if err := app.player.Leave(ctx, owner, game.ID); err != nil {
 		t.Fatal(err)
 	}
@@ -686,7 +705,7 @@ func TestHubBroadcastOnlyTargetsRoom(t *testing.T) {
 	if err := hub.Register(context.Background(), "game-2", c2); err != nil {
 		t.Fatal(err)
 	}
-	hub.BroadcastToGame(context.Background(), "game-1", realtime.Event{Type: realtime.EventRoundSubmitted})
+	hub.BroadcastToGame(context.Background(), "game-1", realtime.Event{Type: realtime.EventScoreTransferSubmitted})
 	select {
 	case <-c1.Send:
 	default:
@@ -725,7 +744,6 @@ func newTestApp(t *testing.T) *testApp {
 		auth:          authsvc.NewService(q, wechat.FakeClient{}, tokens, now),
 		game:          gameService,
 		player:        playersvc.NewService(store, q, gameService, hub, now),
-		round:         roundsvc.NewService(store, q, gameService, hub, now),
 		scoreTransfer: scoretransfersvc.NewService(store, q, gameService, hub, now),
 		settlement:    settlementService,
 		query:         querysvc.NewService(q, gameService),

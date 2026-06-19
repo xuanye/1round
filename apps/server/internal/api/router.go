@@ -11,22 +11,20 @@ import (
 	gamesvc "github.com/xuanye/one-round/apps/server/internal/app/game"
 	playersvc "github.com/xuanye/one-round/apps/server/internal/app/player"
 	querysvc "github.com/xuanye/one-round/apps/server/internal/app/query"
-	roundsvc "github.com/xuanye/one-round/apps/server/internal/app/round"
 	scoretransfersvc "github.com/xuanye/one-round/apps/server/internal/app/scoretransfer"
 	settlementsvc "github.com/xuanye/one-round/apps/server/internal/app/settlement"
 	jwtauth "github.com/xuanye/one-round/apps/server/internal/infra/auth"
 )
 
 type Services struct {
-	Auth         *authsvc.Service
-	Game         *gamesvc.Service
-	Player       *playersvc.Service
-	Round        *roundsvc.Service
+	Auth          *authsvc.Service
+	Game          *gamesvc.Service
+	Player        *playersvc.Service
 	ScoreTransfer *scoretransfersvc.Service
-	Settlement   *settlementsvc.Service
-	Query        *querysvc.Service
-	Tokens       *jwtauth.JWTService
-	WebSocket    *handler.WebSocketHandler
+	Settlement    *settlementsvc.Service
+	Query         *querysvc.Service
+	Tokens        *jwtauth.JWTService
+	WebSocket     *handler.WebSocketHandler
 }
 
 func NewRouter(logger *slog.Logger, services Services) http.Handler {
@@ -41,7 +39,6 @@ func NewRouter(logger *slog.Logger, services Services) http.Handler {
 	authHandler := handler.NewAuthHandler(services.Auth)
 	gameHandler := handler.NewGameHandler(services.Game, services.Query, services.Player, services.Settlement)
 	playerHandler := handler.NewPlayerHandler(services.Player)
-	roundHandler := handler.NewRoundHandler(services.Round, services.Query)
 	scoreTransferHandler := handler.NewScoreTransferHandler(services.ScoreTransfer, services.Query)
 	historyHandler := handler.NewHistoryHandler(services.Query)
 
@@ -67,8 +64,6 @@ func NewRouter(logger *slog.Logger, services Services) http.Handler {
 			r.Get("/game-sessions/{id}/players", playerHandler.List)
 			r.Patch("/game-sessions/{id}/players/{playerId}", playerHandler.Update)
 			r.Delete("/game-sessions/{id}/players/{playerId}", playerHandler.Delete)
-			r.Post("/game-sessions/{id}/rounds", roundHandler.Submit)
-			r.Get("/game-sessions/{id}/rounds/recent", roundHandler.Recent)
 			r.Post("/game-sessions/{id}/score-transfers", scoreTransferHandler.Submit)
 			r.Get("/game-sessions/{id}/score-transfers", scoreTransferHandler.List)
 			r.Get("/game-sessions/{id}/ranking", gameHandler.Ranking)

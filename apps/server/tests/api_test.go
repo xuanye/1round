@@ -19,7 +19,7 @@ func TestFakeAuthCreateJoinAddSubmitSummaryRankingAPI(t *testing.T) {
 	app := newTestApp(t)
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
 	router := api.NewRouter(slog.Default(), api.Services{
-		Auth: app.auth, Game: app.game, Player: app.player, Round: app.round, ScoreTransfer: app.scoreTransfer, Settlement: app.settlement, Query: app.query,
+		Auth: app.auth, Game: app.game, Player: app.player, ScoreTransfer: app.scoreTransfer, Settlement: app.settlement, Query: app.query,
 		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
 	})
 
@@ -28,16 +28,13 @@ func TestFakeAuthCreateJoinAddSubmitSummaryRankingAPI(t *testing.T) {
 	gameID := game["id"].(string)
 	inviteCode := game["inviteCode"].(string)
 	_ = postJSON[map[string]any](t, router, token, "/api/game-sessions/join", map[string]any{"inviteCode": inviteCode})
-	// List existing players (owner player is auto-created)
-	existingPlayers := getJSON[[]map[string]any](t, router, token, "/api/game-sessions/"+gameID+"/players")
 	p1 := postJSON[map[string]any](t, router, token, "/api/game-sessions/"+gameID+"/players", map[string]any{"displayName": "A"})
-	p2 := postJSON[map[string]any](t, router, token, "/api/game-sessions/"+gameID+"/players", map[string]any{"displayName": "B"})
-	scores := []map[string]any{{"playerId": p1["id"], "score": 5}, {"playerId": p2["id"], "score": -5}}
-	for _, ep := range existingPlayers {
-		scores = append(scores, map[string]any{"playerId": ep["id"], "score": 0})
-	}
-	_ = postJSON[map[string]any](t, router, token, "/api/game-sessions/"+gameID+"/rounds", map[string]any{
-		"scores": scores,
+	_ = postJSON[map[string]any](t, router, token, "/api/game-sessions/"+gameID+"/players", map[string]any{"displayName": "B"})
+	// Owner gives 5 to player A via score transfer
+	_ = postJSON[map[string]any](t, router, token, "/api/game-sessions/"+gameID+"/score-transfers", map[string]any{
+		"receiverPlayerIds": []string{p1["id"].(string)},
+		"amount":            5,
+		"idempotencyKey":    "api-test-1",
 	})
 	summary := getJSON[map[string]any](t, router, token, "/api/game-sessions/"+gameID+"/summary")
 	if summary["scoreTransferCount"].(float64) != 1 {
@@ -53,7 +50,7 @@ func TestLeaveGameAPI(t *testing.T) {
 	app := newTestApp(t)
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
 	router := api.NewRouter(slog.Default(), api.Services{
-		Auth: app.auth, Game: app.game, Player: app.player, Round: app.round, ScoreTransfer: app.scoreTransfer, Settlement: app.settlement, Query: app.query,
+		Auth: app.auth, Game: app.game, Player: app.player, ScoreTransfer: app.scoreTransfer, Settlement: app.settlement, Query: app.query,
 		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
 	})
 
@@ -72,7 +69,7 @@ func TestLeaveRequiresZeroScoreAPI(t *testing.T) {
 	app := newTestApp(t)
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
 	router := api.NewRouter(slog.Default(), api.Services{
-		Auth: app.auth, Game: app.game, Player: app.player, Round: app.round, ScoreTransfer: app.scoreTransfer, Settlement: app.settlement, Query: app.query,
+		Auth: app.auth, Game: app.game, Player: app.player, ScoreTransfer: app.scoreTransfer, Settlement: app.settlement, Query: app.query,
 		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
 	})
 
@@ -89,20 +86,24 @@ func TestLeaveRequiresZeroScoreAPI(t *testing.T) {
 		t.Fatalf("unexpected join result: %+v", joinerGameID)
 	}
 
-	// Submit a round to give owner non-zero score
-	existingPlayers := getJSON[[]map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/players")
-	scores := []map[string]any{}
-	for _, p := range existingPlayers {
-		scores = append(scores, map[string]any{"playerId": p["id"], "score": 0})
-	}
-	// Replace owner score with non-zero
-	for i, p := range existingPlayers {
-		if p["userId"] != nil {
-			scores[i] = map[string]any{"playerId": p["id"], "score": 5}
+	// Get joiner's player ID
+	joinerPlayer := postJSON[map[string]any](t, router, joinerToken, "/api/game-sessions/join-preview", map[string]any{"inviteCode": game["inviteCode"]})
+	_ = joinerPlayer
+
+	// List players to find joiner's player ID
+	players := getJSON[[]map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/players")
+	var joinerPlayerID string
+	for _, p := range players {
+		if p["userId"] != nil && p["displayName"] == "妈妈" {
+			joinerPlayerID = p["id"].(string)
 		}
 	}
-	postJSON[map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/rounds", map[string]any{
-		"scores": scores,
+
+	// Owner gives 5 to joiner via score transfer (makes owner's score non-zero)
+	postJSON[map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/score-transfers", map[string]any{
+		"receiverPlayerIds": []string{joinerPlayerID},
+		"amount":            5,
+		"idempotencyKey":    "leave-test-api",
 	})
 
 	// Try to leave with non-zero score - should fail with 400
@@ -220,7 +221,7 @@ func TestPublicSettlementAPI(t *testing.T) {
 	app := newTestApp(t)
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
 	router := api.NewRouter(slog.Default(), api.Services{
-		Auth: app.auth, Game: app.game, Player: app.player, Round: app.round,
+		Auth: app.auth, Game: app.game, Player: app.player,
 		ScoreTransfer: app.scoreTransfer, Settlement: app.settlement, Query: app.query,
 		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
 	})

@@ -17,7 +17,6 @@ import (
 	gamesvc "github.com/xuanye/one-round/apps/server/internal/app/game"
 	playersvc "github.com/xuanye/one-round/apps/server/internal/app/player"
 	querysvc "github.com/xuanye/one-round/apps/server/internal/app/query"
-	roundsvc "github.com/xuanye/one-round/apps/server/internal/app/round"
 	scoretransfersvc "github.com/xuanye/one-round/apps/server/internal/app/scoretransfer"
 	settlementsvc "github.com/xuanye/one-round/apps/server/internal/app/settlement"
 	"github.com/xuanye/one-round/apps/server/internal/app/scheduler"
@@ -72,7 +71,6 @@ func main() {
 	queryService := querysvc.NewService(queries, gameService)
 	authService := authsvc.NewService(queries, wechatClient, tokens, now)
 	playerService := playersvc.NewService(store, queries, gameService, hub, now)
-	roundService := roundsvc.NewService(store, queries, gameService, hub, now)
 	scoreTransferService := scoretransfersvc.NewService(store, queries, gameService, hub, now)
 	settlementService := settlementsvc.NewService(store, queries, gameService, hub, now)
 	wsHandler := wshandler.NewWebSocketHandler(gameService, hub, cfg.Realtime.ClientSendQueueSize, time.Duration(cfg.Realtime.WriteTimeoutSeconds)*time.Second)
@@ -81,7 +79,7 @@ func main() {
 	runner.Start(ctx)
 
 	router := api.NewRouter(logger, api.Services{
-		Auth: authService, Game: gameService, Player: playerService, Round: roundService,
+		Auth: authService, Game: gameService, Player: playerService,
 		ScoreTransfer: scoreTransferService, Settlement: settlementService, Query: queryService, Tokens: tokens, WebSocket: wsHandler,
 	})
 	logger.Info("starting server", "addr", cfg.Server.HTTPAddr)

@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/redhu/one-round/apps/server/internal/api/dto"
-	"github.com/redhu/one-round/apps/server/internal/api/response"
-	authsvc "github.com/redhu/one-round/apps/server/internal/app/auth"
+	"github.com/xuanye/one-round/apps/server/internal/api/dto"
+	"github.com/xuanye/one-round/apps/server/internal/api/response"
+	authsvc "github.com/xuanye/one-round/apps/server/internal/app/auth"
 )
 
 type AuthHandler struct {

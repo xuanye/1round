@@ -10,9 +10,9 @@ import (
 
 	"log/slog"
 
-	"github.com/redhu/one-round/apps/server/internal/api"
-	wshandler "github.com/redhu/one-round/apps/server/internal/api/handler"
-	jwtauth "github.com/redhu/one-round/apps/server/internal/infra/auth"
+	"github.com/xuanye/one-round/apps/server/internal/api"
+	wshandler "github.com/xuanye/one-round/apps/server/internal/api/handler"
+	jwtauth "github.com/xuanye/one-round/apps/server/internal/infra/auth"
 )
 
 func TestFakeAuthCreateJoinAddSubmitSummaryRankingAPI(t *testing.T) {

@@ -98,7 +98,7 @@ You are an AI coding agent working inside a small production-oriented monorepo. 
 
 ## Key Conventions
 
-- Server module path: `github.com/redhu/one-round/apps/server`
+- Server module path: `github.com/xuanye/one-round/apps/server`
 - Server entrypoint: `apps/server/cmd/oneround-server`
 - Server config example: `apps/server/config.example.yaml`
 - Migrations path: `apps/server/migrations`

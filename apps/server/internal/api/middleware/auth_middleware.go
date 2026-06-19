@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	jwtauth "github.com/redhu/one-round/apps/server/internal/infra/auth"
+	jwtauth "github.com/xuanye/one-round/apps/server/internal/infra/auth"
 )
 
 type userIDKey struct{}

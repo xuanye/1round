@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/redhu/one-round/apps/server/internal/domain"
+	"github.com/xuanye/one-round/apps/server/internal/domain"
 )
 
 type JWTService struct {

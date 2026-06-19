@@ -7,16 +7,16 @@ import (
 	"time"
 
 	"github.com/pressly/goose/v3"
-	authsvc "github.com/redhu/one-round/apps/server/internal/app/auth"
-	gamesvc "github.com/redhu/one-round/apps/server/internal/app/game"
-	playersvc "github.com/redhu/one-round/apps/server/internal/app/player"
-	querysvc "github.com/redhu/one-round/apps/server/internal/app/query"
-	roundsvc "github.com/redhu/one-round/apps/server/internal/app/round"
-	"github.com/redhu/one-round/apps/server/internal/domain"
-	jwtauth "github.com/redhu/one-round/apps/server/internal/infra/auth"
-	"github.com/redhu/one-round/apps/server/internal/infra/sqlite"
-	"github.com/redhu/one-round/apps/server/internal/infra/wechat"
-	"github.com/redhu/one-round/apps/server/internal/realtime"
+	authsvc "github.com/xuanye/one-round/apps/server/internal/app/auth"
+	gamesvc "github.com/xuanye/one-round/apps/server/internal/app/game"
+	playersvc "github.com/xuanye/one-round/apps/server/internal/app/player"
+	querysvc "github.com/xuanye/one-round/apps/server/internal/app/query"
+	roundsvc "github.com/xuanye/one-round/apps/server/internal/app/round"
+	"github.com/xuanye/one-round/apps/server/internal/domain"
+	jwtauth "github.com/xuanye/one-round/apps/server/internal/infra/auth"
+	"github.com/xuanye/one-round/apps/server/internal/infra/sqlite"
+	"github.com/xuanye/one-round/apps/server/internal/infra/wechat"
+	"github.com/xuanye/one-round/apps/server/internal/realtime"
 )
 
 type testApp struct {

@@ -6,11 +6,11 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/redhu/one-round/apps/server/internal/api/dto"
-	"github.com/redhu/one-round/apps/server/internal/api/middleware"
-	"github.com/redhu/one-round/apps/server/internal/api/response"
-	querysvc "github.com/redhu/one-round/apps/server/internal/app/query"
-	roundsvc "github.com/redhu/one-round/apps/server/internal/app/round"
+	"github.com/xuanye/one-round/apps/server/internal/api/dto"
+	"github.com/xuanye/one-round/apps/server/internal/api/middleware"
+	"github.com/xuanye/one-round/apps/server/internal/api/response"
+	querysvc "github.com/xuanye/one-round/apps/server/internal/app/query"
+	roundsvc "github.com/xuanye/one-round/apps/server/internal/app/round"
 )
 
 type RoundHandler struct {

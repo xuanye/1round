@@ -1,4 +1,4 @@
-module github.com/redhu/one-round/apps/server
+module github.com/xuanye/one-round/apps/server
 
 go 1.24.0
 

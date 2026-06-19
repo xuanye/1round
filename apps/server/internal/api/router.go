@@ -5,14 +5,14 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/redhu/one-round/apps/server/internal/api/handler"
-	"github.com/redhu/one-round/apps/server/internal/api/middleware"
-	authsvc "github.com/redhu/one-round/apps/server/internal/app/auth"
-	gamesvc "github.com/redhu/one-round/apps/server/internal/app/game"
-	playersvc "github.com/redhu/one-round/apps/server/internal/app/player"
-	querysvc "github.com/redhu/one-round/apps/server/internal/app/query"
-	roundsvc "github.com/redhu/one-round/apps/server/internal/app/round"
-	jwtauth "github.com/redhu/one-round/apps/server/internal/infra/auth"
+	"github.com/xuanye/one-round/apps/server/internal/api/handler"
+	"github.com/xuanye/one-round/apps/server/internal/api/middleware"
+	authsvc "github.com/xuanye/one-round/apps/server/internal/app/auth"
+	gamesvc "github.com/xuanye/one-round/apps/server/internal/app/game"
+	playersvc "github.com/xuanye/one-round/apps/server/internal/app/player"
+	querysvc "github.com/xuanye/one-round/apps/server/internal/app/query"
+	roundsvc "github.com/xuanye/one-round/apps/server/internal/app/round"
+	jwtauth "github.com/xuanye/one-round/apps/server/internal/infra/auth"
 )
 
 type Services struct {

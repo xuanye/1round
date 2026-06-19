@@ -5,11 +5,11 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/redhu/one-round/apps/server/internal/api/dto"
-	"github.com/redhu/one-round/apps/server/internal/api/middleware"
-	"github.com/redhu/one-round/apps/server/internal/api/response"
-	gamesvc "github.com/redhu/one-round/apps/server/internal/app/game"
-	querysvc "github.com/redhu/one-round/apps/server/internal/app/query"
+	"github.com/xuanye/one-round/apps/server/internal/api/dto"
+	"github.com/xuanye/one-round/apps/server/internal/api/middleware"
+	"github.com/xuanye/one-round/apps/server/internal/api/response"
+	gamesvc "github.com/xuanye/one-round/apps/server/internal/app/game"
+	querysvc "github.com/xuanye/one-round/apps/server/internal/app/query"
 )
 
 type GameHandler struct {

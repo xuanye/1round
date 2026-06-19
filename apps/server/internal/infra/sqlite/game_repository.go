@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/redhu/one-round/apps/server/internal/domain"
+	"github.com/xuanye/one-round/apps/server/internal/domain"
 )
 
 func (q *Queries) CreateGameSession(ctx context.Context, session domain.GameSession, ownerMember domain.GameMember) error {

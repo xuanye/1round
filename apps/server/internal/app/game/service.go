@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/redhu/one-round/apps/server/internal/domain"
-	"github.com/redhu/one-round/apps/server/internal/infra/sqlite"
-	"github.com/redhu/one-round/apps/server/internal/realtime"
+	"github.com/xuanye/one-round/apps/server/internal/domain"
+	"github.com/xuanye/one-round/apps/server/internal/infra/sqlite"
+	"github.com/xuanye/one-round/apps/server/internal/realtime"
 )
 
 const inviteAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/redhu/one-round/apps/server/internal/domain"
+	"github.com/xuanye/one-round/apps/server/internal/domain"
 )
 
 func (q *Queries) UpsertUserByOpenID(ctx context.Context, openID string, now time.Time) (domain.User, error) {

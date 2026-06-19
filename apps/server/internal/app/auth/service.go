@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	jwtauth "github.com/redhu/one-round/apps/server/internal/infra/auth"
-	"github.com/redhu/one-round/apps/server/internal/infra/sqlite"
-	"github.com/redhu/one-round/apps/server/internal/infra/wechat"
+	jwtauth "github.com/xuanye/one-round/apps/server/internal/infra/auth"
+	"github.com/xuanye/one-round/apps/server/internal/infra/sqlite"
+	"github.com/xuanye/one-round/apps/server/internal/infra/wechat"
 )
 
 type Service struct {

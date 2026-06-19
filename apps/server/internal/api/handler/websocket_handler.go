@@ -6,9 +6,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/redhu/one-round/apps/server/internal/api/middleware"
-	gamesvc "github.com/redhu/one-round/apps/server/internal/app/game"
-	"github.com/redhu/one-round/apps/server/internal/realtime"
+	"github.com/xuanye/one-round/apps/server/internal/api/middleware"
+	gamesvc "github.com/xuanye/one-round/apps/server/internal/app/game"
+	"github.com/xuanye/one-round/apps/server/internal/realtime"
 	"nhooyr.io/websocket"
 )
 

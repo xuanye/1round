@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	gamesvc "github.com/redhu/one-round/apps/server/internal/app/game"
-	"github.com/redhu/one-round/apps/server/internal/domain"
-	"github.com/redhu/one-round/apps/server/internal/infra/sqlite"
-	"github.com/redhu/one-round/apps/server/internal/realtime"
+	gamesvc "github.com/xuanye/one-round/apps/server/internal/app/game"
+	"github.com/xuanye/one-round/apps/server/internal/domain"
+	"github.com/xuanye/one-round/apps/server/internal/infra/sqlite"
+	"github.com/xuanye/one-round/apps/server/internal/realtime"
 )
 
 type Service struct {

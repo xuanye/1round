@@ -217,6 +217,197 @@ func decodeData[T any](t *testing.T, raw []byte) T {
 	return data
 }
 
+func postJSONExpectStatus(t *testing.T, router http.Handler, token, path string, payload any, want int) {
+	t.Helper()
+	body, _ := json.Marshal(payload)
+	req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != want {
+		t.Fatalf("POST %s status %d, want %d body %s", path, rec.Code, want, rec.Body.String())
+	}
+}
+
+func patchJSONExpectStatus(t *testing.T, router http.Handler, token, path string, payload any, want int) {
+	t.Helper()
+	body, _ := json.Marshal(payload)
+	req := httptest.NewRequest(http.MethodPatch, path, bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != want {
+		t.Fatalf("PATCH %s status %d, want %d body %s", path, rec.Code, want, rec.Body.String())
+	}
+}
+
+func TestGameScoringLifecycleE2E(t *testing.T) {
+	app := newTestApp(t)
+	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
+	router := api.NewRouter(slog.Default(), api.Services{
+		Auth: app.auth, Game: app.game, Player: app.player, ScoreTransfer: app.scoreTransfer, Settlement: app.settlement, Query: app.query,
+		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
+	})
+
+	// 1. Owner login.
+	ownerToken := loginHTTP(t, router, "owner-code")
+
+	// 2. Create game with capacity.
+	game := postJSON[map[string]any](t, router, ownerToken, "/api/game-sessions", map[string]any{
+		"name": "家庭聚会", "maxParticipants": 4,
+	})
+	gameID := game["id"].(string)
+	inviteCode := game["inviteCode"].(string)
+
+	// 3. Current game returns created game.
+	current := getJSON[map[string]any](t, router, ownerToken, "/api/game-sessions/current")
+	if current["id"] != gameID {
+		t.Fatalf("unexpected current game: %+v", current)
+	}
+
+	// 4. Joiner logs in.
+	joinerToken := loginHTTP(t, router, "joiner-code")
+
+	// 5. Join preview shows no score details.
+	preview := postJSON[map[string]any](t, router, joinerToken, "/api/game-sessions/join-preview", map[string]any{
+		"inviteCode": inviteCode,
+	})
+	if preview["participantCount"].(float64) != 1 {
+		t.Fatalf("unexpected preview participant count: %+v", preview)
+	}
+	if preview["gameSessionId"] != gameID {
+		t.Fatalf("unexpected preview game id: %+v", preview)
+	}
+
+	// 6. Joiner confirms join.
+	joined := postJSON[map[string]any](t, router, joinerToken, "/api/game-sessions/join", map[string]any{
+		"inviteCode": inviteCode, "displayName": "妈妈",
+	})
+	if joined["gameSessionId"] != gameID {
+		t.Fatalf("unexpected join: %+v", joined)
+	}
+
+	// Get joiner's player ID for score transfer
+	joinerPlayer := postJSON[map[string]any](t, router, joinerToken, "/api/game-sessions/join-preview", map[string]any{
+		"inviteCode": inviteCode,
+	})
+	joinerParticipantID := joinerPlayer["participants"].([]any)[1].(map[string]any)["id"].(string)
+
+	// 7. Owner submits score transfer to joiner.
+	_ = getJSON[[]map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/players")
+
+	_ = postJSON[map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/score-transfers", map[string]any{
+		"receiverPlayerIds": []string{joinerParticipantID},
+		"amount":            10,
+		"idempotencyKey":    "e2e-transfer-1",
+	})
+
+	// 8. Summary shows participants by score desc and transfer details.
+	summary := getJSON[map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/summary")
+	participants := summary["players"].([]any)
+	if len(participants) != 2 {
+		t.Fatalf("unexpected participants: %+v", participants)
+	}
+	// ListRanking sorts by total_score DESC, display_name ASC.
+	// Joiner (+10) first, owner (-10) second.
+	joinerSummary := participants[0].(map[string]any)
+	ownerSummary := participants[1].(map[string]any)
+	if ownerSummary["totalScore"].(float64) != -10 {
+		t.Fatalf("unexpected owner score: %+v", ownerSummary)
+	}
+	if joinerSummary["totalScore"].(float64) != 10 {
+		t.Fatalf("unexpected joiner score: %+v", joinerSummary)
+	}
+	if summary["scoreTransferCount"].(float64) != 1 {
+		t.Fatalf("unexpected score transfer count: %+v", summary)
+	}
+
+	// Check ranking: score desc means joiner first, then owner
+	ranking := getJSON[[]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/ranking")
+	if len(ranking) != 2 {
+		t.Fatalf("unexpected ranking: %+v", ranking)
+	}
+	first := ranking[0].(map[string]any)
+	if first["displayName"] != "妈妈" {
+		t.Fatalf("unexpected first in ranking: %+v", first)
+	}
+	if first["totalScore"].(float64) != 10 {
+		t.Fatalf("unexpected first score: %+v", first)
+	}
+	second := ranking[1].(map[string]any)
+	if second["totalScore"].(float64) != -10 {
+		t.Fatalf("unexpected second score: %+v", second)
+	}
+
+	// 9. Non-owner creates finish request.
+	finishReq := postJSON[map[string]any](t, router, joinerToken, "/api/game-sessions/"+gameID+"/finish-requests", map[string]any{})
+	if finishReq["Status"] != "pending" {
+		t.Fatalf("unexpected finish request: %+v", finishReq)
+	}
+
+	// 10. Owner approves.
+	finished := postJSON[map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/finish-requests/"+finishReq["ID"].(string)+"/approve", map[string]any{})
+	if finished["status"] != "finished" {
+		t.Fatalf("unexpected finished status: %+v", finished)
+	}
+	shareToken := finished["publicShareToken"].(string)
+	if shareToken == "" {
+		t.Fatalf("expected share token, got %+v", finished)
+	}
+
+	// 11. History lists finished game for participants.
+	history := getJSON[map[string]any](t, router, ownerToken, "/api/history/game-sessions")
+	items := history["items"].([]any)
+	if len(items) != 1 {
+		t.Fatalf("unexpected history: %+v", history)
+	}
+	historyItem := items[0].(map[string]any)
+	if historyItem["id"] != gameID {
+		t.Fatalf("unexpected history item: %+v", historyItem)
+	}
+
+	// Joiner should also see history
+	joinerHistory := getJSON[map[string]any](t, router, joinerToken, "/api/history/game-sessions")
+	joinerItems := joinerHistory["items"].([]any)
+	if len(joinerItems) != 1 {
+		t.Fatalf("unexpected joiner history: %+v", joinerHistory)
+	}
+
+	// 12. Public settlement share works without auth.
+	public := getJSON[map[string]any](t, router, "", "/api/public/settlements/"+shareToken)
+	if public["gameSessionId"] != gameID {
+		t.Fatalf("unexpected public share: %+v", public)
+	}
+	publicParticipants := public["participants"].([]any)
+	if len(publicParticipants) != 2 {
+		t.Fatalf("unexpected public participants: %+v", publicParticipants)
+	}
+
+	// 13. Further join/leave/score transfer/profile update all fail.
+	postJSONExpectStatus(t, router, joinerToken, "/api/game-sessions/join", map[string]any{
+		"inviteCode": inviteCode, "displayName": "孩子",
+	}, http.StatusConflict)
+
+	postJSONExpectStatus(t, router, joinerToken, "/api/game-sessions/"+gameID+"/leave", map[string]any{},
+		http.StatusConflict)
+
+	postJSONExpectStatus(t, router, ownerToken, "/api/game-sessions/"+gameID+"/score-transfers", map[string]any{
+		"receiverPlayerIds": []string{joinerParticipantID},
+		"amount":            5,
+		"idempotencyKey":    "e2e-transfer-after-finish",
+	}, http.StatusConflict)
+
+	patchJSONExpectStatus(t, router, joinerToken, "/api/game-sessions/"+gameID+"/my-profile", map[string]any{
+		"displayName": "新名字",
+	}, http.StatusConflict)
+}
+
 func TestPublicSettlementAPI(t *testing.T) {
 	app := newTestApp(t)
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)

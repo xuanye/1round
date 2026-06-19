@@ -54,7 +54,7 @@ func (q *Queries) listScoreTransferReceivers(ctx context.Context, scoreTransferI
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var receivers []domain.ScoreTransferReceiver
 	for rows.Next() {
 		var r domain.ScoreTransferReceiver
@@ -103,7 +103,7 @@ func (q *Queries) ListScoreTransfersPaginated(ctx context.Context, gameSessionID
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var transfers []domain.ScoreTransfer
 	for rows.Next() {
 		var t domain.ScoreTransfer

@@ -50,7 +50,7 @@ func (q *Queries) ListFinishRequests(ctx context.Context, gameSessionID string) 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var requests []domain.FinishRequest
 	for rows.Next() {
 		var r domain.FinishRequest
@@ -123,7 +123,7 @@ func (q *Queries) ListSettledGamesForUser(ctx context.Context, userID string, be
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var sessions []domain.GameSession
 	for rows.Next() {
 		g, err := scanGame(rows)
@@ -163,7 +163,7 @@ func (q *Queries) ListHistoricalPlayersForUser(ctx context.Context, gameSessionI
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	return scanPlayers(rows)
 }
 
@@ -205,7 +205,7 @@ func (q *Queries) ListInactiveActiveSessions(ctx context.Context, thresholdCutof
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var sessions []domain.GameSession
 	for rows.Next() {
 		g, err := scanGame(rows)

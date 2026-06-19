@@ -4,12 +4,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/coder/websocket"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/xuanye/one-round/apps/server/internal/api/middleware"
 	gamesvc "github.com/xuanye/one-round/apps/server/internal/app/game"
 	"github.com/xuanye/one-round/apps/server/internal/realtime"
-	"nhooyr.io/websocket"
 )
 
 type WebSocketHandler struct {

@@ -30,7 +30,7 @@ func (q *Queries) ListPlayers(ctx context.Context, gameSessionID string) ([]doma
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	return scanPlayers(rows)
 }
 
@@ -39,7 +39,7 @@ func (q *Queries) ListRanking(ctx context.Context, gameSessionID string) ([]doma
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	return scanPlayers(rows)
 }
 
@@ -48,7 +48,7 @@ func (q *Queries) ListActivePlayers(ctx context.Context, gameSessionID string) (
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	return scanPlayers(rows)
 }
 
@@ -57,7 +57,7 @@ func (q *Queries) ListHistoricalPlayers(ctx context.Context, gameSessionID strin
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	return scanPlayers(rows)
 }
 

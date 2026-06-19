@@ -299,17 +299,6 @@ func (s *Service) GetForHistoricalMember(ctx context.Context, userID, gameSessio
 	return s.q.GetGameSession(ctx, gameSessionID)
 }
 
-func (s *Service) Finish(ctx context.Context, userID, gameSessionID string) (domain.GameSession, error) {
-	if err := s.requireMember(ctx, userID, gameSessionID); err != nil {
-		return domain.GameSession{}, err
-	}
-	session, err := s.q.FinishGameSession(ctx, gameSessionID, s.now())
-	if err == nil && s.hub != nil {
-		s.hub.BroadcastToGame(ctx, gameSessionID, realtime.Event{Type: realtime.EventGameFinished, GameSessionID: gameSessionID, Version: session.Version, SentAt: s.now()})
-	}
-	return session, err
-}
-
 func (s *Service) RequireMember(ctx context.Context, userID, gameSessionID string) error {
 	return s.requireMember(ctx, userID, gameSessionID)
 }

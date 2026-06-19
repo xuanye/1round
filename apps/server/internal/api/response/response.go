@@ -41,7 +41,7 @@ func mapError(err error) (int, int, string) {
 		return 40301, http.StatusForbidden, err.Error()
 	case errors.Is(err, domain.ErrNotFound), errors.Is(err, domain.ErrFinishRequestNotFound):
 		return 40401, http.StatusNotFound, err.Error()
-	case errors.Is(err, domain.ErrConflict), errors.Is(err, domain.ErrGameSessionFinished), errors.Is(err, domain.ErrAlreadyDeactivated), errors.Is(err, domain.ErrIdempotencyConflict), errors.Is(err, domain.ErrFinishRequestPending):
+	case errors.Is(err, domain.ErrConflict), errors.Is(err, domain.ErrGameSessionFinished), errors.Is(err, domain.ErrAlreadyDeactivated), errors.Is(err, domain.ErrIdempotencyConflict), errors.Is(err, domain.ErrFinishRequestPending), errors.Is(err, domain.ErrFinishRequestNotPending):
 		return 40901, http.StatusConflict, err.Error()
 	default:
 		return 50001, http.StatusInternalServerError, "internal error"

@@ -103,7 +103,7 @@ func TestCurrentGameExcludesFinishedAndVoidedGames(t *testing.T) {
 	if current == nil || current.ID != game.ID {
 		t.Fatalf("unexpected current game: %+v", current)
 	}
-	if _, err := app.game.Finish(ctx, user, game.ID); err != nil {
+	if _, err := app.settlement.FinishDirect(ctx, user, game.ID); err != nil {
 		t.Fatal(err)
 	}
 	current, err = app.game.Current(ctx, user)
@@ -177,7 +177,7 @@ func TestFinishedGameRejectsRound(t *testing.T) {
 	}
 	p1, _ := app.player.Add(ctx, user, game.ID, "A")
 	p2, _ := app.player.Add(ctx, user, game.ID, "B")
-	if _, err := app.game.Finish(ctx, user, game.ID); err != nil {
+	if _, err := app.settlement.FinishDirect(ctx, user, game.ID); err != nil {
 		t.Fatal(err)
 	}
 	_, err := app.round.Submit(ctx, user, game.ID, []roundsvc.ScoreInput{

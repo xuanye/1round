@@ -189,6 +189,9 @@ func (s *Service) RejectFinishRequest(ctx context.Context, userID, gameSessionID
 	if err != nil {
 		return domain.FinishRequest{}, err
 	}
+	if session.Status != domain.GameSessionStatusActive {
+		return domain.FinishRequest{}, domain.ErrGameSessionFinished
+	}
 	if session.OwnerUserID != userID {
 		return domain.FinishRequest{}, domain.ErrNotOwner
 	}

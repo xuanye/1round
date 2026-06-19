@@ -215,3 +215,67 @@ func decodeData[T any](t *testing.T, raw []byte) T {
 	}
 	return data
 }
+
+func TestPublicSettlementAPI(t *testing.T) {
+	app := newTestApp(t)
+	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
+	router := api.NewRouter(slog.Default(), api.Services{
+		Auth: app.auth, Game: app.game, Player: app.player, Round: app.round,
+		ScoreTransfer: app.scoreTransfer, Settlement: app.settlement, Query: app.query,
+		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
+	})
+
+	token := loginHTTP(t, router, "owner-code")
+	game := postJSON[map[string]any](t, router, token, "/api/game-sessions", map[string]any{"name": "结算测试"})
+	gameID := game["id"].(string)
+
+	// Finish the game to generate a public share token
+	finished := postJSON[map[string]any](t, router, token, "/api/game-sessions/"+gameID+"/finish", map[string]any{})
+	shareToken := finished["publicShareToken"].(string)
+
+	// Verify handler extracts shareToken from URL path and returns proper response shape
+	req := httptest.NewRequest(http.MethodGet, "/api/public/settlements/"+shareToken, nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body %s", rec.Code, rec.Body.String())
+	}
+	var envelope struct {
+		Code int `json:"code"`
+		Data struct {
+			GameSessionID string `json:"gameSessionId"`
+			Name          string `json:"name"`
+			Participants  []struct {
+				DisplayName string `json:"displayName"`
+				FinalScore  int    `json:"finalScore"`
+			} `json:"participants"`
+			ScoreTransfers []struct {
+				ID     string `json:"id"`
+				Amount int    `json:"amount"`
+			} `json:"scoreTransfers"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &envelope); err != nil {
+		t.Fatalf("failed to unmarshal response: %v", err)
+	}
+	if envelope.Code != 0 {
+		t.Fatalf("unexpected code %d", envelope.Code)
+	}
+	if envelope.Data.GameSessionID != gameID {
+		t.Fatalf("expected gameSessionID %s, got %s", gameID, envelope.Data.GameSessionID)
+	}
+	if len(envelope.Data.Participants) != 1 {
+		t.Fatalf("expected 1 participant, got %d", len(envelope.Data.Participants))
+	}
+	if len(envelope.Data.ScoreTransfers) != 0 {
+		t.Fatalf("expected 0 score transfers, got %d", len(envelope.Data.ScoreTransfers))
+	}
+
+	// Verify 404 for invalid share token
+	req2 := httptest.NewRequest(http.MethodGet, "/api/public/settlements/invalid-token", nil)
+	rec2 := httptest.NewRecorder()
+	router.ServeHTTP(rec2, req2)
+	if rec2.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 for invalid token, got %d body %s", rec2.Code, rec2.Body.String())
+	}
+}

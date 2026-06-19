@@ -3,6 +3,7 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/xuanye/one-round/apps/server/internal/domain"
@@ -142,7 +143,11 @@ func (q *Queries) GetGameSessionByPublicShareToken(ctx context.Context, shareTok
 		        settled_at, voided_at, created_at, updated_at
 		 FROM game_sessions
 		 WHERE public_share_token = ? AND status = 'finished'`, shareToken)
-	return scanGame(row)
+	g, err := scanGame(row)
+	if errors.Is(err, domain.ErrNotFound) {
+		return g, domain.ErrPublicShareUnavailable
+	}
+	return g, err
 }
 
 // ListHistoricalPlayersForUser returns all historical player records (active and inactive)

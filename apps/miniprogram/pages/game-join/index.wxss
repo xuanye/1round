@@ -76,7 +76,7 @@
   background: #f4f3f1;
 }
 
-.close-button .material-symbols-outlined {
+.close-button .icon {
   font-size: 36rpx !important;
 }
 

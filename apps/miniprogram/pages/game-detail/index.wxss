@@ -34,7 +34,7 @@
   background: #f4f3f1;
 }
 
-.round-button .material-symbols-outlined {
+.round-button .icon {
   font-size: 38rpx !important;
 }
 
@@ -310,7 +310,7 @@
   font-weight: bold;
 }
 
-.bottom-nav button .material-symbols-outlined {
+.bottom-nav button .icon {
   font-size: 44rpx !important;
   margin-bottom: 4rpx;
 }

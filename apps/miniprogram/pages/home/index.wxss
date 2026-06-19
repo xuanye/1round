@@ -417,7 +417,7 @@
   font-weight: bold;
 }
 
-.nav-item .material-symbols-outlined {
+.nav-item .icon {
   font-size: 44rpx !important;
   margin-bottom: 4rpx;
 }

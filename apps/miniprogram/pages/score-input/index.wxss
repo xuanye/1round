@@ -39,8 +39,8 @@
   background: #f4f3f1;
 }
 
-.back-button .material-symbols-outlined,
-.info-button .material-symbols-outlined {
+.back-button .icon,
+.info-button .icon {
   font-size: 38rpx !important;
 }
 
@@ -218,8 +218,8 @@
   padding: 0;
 }
 
-.num-pad button .material-symbols-outlined,
-.done-key .material-symbols-outlined {
+.num-pad button .icon,
+.done-key .icon {
   font-size: 44rpx !important;
   line-height: 1;
 }

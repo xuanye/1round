@@ -1,21 +1,21 @@
 <view class="page detail-page">
   <view class="detail-topbar">
     <button class="round-button" bindtap="backHome" hover-class="tap-feedback">
-      <text class="material-symbols-outlined">arrow_back</text>
+      <text class="icon icon-arrow_back"></text>
     </button>
     <view class="detail-title">
       <view>{{game.name}}</view>
       <text>{{game.createdAt}}</text>
     </view>
     <button class="round-button" bindtap="showInvite" hover-class="tap-feedback">
-      <text class="material-symbols-outlined">qr_code_2</text>
+      <text class="icon icon-qr_code_2"></text>
     </button>
   </view>
 
   <view class="section-row">
     <view class="section-label">当前参与者</view>
     <button class="rank-link" bindtap="ranking" hover-class="tap-feedback">
-      <text class="material-symbols-outlined inline-icon">leaderboard</text>
+      <text class="icon icon-leaderboard inline-icon"></text>
       排行榜
     </button>
   </view>
@@ -25,7 +25,7 @@
       <view class="person">
         <view class="avatar-wrap {{item.isCreator ? 'creator' : ''}}">
           <view class="avatar">{{item.initial}}</view>
-          <text wx:if="{{item.isCreator}}" class="material-symbols-outlined star-icon">star</text>
+          <text wx:if="{{item.isCreator}}" class="icon icon-star star-icon"></text>
         </view>
         <view>
           <view class="person-name">{{item.name}}</view>
@@ -37,18 +37,18 @@
   </view>
 
   <button class="button-primary score-entry" bindtap="inputScore" hover-class="tap-feedback">
-    <text class="material-symbols-outlined button-icon">add_circle</text>
+    <text class="icon icon-add_circle button-icon"></text>
     开始计分
   </button>
 
   <view class="history-head">
     <view class="section-label">计分明细</view>
-    <text class="material-symbols-outlined history-header-icon">history</text>
+    <text class="icon icon-history history-header-icon"></text>
   </view>
 
   <view class="transfer-list">
     <view wx:for="{{transfers}}" wx:key="id" class="transfer-card">
-      <text class="material-symbols-outlined transfer-icon">{{item.icon}}</text>
+      <text class="icon icon-{{item.icon}} transfer-icon"></text>
       <view class="transfer-main">
         <view class="transfer-text">
           <text class="strong">{{item.from}}</text>
@@ -65,20 +65,20 @@
 
   <view class="bottom-actions">
     <button class="finish-button" bindtap="finish" hover-class="tap-feedback">
-      <text class="material-symbols-outlined button-icon">flag</text>
+      <text class="icon icon-flag button-icon"></text>
       结束本局
     </button>
     <view class="bottom-nav">
       <button bindtap="backHome">
-        <text class="material-symbols-outlined">home</text>
+        <text class="icon icon-home"></text>
         <text>首页</text>
       </button>
       <button class="active">
-        <text class="material-symbols-outlined">insights</text>
+        <text class="icon icon-insights"></text>
         <text>牌局</text>
       </button>
       <button bindtap="ranking">
-        <text class="material-symbols-outlined">history</text>
+        <text class="icon icon-history"></text>
         <text>历史</text>
       </button>
     </view>

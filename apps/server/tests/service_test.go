@@ -330,6 +330,142 @@ func TestJoinReactivationPath(t *testing.T) {
 	}
 }
 
+func TestLeaveRequiresZeroScore(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	owner := login(t, app, "owner-code")
+	joiner := login(t, app, "joiner-code")
+	game := createGame(t, app, owner, nil)
+	if _, err := app.game.Join(ctx, joiner, game.InviteCode, "妈妈"); err != nil {
+		t.Fatal(err)
+	}
+
+	// Get all active players
+	activePlayers, _ := app.query.ActiveParticipants(ctx, owner, game.ID)
+	var ownerPID, joinerPID string
+	for _, p := range activePlayers {
+		if p.UserID != nil && *p.UserID == owner {
+			ownerPID = p.ID
+		}
+		if p.UserID != nil && *p.UserID == joiner {
+			joinerPID = p.ID
+		}
+	}
+
+	// Submit a round to give owner a non-zero score
+	_, err := app.round.Submit(ctx, owner, game.ID, []roundsvc.ScoreInput{
+		{PlayerID: ownerPID, Score: 10},
+		{PlayerID: joinerPID, Score: -10},
+	}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = app.player.Leave(ctx, owner, game.ID)
+	if err != domain.ErrCannotLeaveWithNonZeroScore {
+		t.Fatalf("expected non-zero leave error, got %v", err)
+	}
+}
+
+func TestLastZeroScoreParticipantLeaveVoidsUnscoredGame(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	user := login(t, app, "owner-code")
+	game := createGame(t, app, user, nil)
+
+	if err := app.player.Leave(ctx, user, game.ID); err != nil {
+		t.Fatal(err)
+	}
+	current, err := app.game.Current(ctx, user)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if current != nil {
+		t.Fatalf("expected no current game after void, got %+v", current)
+	}
+	g, err := app.game.GetForHistoricalMember(ctx, user, game.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g.Status != domain.GameSessionStatusVoided {
+		t.Fatalf("expected voided game, got %+v", g.Status)
+	}
+}
+
+func TestOwnerTransferOnLeave(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	owner := login(t, app, "owner-code")
+	joiner := login(t, app, "joiner-code")
+	game := createGame(t, app, owner, nil)
+	if _, err := app.game.Join(ctx, joiner, game.InviteCode, "妈妈"); err != nil {
+		t.Fatal(err)
+	}
+
+	// Owner leaves with zero score, ownership should transfer to joiner
+	if err := app.player.Leave(ctx, owner, game.ID); err != nil {
+		t.Fatal(err)
+	}
+	g, err := app.game.GetForHistoricalMember(ctx, owner, game.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g.OwnerUserID != joiner {
+		t.Fatalf("expected owner transferred to %s, got %s", joiner, g.OwnerUserID)
+	}
+}
+
+func TestLastScoredParticipantLeaveFinishesGame(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	owner := login(t, app, "owner-code")
+	joiner := login(t, app, "joiner-code")
+	game := createGame(t, app, owner, nil)
+	if _, err := app.game.Join(ctx, joiner, game.InviteCode, "妈妈"); err != nil {
+		t.Fatal(err)
+	}
+
+	// Get all active players
+	activePlayers, _ := app.query.ActiveParticipants(ctx, owner, game.ID)
+	var ownerPID, joinerPID string
+	for _, p := range activePlayers {
+		if p.UserID != nil && *p.UserID == owner {
+			ownerPID = p.ID
+		}
+		if p.UserID != nil && *p.UserID == joiner {
+			joinerPID = p.ID
+		}
+	}
+
+	// Submit a round (scored game with zero scores)
+	_, err := app.round.Submit(ctx, owner, game.ID, []roundsvc.ScoreInput{
+		{PlayerID: ownerPID, Score: 0},
+		{PlayerID: joinerPID, Score: 0},
+	}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Both leave
+	if err := app.player.Leave(ctx, owner, game.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := app.player.Leave(ctx, joiner, game.ID); err != nil {
+		t.Fatal(err)
+	}
+
+	g, err := app.game.GetForHistoricalMember(ctx, joiner, game.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g.Status != domain.GameSessionStatusFinished {
+		t.Fatalf("expected finished game, got %+v", g.Status)
+	}
+	if g.SettledAt == nil {
+		t.Fatal("expected settled_at to be set")
+	}
+}
+
 func TestHubBroadcastOnlyTargetsRoom(t *testing.T) {
 	hub := realtime.NewMemoryHub()
 	c1 := &realtime.Client{Send: make(chan realtime.Event, 1)}
@@ -375,7 +511,7 @@ func newTestApp(t *testing.T) *testApp {
 	return &testApp{
 		auth:   authsvc.NewService(q, wechat.FakeClient{}, tokens, now),
 		game:   gameService,
-		player: playersvc.NewService(q, gameService, hub, now),
+		player: playersvc.NewService(store, q, gameService, hub, now),
 		round:  roundsvc.NewService(store, q, gameService, hub, now),
 		query:  querysvc.NewService(q, gameService),
 		hub:    hub,

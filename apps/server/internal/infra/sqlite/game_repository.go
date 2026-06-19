@@ -73,6 +73,54 @@ func (q *Queries) FinishGameSession(ctx context.Context, gameSessionID string, n
 	return q.GetGameSession(ctx, gameSessionID)
 }
 
+func (q *Queries) FinishGameSessionWithSettle(ctx context.Context, gameSessionID string, now time.Time) (domain.GameSession, error) {
+	_, err := q.db.ExecContext(ctx, `UPDATE game_sessions SET status = ?, settled_at = ?, version = version + 1, updated_at = ? WHERE id = ?`,
+		domain.GameSessionStatusFinished, encodeTime(now), encodeTime(now), gameSessionID)
+	if err != nil {
+		return domain.GameSession{}, err
+	}
+	return q.GetGameSession(ctx, gameSessionID)
+}
+
+func (q *Queries) VoidGameSession(ctx context.Context, gameSessionID string, now time.Time) (domain.GameSession, error) {
+	_, err := q.db.ExecContext(ctx, `UPDATE game_sessions SET status = ?, voided_at = ?, version = version + 1, updated_at = ? WHERE id = ?`,
+		domain.GameSessionStatusVoided, encodeTime(now), encodeTime(now), gameSessionID)
+	if err != nil {
+		return domain.GameSession{}, err
+	}
+	return q.GetGameSession(ctx, gameSessionID)
+}
+
+func (q *Queries) UpdateGameSessionOwner(ctx context.Context, gameSessionID, newOwnerUserID string, now time.Time) error {
+	_, err := q.db.ExecContext(ctx, `UPDATE game_sessions SET owner_user_id = ?, version = version + 1, updated_at = ? WHERE id = ?`,
+		newOwnerUserID, encodeTime(now), gameSessionID)
+	return err
+}
+
+func (q *Queries) IncrementGameSessionVersion(ctx context.Context, gameSessionID string, now time.Time) error {
+	_, err := q.db.ExecContext(ctx, `UPDATE game_sessions SET version = version + 1, updated_at = ? WHERE id = ?`,
+		encodeTime(now), gameSessionID)
+	return err
+}
+
+func (q *Queries) SetPublicShareToken(ctx context.Context, gameSessionID, token string) error {
+	_, err := q.db.ExecContext(ctx, `UPDATE game_sessions SET public_share_token = ? WHERE id = ?`, token, gameSessionID)
+	return err
+}
+
+func (q *Queries) TransferGameMemberRole(ctx context.Context, gameSessionID, newOwnerUserID string, now time.Time) error {
+	// Downgrade current owner to member
+	_, err := q.db.ExecContext(ctx, `UPDATE game_members SET role = ? WHERE game_session_id = ? AND role = ?`,
+		domain.GameMemberRoleMember, gameSessionID, domain.GameMemberRoleOwner)
+	if err != nil {
+		return err
+	}
+	// Upgrade new owner
+	_, err = q.db.ExecContext(ctx, `UPDATE game_members SET role = ? WHERE game_session_id = ? AND user_id = ?`,
+		domain.GameMemberRoleOwner, gameSessionID, newOwnerUserID)
+	return err
+}
+
 func scanGame(row interface{ Scan(...any) error }) (domain.GameSession, error) {
 	var g domain.GameSession
 	var maxParticipants, publicShareToken, lastScoredAt, settledAt, voidedAt sql.NullString

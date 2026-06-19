@@ -33,7 +33,7 @@ func Error(w http.ResponseWriter, err error) {
 
 func mapError(err error) (int, int, string) {
 	switch {
-	case errors.Is(err, domain.ErrInvalidArgument), errors.Is(err, domain.ErrInvalidPlayer), errors.Is(err, domain.ErrScoreTotalMustBeZero):
+	case errors.Is(err, domain.ErrInvalidArgument), errors.Is(err, domain.ErrInvalidPlayer), errors.Is(err, domain.ErrScoreTotalMustBeZero), errors.Is(err, domain.ErrCannotLeaveWithNonZeroScore):
 		return 40001, http.StatusBadRequest, err.Error()
 	case errors.Is(err, domain.ErrUnauthorized):
 		return 40101, http.StatusUnauthorized, err.Error()

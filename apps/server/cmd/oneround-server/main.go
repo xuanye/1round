@@ -65,7 +65,7 @@ func main() {
 	gameService := gamesvc.NewService(store, queries, hub, now)
 	queryService := querysvc.NewService(queries, gameService)
 	authService := authsvc.NewService(queries, wechatClient, tokens, now)
-	playerService := playersvc.NewService(queries, gameService, hub, now)
+	playerService := playersvc.NewService(store, queries, gameService, hub, now)
 	roundService := roundsvc.NewService(store, queries, gameService, hub, now)
 	wsHandler := wshandler.NewWebSocketHandler(gameService, hub, cfg.Realtime.ClientSendQueueSize, time.Duration(cfg.Realtime.WriteTimeoutSeconds)*time.Second)
 

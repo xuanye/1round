@@ -9,16 +9,18 @@ import (
 	"github.com/xuanye/one-round/apps/server/internal/api/middleware"
 	"github.com/xuanye/one-round/apps/server/internal/api/response"
 	gamesvc "github.com/xuanye/one-round/apps/server/internal/app/game"
+	playersvc "github.com/xuanye/one-round/apps/server/internal/app/player"
 	querysvc "github.com/xuanye/one-round/apps/server/internal/app/query"
 )
 
 type GameHandler struct {
-	game  *gamesvc.Service
-	query *querysvc.Service
+	game   *gamesvc.Service
+	query  *querysvc.Service
+	player *playersvc.Service
 }
 
-func NewGameHandler(game *gamesvc.Service, query *querysvc.Service) *GameHandler {
-	return &GameHandler{game: game, query: query}
+func NewGameHandler(game *gamesvc.Service, query *querysvc.Service, player *playersvc.Service) *GameHandler {
+	return &GameHandler{game: game, query: query, player: player}
 }
 
 func (h *GameHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -122,4 +124,13 @@ func (h *GameHandler) Finish(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response.JSON(w, http.StatusOK, map[string]string{"id": result.ID, "status": string(result.Status)})
+}
+
+func (h *GameHandler) Leave(w http.ResponseWriter, r *http.Request) {
+	err := h.player.Leave(r.Context(), middleware.UserID(r.Context()), chi.URLParam(r, "id"))
+	if err != nil {
+		response.Error(w, err)
+		return
+	}
+	response.JSON(w, http.StatusOK, map[string]bool{"left": true})
 }

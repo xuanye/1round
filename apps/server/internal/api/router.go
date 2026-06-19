@@ -35,7 +35,7 @@ func NewRouter(logger *slog.Logger, services Services) http.Handler {
 	})
 
 	authHandler := handler.NewAuthHandler(services.Auth)
-	gameHandler := handler.NewGameHandler(services.Game, services.Query)
+	gameHandler := handler.NewGameHandler(services.Game, services.Query, services.Player)
 	playerHandler := handler.NewPlayerHandler(services.Player)
 	roundHandler := handler.NewRoundHandler(services.Round, services.Query)
 
@@ -50,6 +50,7 @@ func NewRouter(logger *slog.Logger, services Services) http.Handler {
 			r.Get("/game-sessions/{id}", gameHandler.Get)
 			r.Get("/game-sessions/{id}/summary", gameHandler.Summary)
 			r.Post("/game-sessions/{id}/finish", gameHandler.Finish)
+				r.Post("/game-sessions/{id}/leave", gameHandler.Leave)
 			r.Patch("/game-sessions/{id}/my-profile", playerHandler.UpdateMyProfile)
 			r.Post("/game-sessions/{id}/players", playerHandler.Add)
 			r.Get("/game-sessions/{id}/players", playerHandler.List)

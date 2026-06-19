@@ -288,6 +288,17 @@ func (s *Service) GetForMember(ctx context.Context, userID, gameSessionID string
 	return s.q.GetGameSession(ctx, gameSessionID)
 }
 
+func (s *Service) GetForHistoricalMember(ctx context.Context, userID, gameSessionID string) (domain.GameSession, error) {
+	ok, err := s.q.IsGameMember(ctx, gameSessionID, userID)
+	if err != nil {
+		return domain.GameSession{}, err
+	}
+	if !ok {
+		return domain.GameSession{}, domain.ErrGameMemberRequired
+	}
+	return s.q.GetGameSession(ctx, gameSessionID)
+}
+
 func (s *Service) Finish(ctx context.Context, userID, gameSessionID string) (domain.GameSession, error) {
 	if err := s.requireMember(ctx, userID, gameSessionID); err != nil {
 		return domain.GameSession{}, err

@@ -122,6 +122,36 @@ func (q *Queries) ReactivatePlayer(ctx context.Context, playerID, gameSessionID,
 	return err
 }
 
+func (q *Queries) DeactivatePlayer(ctx context.Context, gameSessionID, userID string, now time.Time) error {
+	_, err := q.db.ExecContext(ctx, `UPDATE players SET active = 0, left_at = ?, updated_at = ? WHERE game_session_id = ? AND user_id = ? AND active = 1`,
+		encodeTime(now), encodeTime(now), gameSessionID, userID)
+	return err
+}
+
+func (q *Queries) GetNextOwner(ctx context.Context, gameSessionID string) (*domain.Player, error) {
+	var p domain.Player
+	var leftAt sql.NullString
+	var createdAt, updatedAt string
+	err := q.db.QueryRowContext(ctx,
+		`SELECT id, game_session_id, user_id, display_name, total_score, active, joined_order, left_at, created_at, updated_at
+		 FROM players WHERE game_session_id = ? AND active = 1 AND user_id IS NOT NULL
+		 ORDER BY joined_order ASC LIMIT 1`, gameSessionID).
+		Scan(&p.ID, &p.GameSessionID, &p.UserID, &p.DisplayName, &p.TotalScore, &p.Active, &p.JoinedOrder, &leftAt, &createdAt, &updatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	p.LeftAt, _ = nullTimePtr(leftAt)
+	p.CreatedAt, err = decodeTime(createdAt)
+	if err != nil {
+		return nil, err
+	}
+	p.UpdatedAt, err = decodeTime(updatedAt)
+	return &p, err
+}
+
 func (q *Queries) DeletePlayer(ctx context.Context, gameSessionID, playerID string) error {
 	var scoreID string
 	err := q.db.QueryRowContext(ctx, `SELECT id FROM round_scores WHERE player_id = ? LIMIT 1`, playerID).Scan(&scoreID)

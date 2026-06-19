@@ -49,6 +49,72 @@ func TestFakeAuthCreateJoinAddSubmitSummaryRankingAPI(t *testing.T) {
 	}
 }
 
+func TestLeaveGameAPI(t *testing.T) {
+	app := newTestApp(t)
+	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
+	router := api.NewRouter(slog.Default(), api.Services{
+		Auth: app.auth, Game: app.game, Player: app.player, Round: app.round, Query: app.query,
+		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
+	})
+
+	ownerToken := loginHTTP(t, router, "owner-code")
+	game := postJSON[map[string]any](t, router, ownerToken, "/api/game-sessions", map[string]any{"name": "家庭聚会"})
+	gameID := game["id"].(string)
+
+	// Leave with zero score should succeed
+	result := postJSON[map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/leave", map[string]any{})
+	if result["left"] != true {
+		t.Fatalf("expected left=true, got %+v", result)
+	}
+}
+
+func TestLeaveRequiresZeroScoreAPI(t *testing.T) {
+	app := newTestApp(t)
+	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
+	router := api.NewRouter(slog.Default(), api.Services{
+		Auth: app.auth, Game: app.game, Player: app.player, Round: app.round, Query: app.query,
+		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
+	})
+
+	ownerToken := loginHTTP(t, router, "owner-code")
+	joinerToken := loginHTTP(t, router, "joiner-code")
+	game := postJSON[map[string]any](t, router, ownerToken, "/api/game-sessions", map[string]any{"name": "家庭聚会"})
+	gameID := game["id"].(string)
+
+	// Join with joiner
+	joinerGameID := postJSON[map[string]any](t, router, joinerToken, "/api/game-sessions/join", map[string]any{
+		"inviteCode": game["inviteCode"], "displayName": "妈妈",
+	})
+	if joinerGameID["gameSessionId"] != gameID {
+		t.Fatalf("unexpected join result: %+v", joinerGameID)
+	}
+
+	// Submit a round to give owner non-zero score
+	existingPlayers := getJSON[[]map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/players")
+	scores := []map[string]any{}
+	for _, p := range existingPlayers {
+		scores = append(scores, map[string]any{"playerId": p["id"], "score": 0})
+	}
+	// Replace owner score with non-zero
+	for i, p := range existingPlayers {
+		if p["userId"] != nil {
+			scores[i] = map[string]any{"playerId": p["id"], "score": 5}
+		}
+	}
+	postJSON[map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/rounds", map[string]any{
+		"scores": scores,
+	})
+
+	// Try to leave with non-zero score - should fail with 400
+	req, _ := http.NewRequest(http.MethodPost, "/api/game-sessions/"+gameID+"/leave", nil)
+	req.Header.Set("Authorization", "Bearer "+ownerToken)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 status, got %d body %s", rec.Code, rec.Body.String())
+	}
+}
+
 func TestCurrentPreviewJoinAndProfileAPI(t *testing.T) {
 	app := newTestApp(t)
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)

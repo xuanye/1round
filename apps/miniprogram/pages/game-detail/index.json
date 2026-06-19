@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "牌局详情",
+  "usingComponents": {
+    "player-list": "/components/player-list/index",
+    "round-list": "/components/round-list/index"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "oneround-miniprogram",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "watch": "tsc -p tsconfig.json --watch --preserveWatchOutput"
+  },
+  "devDependencies": {
+    "miniprogram-api-typings": "^4.0.7",
+    "typescript": "^5.9.3"
+  }
+}

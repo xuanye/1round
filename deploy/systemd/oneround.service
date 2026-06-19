@@ -1,0 +1,16 @@
+[Unit]
+Description=OneRound server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/oneround
+Environment=ONEROUND_DATABASE_PATH=/var/lib/oneround/oneround.db
+ExecStart=/opt/oneround/oneround-server -config /opt/oneround/config.yaml
+Restart=always
+RestartSec=5
+User=oneround
+Group=oneround
+
+[Install]
+WantedBy=multi-user.target

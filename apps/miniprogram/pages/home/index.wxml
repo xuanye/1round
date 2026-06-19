@@ -1,0 +1,98 @@
+<view class="page home-page">
+  <view class="topbar">
+    <view class="brand">
+      <view class="brand-mark">牌</view>
+      <view class="brand-name">一局一分</view>
+    </view>
+    <button class="icon-button" hover-class="tap-feedback">⚙</button>
+  </view>
+
+  <view class="greeting">
+    <view>
+      <view class="hello">你好，{{userName}}</view>
+      <view class="hello-copy">准备好和家人们来一场愉快的博弈了吗？</view>
+    </view>
+    <view class="greeting-art">
+      <view class="tile tile-a">友</view>
+      <view class="tile tile-b">分</view>
+      <view class="tile tile-c">和</view>
+    </view>
+  </view>
+
+  <view class="current-card card">
+    <view class="current-head">
+      <view>
+        <view class="game-title-row">
+          <view class="live-dot"></view>
+          <view class="game-title">{{currentGame.name}}</view>
+        </view>
+        <view class="game-meta">{{currentGame.date}} · {{currentGame.participantCount}}人参与</view>
+      </view>
+      <view class="my-score">
+        <view class="score-label">当前个人分值</view>
+        <view class="score-value">+{{currentGame.myScore}}</view>
+      </view>
+    </view>
+    <button class="button-primary enter-button" hover-class="tap-feedback" bindtap="enterGame">进入牌局</button>
+    <button class="exit-button disabled" hover-class="tap-feedback" bindtap="showExitTip">
+      退出牌局
+    </button>
+    <view class="exit-tip">分值清零后可退出</view>
+  </view>
+
+  <view class="actions">
+    <button class="create-disabled" disabled>已在牌局中</button>
+    <view class="action-grid">
+      <button class="action-card" hover-class="tap-feedback" bindtap="joinGame">
+        <view class="action-icon">＋</view>
+        <view>加入牌局</view>
+      </button>
+      <button class="action-card" hover-class="tap-feedback" bindtap="history">
+        <view class="action-icon">↺</view>
+        <view>历史记录</view>
+      </button>
+    </view>
+  </view>
+
+  <view class="overview">
+    <view class="section-title">本月概览</view>
+    <view class="stat-grid">
+      <view wx:for="{{stats}}" wx:key="label" class="stat-card card {{item.tone}}">
+        <view class="stat-top">
+          <view>{{item.label}}</view>
+          <view class="stat-icon">{{item.icon}}</view>
+        </view>
+        <view class="stat-number">{{item.value}}<text>{{item.unit}}</text></view>
+      </view>
+    </view>
+  </view>
+
+  <view class="recent-section">
+    <view class="section-head">
+      <view class="section-title">最近牌局</view>
+      <button bindtap="history" hover-class="tap-feedback">查看全部</button>
+    </view>
+    <view class="recent-list">
+      <view wx:for="{{recentGames}}" wx:key="title" class="recent-card card" hover-class="tap-feedback">
+        <view class="recent-icon">{{item.icon}}</view>
+        <view class="recent-main">
+          <view class="recent-row">
+            <view class="recent-title">{{item.title}}</view>
+            <view class="recent-status">{{item.status}}</view>
+          </view>
+          <view class="recent-meta">{{item.meta}}</view>
+        </view>
+        <view class="recent-score">
+          <view>胜者</view>
+          <text>{{item.score}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="bottom-nav">
+    <button class="nav-item active">⌂<text>首页</text></button>
+    <button class="nav-item" bindtap="enterGame">≋<text>数据</text></button>
+    <button class="nav-item" bindtap="history">◷<text>历史</text></button>
+  </view>
+</view>

@@ -1,0 +1,4 @@
+<view class="page form-page">
+  <input value="{{displayName}}" bindinput="onInput" placeholder="玩家名称" />
+  <button class="button-primary" bindtap="submit">添加</button>
+</view>

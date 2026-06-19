@@ -1,0 +1,14 @@
+<view class="rounds">
+  <view class="section-title">
+    <text>最近记录</text>
+    <text class="all">查看全部 ›</text>
+  </view>
+  <view class="round-card card">
+    <view wx:for="{{rounds}}" wx:key="id" class="round">
+      <text class="round-no">第 {{item.roundNo}} 局</text>
+      <text class="round-time">{{index === 0 ? '刚刚' : '10 分钟前'}}</text>
+      <text class="round-scores">{{item.scores.length}} 项</text>
+    </view>
+    <view wx:if="{{!rounds.length}}" class="empty-round">暂无记录</view>
+  </view>
+</view>

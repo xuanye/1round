@@ -1,0 +1,115 @@
+.form-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  padding-top: 30rpx;
+}
+
+.form-card {
+  padding: 28rpx;
+}
+
+.label,
+.row-title {
+  color: #111827;
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.input-wrap {
+  display: flex;
+  align-items: center;
+  height: 80rpx;
+  margin-top: 20rpx;
+  padding: 0 18rpx;
+  border: 1rpx solid #e5e7eb;
+  border-radius: 14rpx;
+  background: #ffffff;
+}
+
+input {
+  flex: 1;
+  color: #111827;
+  font-size: 28rpx;
+}
+
+.counter {
+  color: #6b7280;
+  font-size: 24rpx;
+}
+
+.row,
+.player-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+}
+
+.hint-text {
+  margin-top: 12rpx;
+  color: #6b7280;
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.player-count {
+  flex-shrink: 0;
+  color: #111827;
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.tip-card {
+  display: flex;
+  gap: 18rpx;
+  padding: 24rpx;
+  border: 1rpx solid rgba(22, 163, 74, 0.22);
+  border-radius: 18rpx;
+  background: linear-gradient(180deg, #f2fbf5 0%, #edf7f2 100%);
+}
+
+.tip-title {
+  color: #16a34a;
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.tip-icon {
+  width: 32rpx;
+  height: 32rpx;
+  border: 3rpx solid #16a34a;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.tip-icon::after {
+  content: "";
+  display: block;
+  width: 6rpx;
+  height: 12rpx;
+  margin: 28rpx auto 0;
+  border-radius: 4rpx;
+  background: #16a34a;
+}
+
+.create-btn {
+  height: 88rpx;
+  margin-top: auto;
+}
+
+.safe-note {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10rpx;
+  color: #6b7280;
+  font-size: 22rpx;
+}
+
+.shield {
+  width: 20rpx;
+  height: 24rpx;
+  border: 3rpx solid #16a34a;
+  border-radius: 10rpx 10rpx 14rpx 14rpx;
+}

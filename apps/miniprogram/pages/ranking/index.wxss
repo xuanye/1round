@@ -1,0 +1,158 @@
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 6rpx 0 22rpx;
+  border-bottom: 1rpx solid #e5e7eb;
+}
+
+.tab {
+  position: relative;
+  padding: 18rpx 0;
+  color: #6b7280;
+  font-size: 28rpx;
+  font-weight: 800;
+  text-align: center;
+}
+
+.tab.active {
+  color: #16a34a;
+}
+
+.tab.active::after {
+  content: "";
+  position: absolute;
+  left: 34%;
+  right: 34%;
+  bottom: 0;
+  height: 5rpx;
+  border-radius: 999rpx;
+  background: #16a34a;
+}
+
+.rank-card,
+.history-card {
+  padding: 24rpx;
+  margin-bottom: 22rpx;
+}
+
+.rank-title,
+.history-head {
+  margin-bottom: 20rpx;
+  color: #111827;
+  font-size: 28rpx;
+  font-weight: 900;
+}
+
+.history-head {
+  display: flex;
+  justify-content: space-between;
+}
+
+.rank-head,
+.rank-row {
+  display: grid;
+  grid-template-columns: 70rpx 1fr 92rpx 120rpx;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.rank-head {
+  margin-bottom: 8rpx;
+  color: #9ca3af;
+  font-size: 22rpx;
+}
+
+.rank-row {
+  min-height: 70rpx;
+  border-bottom: 1rpx solid #f0f1f3;
+  color: #111827;
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.rank-row:last-child {
+  border-bottom: 0;
+}
+
+.medal {
+  width: 34rpx;
+  height: 34rpx;
+  border-radius: 50%;
+  color: #6b7280;
+  background: #f3f4f6;
+  font-size: 20rpx;
+  line-height: 34rpx;
+  text-align: center;
+}
+
+.medal-0 { color: #fff; background: #facc15; }
+.medal-1 { color: #fff; background: #9ca3af; }
+.medal-2 { color: #fff; background: #f97316; }
+
+.player-cell {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  min-width: 0;
+}
+
+.avatar {
+  width: 42rpx;
+  height: 42rpx;
+  overflow: hidden;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #f4bf86, #df8e52);
+  font-size: 18rpx;
+  line-height: 42rpx;
+  text-align: center;
+}
+
+.positive { color: #ef4444; }
+.negative { color: #16a34a; }
+
+.history-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid #f0f1f3;
+}
+
+.history-row:last-child {
+  border-bottom: 0;
+}
+
+.calendar {
+  width: 54rpx;
+  height: 54rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 12rpx;
+}
+
+.green { color: #16a34a; }
+.yellow { color: #facc15; }
+
+.history-main {
+  flex: 1;
+}
+
+.history-name {
+  font-size: 26rpx;
+  font-weight: 900;
+}
+
+.history-meta {
+  margin-top: 6rpx;
+  color: #6b7280;
+  font-size: 20rpx;
+}
+
+.status {
+  padding: 5rpx 12rpx;
+  border-radius: 999rpx;
+  font-size: 20rpx;
+  font-weight: 900;
+}
+
+.running { color: #16a34a; background: #dcfce7; }
+.ended { color: #6b7280; background: #f3f4f6; }

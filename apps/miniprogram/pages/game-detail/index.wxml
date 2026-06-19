@@ -1,0 +1,64 @@
+<view class="page detail-page">
+  <view class="detail-topbar">
+    <button class="round-button" bindtap="backHome" hover-class="tap-feedback">‹</button>
+    <view class="detail-title">
+      <view>{{game.name}}</view>
+      <text>{{game.createdAt}}</text>
+    </view>
+    <button class="round-button" bindtap="showInvite" hover-class="tap-feedback">▦</button>
+  </view>
+
+  <view class="section-row">
+    <view class="section-label">当前参与者</view>
+    <button class="rank-link" bindtap="ranking" hover-class="tap-feedback">排行榜</button>
+  </view>
+
+  <view class="participant-list card">
+    <view wx:for="{{participants}}" wx:key="id" class="participant-row">
+      <view class="person">
+        <view class="avatar-wrap {{item.isCreator ? 'creator' : ''}}">
+          <view class="avatar">{{item.initial}}</view>
+          <view wx:if="{{item.isCreator}}" class="star">★</view>
+        </view>
+        <view>
+          <view class="person-name">{{item.name}}</view>
+          <view class="person-role">{{item.role}}</view>
+        </view>
+      </view>
+      <view class="score {{item.scoreTone}}">{{item.score}}</view>
+    </view>
+  </view>
+
+  <button class="button-primary score-entry" bindtap="inputScore" hover-class="tap-feedback">＋ 开始计分</button>
+
+  <view class="history-head">
+    <view class="section-label">计分明细</view>
+    <text>◷</text>
+  </view>
+
+  <view class="transfer-list">
+    <view wx:for="{{transfers}}" wx:key="id" class="transfer-card">
+      <view class="transfer-icon">{{item.icon}}</view>
+      <view class="transfer-main">
+        <view class="transfer-text">
+          <text class="strong">{{item.from}}</text>
+          <text> 给 </text>
+          <text class="strong">{{item.to}}</text>
+          <text wx:if="{{item.multi}}"> 各 </text>
+          <text wx:else> </text>
+          <text class="transfer-score">{{item.score}}</text>
+        </view>
+        <view class="transfer-time">{{item.time}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="bottom-actions">
+    <button class="finish-button" bindtap="finish" hover-class="tap-feedback">⚑ 结束本局</button>
+    <view class="bottom-nav">
+      <button bindtap="backHome">⌂<text>首页</text></button>
+      <button class="active">≋<text>牌局</text></button>
+      <button bindtap="ranking">◷<text>历史</text></button>
+    </view>
+  </view>
+</view>

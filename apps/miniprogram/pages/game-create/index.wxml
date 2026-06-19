@@ -1,0 +1,37 @@
+<view class="page form-page">
+  <view class="form-card card">
+    <view class="label">牌局名称</view>
+    <view class="input-wrap">
+      <input value="{{name}}" bindinput="onNameInput" placeholder="家庭聚会" maxlength="12" />
+      <text class="counter">{{nameLength}}/12</text>
+    </view>
+  </view>
+  <view class="form-card card">
+    <view class="row">
+      <view>
+        <view class="row-title">总分必须为 0</view>
+        <view class="hint-text">开启后，记录每一局的得分总和必须为 0，适合多数家庭玩法。</view>
+      </view>
+      <switch checked="{{zeroSumRequired}}" bindchange="onZeroSumChange" color="#16A34A" />
+    </view>
+  </view>
+  <view class="form-card player-card card">
+    <view>
+      <view class="row-title">玩家人数</view>
+      <view class="hint-text">支持 2-10 人</view>
+    </view>
+    <view class="player-count">4 人 ›</view>
+  </view>
+  <view class="tip-card">
+    <view class="tip-icon"></view>
+    <view>
+      <view class="tip-title">小提示</view>
+      <view class="hint-text">创建后可邀请家人加入，所有人实时同步记分，公平透明又省心。</view>
+    </view>
+  </view>
+  <button class="button-primary create-btn" hover-class="tap-feedback" bindtap="submit">创建并进入</button>
+  <view class="safe-note">
+    <text class="shield"></text>
+    <text>数据云端保存，安全不丢失</text>
+  </view>
+</view>

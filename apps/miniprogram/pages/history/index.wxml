@@ -1,0 +1,20 @@
+<view class="page">
+  <view class="tabs">
+    <view class="tab active">历史牌局</view>
+    <view class="tab">排行榜</view>
+  </view>
+  <empty-state wx:if="{{isEmpty}}" text="暂无历史牌局" />
+  <view class="history-list">
+    <view wx:for="{{ids}}" wx:key="*this" class="history-row card" data-id="{{item}}" bindtap="open">
+      <view class="calendar {{index % 2 === 0 ? 'green' : 'yellow'}}"></view>
+      <view class="history-main">
+        <view class="history-name">{{index === 0 ? '周末家庭局' : '家庭牌局'}}</view>
+        <view class="history-meta">牌局 ID {{item}}</view>
+      </view>
+      <view class="history-side">
+        <view class="status {{index === 0 ? 'running' : 'ended'}}">{{index === 0 ? '进行中' : '已结束'}}</view>
+        <view class="chevron">›</view>
+      </view>
+    </view>
+  </view>
+</view>

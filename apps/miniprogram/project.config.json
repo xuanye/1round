@@ -1,0 +1,15 @@
+{
+  "appid": "touristappid",
+  "projectname": "OneRound",
+  "compileType": "miniprogram",
+  "miniprogramRoot": "./",
+  "setting": {
+    "es6": true,
+    "minified": true,
+    "postcss": true,
+    "useCompilerPlugins": [
+      "typescript"
+    ]
+  },
+  "simulatorPluginLibVersion": {}
+}

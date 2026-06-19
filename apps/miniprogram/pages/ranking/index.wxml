@@ -1,0 +1,48 @@
+<view class="page">
+  <view class="tabs">
+    <view class="tab active">排行榜</view>
+    <view class="tab">历史牌局</view>
+  </view>
+
+  <view class="rank-card card">
+    <view class="rank-title">总分排行榜</view>
+    <view class="rank-head">
+      <text>排名</text>
+      <text>玩家</text>
+      <text>总分</text>
+      <text>平均分/局</text>
+    </view>
+    <view wx:for="{{players}}" wx:key="id" class="rank-row">
+      <view class="medal medal-{{index}}">{{index + 1}}</view>
+      <view class="player-cell">
+        <view class="avatar">{{item.initial}}</view>
+        <text>{{item.displayName}}</text>
+      </view>
+      <text class="{{item.scoreTone}}">{{item.scoreLabel}}</text>
+      <text>{{item.averageLabel}}</text>
+    </view>
+  </view>
+
+  <view class="history-card card">
+    <view class="history-head">
+      <text>历史牌局</text>
+      <text class="muted">查看全部 ›</text>
+    </view>
+    <view class="history-row">
+      <view class="calendar green"></view>
+      <view class="history-main">
+        <view class="history-name">周末家庭局</view>
+        <view class="history-meta">2024-05-18 14:00　4 人　12 局</view>
+      </view>
+      <text class="status running">进行中</text>
+    </view>
+    <view class="history-row">
+      <view class="calendar yellow"></view>
+      <view class="history-main">
+        <view class="history-name">五一家庭局</view>
+        <view class="history-meta">2024-05-01 19:30　5 人　18 局</view>
+      </view>
+      <text class="status ended">已结束</text>
+    </view>
+  </view>
+</view>

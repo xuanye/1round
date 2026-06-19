@@ -1,0 +1,66 @@
+<view class="page join-page">
+  <view class="join-ambient join-ambient-one"></view>
+  <view class="join-ambient join-ambient-two"></view>
+
+  <view class="join-topbar">
+    <view class="join-brand">
+      <view class="join-brand-mark">局</view>
+      <view>OneRound</view>
+    </view>
+    <button class="close-button" bindtap="cancel" hover-class="tap-feedback">×</button>
+  </view>
+
+  <view class="join-title">
+    <view>加入牌局</view>
+    <text>确认信息并设置您的显示名称</text>
+  </view>
+
+  <view class="join-card card">
+    <view class="game-info">
+      <view>
+        <view class="field-label">牌局名称</view>
+        <view class="game-name">{{game.name}}</view>
+      </view>
+      <view class="game-icon">群</view>
+    </view>
+
+    <view class="creator-row">
+      <view class="creator-avatar">{{game.creatorInitial}}</view>
+      <view>
+        <view class="field-label">创建者</view>
+        <view class="creator-name">{{game.creatorName}}</view>
+      </view>
+    </view>
+
+    <view class="divider"></view>
+
+    <view class="participant-head">
+      <view>当前参与者</view>
+      <text>{{game.participantText}}</text>
+    </view>
+    <view class="avatar-stack">
+      <view wx:for="{{participants}}" wx:key="id" class="stack-avatar">{{item.initial}}</view>
+    </view>
+
+    <view class="name-block">
+      <view class="field-label">我的显示名称</view>
+      <view class="input-shell">
+        <input value="{{displayName}}" bindinput="onNameInput" maxlength="12" />
+        <text>✎</text>
+      </view>
+      <view class="name-tip">名称在牌局内必须唯一</view>
+    </view>
+  </view>
+
+  <view class="join-actions">
+    <button
+      class="button-primary join-submit {{joined ? 'joined' : ''}}"
+      bindtap="submit"
+      hover-class="tap-feedback"
+      disabled="{{joining || joined}}"
+    >
+      {{joining ? '正在加入...' : joined ? '已成功加入' : '确认加入 →'}}
+    </button>
+    <button class="cancel-button" bindtap="cancel" hover-class="tap-feedback">取消</button>
+  </view>
+</view>

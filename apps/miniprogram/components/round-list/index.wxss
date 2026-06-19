@@ -1,0 +1,55 @@
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  margin: 24rpx 4rpx 14rpx;
+  color: #111827;
+  font-size: 28rpx;
+  font-weight: 900;
+}
+
+.all {
+  color: #9ca3af;
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.round-card {
+  padding: 18rpx 24rpx;
+}
+
+.round {
+  display: grid;
+  grid-template-columns: 130rpx 1fr 90rpx;
+  align-items: center;
+  min-height: 58rpx;
+  border-bottom: 1rpx solid #f0f1f3;
+}
+
+.round:last-child {
+  border-bottom: 0;
+}
+
+.round-no {
+  color: #111827;
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.round-time {
+  color: #9ca3af;
+  font-size: 22rpx;
+}
+
+.round-scores {
+  color: #16a34a;
+  font-size: 22rpx;
+  font-weight: 800;
+  text-align: right;
+}
+
+.empty-round {
+  padding: 20rpx 0;
+  color: #9ca3af;
+  text-align: center;
+  font-size: 24rpx;
+}

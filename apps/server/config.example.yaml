@@ -1,0 +1,22 @@
+server:
+  env: development
+  http_addr: ":8080"
+  public_base_url: "http://localhost:8080"
+
+database:
+  path: "./data/oneround.db"
+
+wechat:
+  app_id: ""
+  app_secret: ""
+  use_fake_auth: true
+
+auth:
+  signing_key: "dev-only-change-me"
+  token_ttl_hours: 720
+
+realtime:
+  write_timeout_seconds: 10
+  pong_timeout_seconds: 60
+  ping_interval_seconds: 30
+  client_send_queue_size: 32

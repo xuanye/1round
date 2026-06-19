@@ -1,0 +1,20 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/game-create/index",
+    "pages/game-join/index",
+    "pages/game-detail/index",
+    "pages/player-manage/index",
+    "pages/score-input/index",
+    "pages/ranking/index",
+    "pages/history/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "一局一分",
+    "navigationBarBackgroundColor": "#FAF9F6",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#FAF9F6"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

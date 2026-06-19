@@ -1,0 +1,90 @@
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 6rpx 0 24rpx;
+  border-bottom: 1rpx solid #e5e7eb;
+}
+
+.tab {
+  position: relative;
+  padding: 18rpx 0;
+  color: #6b7280;
+  font-size: 28rpx;
+  font-weight: 800;
+  text-align: center;
+}
+
+.tab.active {
+  color: #16a34a;
+}
+
+.tab.active::after {
+  content: "";
+  position: absolute;
+  left: 34%;
+  right: 34%;
+  bottom: 0;
+  height: 5rpx;
+  border-radius: 999rpx;
+  background: #16a34a;
+}
+
+.history-row {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  padding: 20rpx;
+  margin-bottom: 18rpx;
+}
+
+.calendar {
+  width: 58rpx;
+  height: 58rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 14rpx;
+  box-sizing: border-box;
+}
+
+.green { color: #16a34a; }
+.yellow { color: #facc15; }
+
+.history-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.history-name {
+  color: #111827;
+  font-size: 28rpx;
+  font-weight: 900;
+}
+
+.history-meta {
+  margin-top: 6rpx;
+  overflow: hidden;
+  color: #6b7280;
+  font-size: 21rpx;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-side {
+  text-align: right;
+}
+
+.status {
+  display: inline-block;
+  padding: 5rpx 12rpx;
+  border-radius: 999rpx;
+  font-size: 20rpx;
+  font-weight: 900;
+}
+
+.running { color: #16a34a; background: #dcfce7; }
+.ended { color: #6b7280; background: #f3f4f6; }
+
+.chevron {
+  margin-top: 8rpx;
+  color: #9ca3af;
+  font-size: 30rpx;
+}

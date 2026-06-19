@@ -1,0 +1,69 @@
+<view class="page score-page">
+  <view class="score-topbar">
+    <view class="score-title-row">
+      <button class="back-button" bindtap="goBack" hover-class="tap-feedback">‹</button>
+      <view class="score-title">给他人记分</view>
+    </view>
+    <button class="info-button" hover-class="tap-feedback">i</button>
+  </view>
+
+  <view class="receiver-head">
+    <view class="section-label">选择接收方</view>
+    <button class="select-all" bindtap="toggleAll" hover-class="tap-feedback">
+      {{allSelected ? '取消全选' : '全选其余人'}}
+    </button>
+  </view>
+
+  <view class="receiver-grid">
+    <view
+      wx:for="{{receivers}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      class="receiver-card {{item.selected ? 'selected' : ''}}"
+      bindtap="toggleReceiver"
+      hover-class="tap-feedback"
+    >
+      <view class="receiver-avatar">{{item.initial}}</view>
+      <view class="receiver-main">
+        <view class="receiver-name">{{item.displayName}}</view>
+        <view class="receiver-score">当前: {{item.currentScore}}</view>
+      </view>
+      <view wx:if="{{item.selected}}" class="check-mark">✓</view>
+    </view>
+  </view>
+
+  <view class="score-input-section">
+    <view class="section-label">输入每人分值</view>
+    <view class="score-display">
+      <view class="score-glow"></view>
+      <view class="score-number">{{scoreText}}</view>
+      <view class="score-unit">分 / 每人</view>
+    </view>
+  </view>
+
+  <view class="num-pad">
+    <button wx:for="{{numKeys}}" wx:key="*this" data-value="{{item}}" bindtap="pressKey" hover-class="tap-feedback">{{item}}</button>
+    <button class="clear-key" data-value="clear" bindtap="pressKey" hover-class="tap-feedback">⌫</button>
+    <button data-value="0" bindtap="pressKey" hover-class="tap-feedback">0</button>
+    <view class="done-key">✓✓</view>
+  </view>
+
+  <view wx:if="{{selectedCount > 0 && scoreText !== '0'}}" class="preview-card">
+    <view class="preview-icon">⇄</view>
+    <view>
+      <view class="preview-title">分发给 {{selectedCount}} 位好友</view>
+      <view class="preview-deduction">{{deductionText}}</view>
+    </view>
+  </view>
+
+  <view class="submit-dock">
+    <button
+      class="submit-button {{canSubmit ? 'active' : ''}}"
+      disabled="{{!canSubmit}}"
+      bindtap="submit"
+      hover-class="tap-feedback"
+    >
+      {{submitText}}
+    </button>
+  </view>
+</view>

@@ -1,0 +1,66 @@
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.player {
+  display: flex;
+  align-items: center;
+  min-height: 70rpx;
+  border-bottom: 1rpx solid #f0f1f3;
+}
+
+.player:last-child {
+  border-bottom: 0;
+}
+
+.rank-badge {
+  width: 38rpx;
+  color: #6b7280;
+  font-size: 22rpx;
+  font-weight: 900;
+}
+
+.rank-0 { color: #f59e0b; }
+.rank-1 { color: #9ca3af; }
+.rank-2 { color: #f97316; }
+
+.avatar {
+  width: 44rpx;
+  height: 44rpx;
+  margin-right: 16rpx;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #f5c08a, #e49a5f);
+  color: #111827;
+  font-size: 22rpx;
+  font-weight: 800;
+  line-height: 44rpx;
+  text-align: center;
+}
+
+.player-main {
+  flex: 1;
+}
+
+.player-name {
+  color: #111827;
+  font-size: 26rpx;
+  font-weight: 800;
+}
+
+.player-sub {
+  margin-top: 4rpx;
+  color: #9ca3af;
+  font-size: 20rpx;
+}
+
+.score {
+  min-width: 86rpx;
+  text-align: right;
+  font-size: 30rpx;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.positive { color: #ef4444; }
+.negative { color: #16a34a; }

@@ -28,4 +28,5 @@ var (
 	ErrFinishRequestNotPending      = errors.New("finish request not pending")
 	ErrOwnerRequired                = errors.New("owner required")
 	ErrPublicShareUnavailable       = errors.New("public share unavailable")
+	ErrAlreadyDeactivated           = errors.New("player already deactivated")
 )

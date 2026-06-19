@@ -127,6 +127,11 @@ func (s *Service) Leave(ctx context.Context, userID, gameSessionID string) error
 		return domain.ErrGameSessionFinished
 	}
 
+	// Verify user is a game member before proceeding
+	if err := s.game.RequireMember(ctx, userID, gameSessionID); err != nil {
+		return err
+	}
+
 	// Load active player for user
 	player, err := s.q.GetActivePlayerByUser(ctx, gameSessionID, userID)
 	if err != nil {
@@ -148,17 +153,26 @@ func (s *Service) Leave(ctx context.Context, userID, gameSessionID string) error
 			return err
 		}
 
-		// If leaving owner, transfer ownership
+		// If leaving owner, transfer ownership to the next eligible player.
+		// GetNextOwner filters for active players with a non-nil UserID,
+		// but we guard nil UserID here as defense-in-depth.
 		if isOwner {
 			nextOwner, err := q.GetNextOwner(ctx, gameSessionID)
 			if err != nil {
 				return err
 			}
-			if nextOwner != nil && nextOwner.UserID != nil {
-				if err := q.UpdateGameSessionOwner(ctx, gameSessionID, *nextOwner.UserID, now); err != nil {
+			if nextOwner != nil {
+				uid := nextOwner.UserID
+				if uid == nil {
+					// No eligible owner found with a linked user; ownership
+					// cannot be transferred. The game retains the stale owner
+					// until an admin intervenes or the game finishes.
+					return domain.ErrOwnerRequired
+				}
+				if err := q.UpdateGameSessionOwner(ctx, gameSessionID, *uid, now); err != nil {
 					return err
 				}
-				if err := q.TransferGameMemberRole(ctx, gameSessionID, *nextOwner.UserID, now); err != nil {
+				if err := q.TransferGameMemberRole(ctx, gameSessionID, *uid, now); err != nil {
 					return err
 				}
 			}

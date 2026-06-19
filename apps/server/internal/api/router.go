@@ -50,7 +50,7 @@ func NewRouter(logger *slog.Logger, services Services) http.Handler {
 			r.Get("/game-sessions/{id}", gameHandler.Get)
 			r.Get("/game-sessions/{id}/summary", gameHandler.Summary)
 			r.Post("/game-sessions/{id}/finish", gameHandler.Finish)
-				r.Post("/game-sessions/{id}/leave", gameHandler.Leave)
+			r.Post("/game-sessions/{id}/leave", gameHandler.Leave)
 			r.Patch("/game-sessions/{id}/my-profile", playerHandler.UpdateMyProfile)
 			r.Post("/game-sessions/{id}/players", playerHandler.Add)
 			r.Get("/game-sessions/{id}/players", playerHandler.List)

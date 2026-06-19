@@ -123,9 +123,16 @@ func (q *Queries) ReactivatePlayer(ctx context.Context, playerID, gameSessionID,
 }
 
 func (q *Queries) DeactivatePlayer(ctx context.Context, gameSessionID, userID string, now time.Time) error {
-	_, err := q.db.ExecContext(ctx, `UPDATE players SET active = 0, left_at = ?, updated_at = ? WHERE game_session_id = ? AND user_id = ? AND active = 1`,
+	res, err := q.db.ExecContext(ctx, `UPDATE players SET active = 0, left_at = ?, updated_at = ? WHERE game_session_id = ? AND user_id = ? AND active = 1`,
 		encodeTime(now), encodeTime(now), gameSessionID, userID)
-	return err
+	if err != nil {
+		return err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return domain.ErrAlreadyDeactivated
+	}
+	return nil
 }
 
 func (q *Queries) GetNextOwner(ctx context.Context, gameSessionID string) (*domain.Player, error) {

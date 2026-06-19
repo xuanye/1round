@@ -9,9 +9,9 @@ Page({
             participantText: '4 / 8',
         },
         participants: [
-            { id: 'p1', initial: '周' },
-            { id: 'p2', initial: '林' },
-            { id: 'p3', initial: '赵' },
+            { id: 'p1', initial: '周', avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCnx3j19hP4nb-3iIf88qb3AP11TRrIJJlvC0wSd30_mQ4nBpbk1Y2aJPl4rG0gRhfZ2YQCfWABFJlESgNggKmdG4CYXD4byY4xRXpvu1Is5ubv9yziVhks7byd6sMfKtuMWJPbxSsV0uUzc9HQnnHDldoI5aH9V1b3gRzRoKcWNtEeo-sMlgENpiqiWIMsFmbApYIN2n-Wy9mb9FVxFeevVFyWU2IOJE4Iux8eM8-f0BWewd6jjoTKLA' },
+            { id: 'p2', initial: '林', avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCbUuyQ9d_GacZDB29CmMfSJ8UUUpxvpe-kqil5623re1Jao0GqPfjKAxw1VyPtBScfxvjJaWWdVNCwvZ1RgXMlGUQznDvp0VQBf6As5MOnq0WN71H1JwthDRpd04UCcsxqxSwUeK4zysUm169l7QwQOglXe12KyTa-lTNTchBXRDQZc7r9e4mCK6BkybWua-6ziEt6gWUEBMt7MrizGxqLmg_wb_fP649OuWdE7VgbEQdhIVN3qGG6yQ' },
+            { id: 'p3', initial: '赵', avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD9kWMBbwc3Qe5TJj2fgLThcBXwPVWsp7S6SnqaynLhU1d1RiyRiDgzHWmlfRzpn5XOps3f_QR2X44g5TWTn9FqHLLmGqCrG92EhkGEGf7IFnGCY2qjRQxu8azP1mRxwyrbB9nkXU6Z9dPNoOk_0pITv_am8cWZuTX4-HVV70ODlomMIukbfkpYRSwMq0u6T7VXuoNV9hYv20aoq423b8I9gvbp9iqfX_P7XJq95wIkfXcNydW5SEFaKg' },
             { id: 'p4', initial: '+1' },
         ],
         displayName: '老书记05',

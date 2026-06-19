@@ -10,5 +10,8 @@
   "devDependencies": {
     "miniprogram-api-typings": "^4.0.7",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "material-symbols": "^0.45.2"
   }
 }

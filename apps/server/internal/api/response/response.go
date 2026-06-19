@@ -33,7 +33,7 @@ func Error(w http.ResponseWriter, err error) {
 
 func mapError(err error) (int, int, string) {
 	switch {
-	case errors.Is(err, domain.ErrInvalidArgument), errors.Is(err, domain.ErrInvalidPlayer), errors.Is(err, domain.ErrScoreTotalMustBeZero), errors.Is(err, domain.ErrCannotLeaveWithNonZeroScore):
+	case errors.Is(err, domain.ErrInvalidArgument), errors.Is(err, domain.ErrInvalidPlayer), errors.Is(err, domain.ErrScoreTotalMustBeZero), errors.Is(err, domain.ErrCannotLeaveWithNonZeroScore), errors.Is(err, domain.ErrOwnerRequired):
 		return 40001, http.StatusBadRequest, err.Error()
 	case errors.Is(err, domain.ErrUnauthorized):
 		return 40101, http.StatusUnauthorized, err.Error()
@@ -41,7 +41,7 @@ func mapError(err error) (int, int, string) {
 		return 40301, http.StatusForbidden, err.Error()
 	case errors.Is(err, domain.ErrNotFound):
 		return 40401, http.StatusNotFound, err.Error()
-	case errors.Is(err, domain.ErrConflict), errors.Is(err, domain.ErrGameSessionFinished):
+	case errors.Is(err, domain.ErrConflict), errors.Is(err, domain.ErrGameSessionFinished), errors.Is(err, domain.ErrAlreadyDeactivated):
 		return 40901, http.StatusConflict, err.Error()
 	default:
 		return 50001, http.StatusInternalServerError, "internal error"

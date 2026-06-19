@@ -112,8 +112,42 @@ func (s *Service) Submit(ctx context.Context, userID, gameSessionID string, inpu
 
 	var sequenceNo int
 	err = s.store.InTx(ctx, func(q *sqlite.Queries) error {
+		// Re-validate game status inside transaction to prevent writes after finish
+		currentSession, err := q.GetGameSession(ctx, gameSessionID)
+		if err != nil {
+			return err
+		}
+		if currentSession.Status != domain.GameSessionStatusActive {
+			return domain.ErrGameSessionFinished
+		}
+
+		// Re-validate sender is still active
+		currentSender, err := q.GetActivePlayerByUser(ctx, gameSessionID, userID)
+		if err != nil {
+			if err == domain.ErrNotFound {
+				return domain.ErrParticipantRequired
+			}
+			return err
+		}
+		if currentSender.ID != sender.ID {
+			return domain.ErrParticipantRequired
+		}
+
+		// Re-validate all receivers are still active
+		for _, rid := range input.ReceiverPlayerIDs {
+			p, err := q.GetPlayer(ctx, gameSessionID, rid)
+			if err != nil {
+				if err == domain.ErrNotFound {
+					return domain.ErrInvalidPlayer
+				}
+				return err
+			}
+			if !p.Active {
+				return domain.ErrParticipantInactive
+			}
+		}
+
 		// Allocate sequence number inside transaction to prevent concurrent conflicts
-		var err error
 		sequenceNo, err = q.NextScoreTransferSequence(ctx, gameSessionID)
 		if err != nil {
 			return err

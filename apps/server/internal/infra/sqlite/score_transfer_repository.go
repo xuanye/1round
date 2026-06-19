@@ -154,28 +154,28 @@ func (q *Queries) GetScoreTransferByIdempotencyKey(ctx context.Context, gameSess
 
 // DebitPlayerScore decreases a player's total_score. Must be called in a transaction.
 func (q *Queries) DebitPlayerScore(ctx context.Context, gameSessionID, playerID string, amount int, now time.Time) error {
-	res, err := q.db.ExecContext(ctx, `UPDATE players SET total_score = total_score - ?, updated_at = ? WHERE id = ? AND game_session_id = ?`,
+	res, err := q.db.ExecContext(ctx, `UPDATE players SET total_score = total_score - ?, updated_at = ? WHERE id = ? AND game_session_id = ? AND active = 1`,
 		amount, encodeTime(now), playerID, gameSessionID)
 	if err != nil {
 		return err
 	}
 	n, _ := res.RowsAffected()
 	if n == 0 {
-		return domain.ErrNotFound
+		return domain.ErrParticipantInactive
 	}
 	return nil
 }
 
 // CreditPlayerScore increases a player's total_score. Must be called in a transaction.
 func (q *Queries) CreditPlayerScore(ctx context.Context, gameSessionID, playerID string, amount int, now time.Time) error {
-	res, err := q.db.ExecContext(ctx, `UPDATE players SET total_score = total_score + ?, updated_at = ? WHERE id = ? AND game_session_id = ?`,
+	res, err := q.db.ExecContext(ctx, `UPDATE players SET total_score = total_score + ?, updated_at = ? WHERE id = ? AND game_session_id = ? AND active = 1`,
 		amount, encodeTime(now), playerID, gameSessionID)
 	if err != nil {
 		return err
 	}
 	n, _ := res.RowsAffected()
 	if n == 0 {
-		return domain.ErrNotFound
+		return domain.ErrParticipantInactive
 	}
 	return nil
 }
@@ -183,14 +183,14 @@ func (q *Queries) CreditPlayerScore(ctx context.Context, gameSessionID, playerID
 // IncrementGameSessionForTransfer bumps round_count, version, updated_at, and last_scored_at.
 // Must be called in a transaction.
 func (q *Queries) IncrementGameSessionForTransfer(ctx context.Context, gameSessionID string, nextVersion int64, now time.Time) error {
-	res, err := q.db.ExecContext(ctx, `UPDATE game_sessions SET round_count = round_count + 1, version = ?, updated_at = ?, last_scored_at = ? WHERE id = ?`,
+	res, err := q.db.ExecContext(ctx, `UPDATE game_sessions SET round_count = round_count + 1, version = ?, updated_at = ?, last_scored_at = ? WHERE id = ? AND status = 'active'`,
 		nextVersion, encodeTime(now), encodeTime(now), gameSessionID)
 	if err != nil {
 		return err
 	}
 	n, _ := res.RowsAffected()
 	if n == 0 {
-		return domain.ErrNotFound
+		return domain.ErrGameSessionFinished
 	}
 	return nil
 }

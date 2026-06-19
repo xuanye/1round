@@ -3,6 +3,7 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"strings"
 	"time"
 
 	"github.com/xuanye/one-round/apps/server/internal/domain"
@@ -11,7 +12,17 @@ import (
 func (q *Queries) CreatePlayer(ctx context.Context, p domain.Player) error {
 	_, err := q.db.ExecContext(ctx, `INSERT INTO players (id, game_session_id, user_id, display_name, total_score, active, joined_order, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		p.ID, p.GameSessionID, p.UserID, p.DisplayName, p.TotalScore, boolToInt(p.Active), p.JoinedOrder, encodeTime(p.CreatedAt), encodeTime(p.UpdatedAt))
-	return err
+	if err != nil {
+		// Map unique constraint violations to domain errors
+		if strings.Contains(err.Error(), "UNIQUE constraint failed: players.game_session_id, display_name") {
+			return domain.ErrDuplicateDisplayName
+		}
+		if strings.Contains(err.Error(), "UNIQUE constraint failed: players.game_session_id, user_id") {
+			return domain.ErrActiveGameExists
+		}
+		return err
+	}
+	return nil
 }
 
 func (q *Queries) ListPlayers(ctx context.Context, gameSessionID string) ([]domain.Player, error) {
@@ -119,7 +130,14 @@ func (q *Queries) UpdatePlayerAt(ctx context.Context, gameSessionID, playerID, d
 func (q *Queries) ReactivatePlayer(ctx context.Context, playerID, gameSessionID, displayName string, totalScore int, now time.Time) error {
 	_, err := q.db.ExecContext(ctx, `UPDATE players SET active = 1, display_name = ?, total_score = ?, left_at = NULL, updated_at = ? WHERE id = ? AND game_session_id = ?`,
 		displayName, totalScore, encodeTime(now), playerID, gameSessionID)
-	return err
+	if err != nil {
+		// Map unique constraint violations to domain errors
+		if strings.Contains(err.Error(), "UNIQUE constraint failed: players.game_session_id, display_name") {
+			return domain.ErrDuplicateDisplayName
+		}
+		return err
+	}
+	return nil
 }
 
 func (q *Queries) DeactivatePlayer(ctx context.Context, gameSessionID, userID string, now time.Time) error {

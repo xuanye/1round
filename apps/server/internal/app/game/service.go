@@ -203,15 +203,6 @@ func (s *Service) Join(ctx context.Context, userID, inviteCode, displayName stri
 		return "", domain.ErrActiveGameExists
 	}
 
-	// Check capacity (count active participants only)
-	activeCount, err := s.q.CountActiveParticipants(ctx, session.ID)
-	if err != nil {
-		return "", err
-	}
-	if session.MaxParticipants != nil && activeCount >= *session.MaxParticipants {
-		return "", domain.ErrGameCapacityFull
-	}
-
 	displayName = strings.TrimSpace(displayName)
 
 	// Check if user was a historical (inactive) participant -- reactivate
@@ -226,6 +217,16 @@ func (s *Service) Join(ctx context.Context, userID, inviteCode, displayName stri
 		}
 		now := s.now()
 		err = s.store.InTx(ctx, func(q *sqlite.Queries) error {
+			// Re-check capacity inside transaction to prevent concurrent joins exceeding limit
+			if session.MaxParticipants != nil {
+				activeCount, err := q.CountActiveParticipants(ctx, session.ID)
+				if err != nil {
+					return err
+				}
+				if activeCount >= *session.MaxParticipants {
+					return domain.ErrGameCapacityFull
+				}
+			}
 			if err := q.ReactivatePlayer(ctx, historicalPlayer.ID, session.ID, displayName, 0, now); err != nil {
 				return err
 			}
@@ -253,15 +254,25 @@ func (s *Service) Join(ctx context.Context, userID, inviteCode, displayName stri
 		return "", err
 	}
 	now := s.now()
-	joinedOrder, err := s.q.NextJoinedOrder(ctx, session.ID)
-	if err != nil {
-		return "", err
-	}
-	p := domain.Player{
-		ID: uuid.NewString(), GameSessionID: session.ID, UserID: &userID, DisplayName: displayName,
-		Active: true, JoinedOrder: joinedOrder, TotalScore: 0, CreatedAt: now, UpdatedAt: now,
-	}
 	err = s.store.InTx(ctx, func(q *sqlite.Queries) error {
+		// Re-check capacity inside transaction to prevent concurrent joins exceeding limit
+		if session.MaxParticipants != nil {
+			activeCount, err := q.CountActiveParticipants(ctx, session.ID)
+			if err != nil {
+				return err
+			}
+			if activeCount >= *session.MaxParticipants {
+				return domain.ErrGameCapacityFull
+			}
+		}
+		joinedOrder, err := q.NextJoinedOrder(ctx, session.ID)
+		if err != nil {
+			return err
+		}
+		p := domain.Player{
+			ID: uuid.NewString(), GameSessionID: session.ID, UserID: &userID, DisplayName: displayName,
+			Active: true, JoinedOrder: joinedOrder, TotalScore: 0, CreatedAt: now, UpdatedAt: now,
+		}
 		if err := q.CreatePlayer(ctx, p); err != nil {
 			return err
 		}

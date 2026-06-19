@@ -72,14 +72,9 @@ func (s *Service) Submit(ctx context.Context, userID, gameSessionID string, scor
 			return SubmitResult{}, domain.ErrInvalidPlayer
 		}
 	}
-	if session.ZeroSumRequired {
-		if err := ValidateZeroSum(scores); err != nil {
-			return SubmitResult{}, err
-		}
-	}
 	now := s.now()
 	roundID := uuid.NewString()
-	roundNo := session.RoundCount + 1
+	roundNo := session.ScoreTransferCnt + 1
 	version := session.Version + 1
 	r := domain.Round{ID: roundID, GameSessionID: gameSessionID, RoundNo: roundNo, CreatedByUserID: userID, Note: note, CreatedAt: now}
 	for _, input := range scores {

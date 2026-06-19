@@ -35,24 +35,23 @@ type RecentRound struct {
 }
 
 type Summary struct {
-	ID              string          `json:"id"`
-	Name            string          `json:"name"`
-	Status          string          `json:"status"`
-	RoundCount      int             `json:"roundCount"`
-	ZeroSumRequired bool            `json:"zeroSumRequired"`
-	Players         []PlayerSummary `json:"players"`
-	RecentRounds    []RecentRound   `json:"recentRounds"`
-	UpdatedAt       time.Time       `json:"updatedAt"`
-	Version         int64           `json:"version"`
+	ID               string          `json:"id"`
+	Name             string          `json:"name"`
+	Status           string          `json:"status"`
+	ScoreTransferCnt int             `json:"scoreTransferCount"`
+	Players          []PlayerSummary `json:"players"`
+	RecentRounds     []RecentRound   `json:"recentRounds"`
+	UpdatedAt        time.Time       `json:"updatedAt"`
+	Version          int64           `json:"version"`
 }
 
 type RankingItem struct {
-	Rank         int     `json:"rank"`
-	PlayerID     string  `json:"playerId"`
-	DisplayName  string  `json:"displayName"`
-	TotalScore   int     `json:"totalScore"`
-	RoundCount   int     `json:"roundCount"`
-	AverageScore float64 `json:"averageScore"`
+	Rank             int     `json:"rank"`
+	PlayerID         string  `json:"playerId"`
+	DisplayName      string  `json:"displayName"`
+	TotalScore       int     `json:"totalScore"`
+	ScoreTransferCnt int     `json:"scoreTransferCount"`
+	AverageScore     float64 `json:"averageScore"`
 }
 
 func NewService(q *sqlite.Queries, game *gamesvc.Service) *Service {
@@ -75,9 +74,9 @@ func (s *Service) Summary(ctx context.Context, userID, gameSessionID string) (Su
 	if err != nil {
 		return Summary{}, err
 	}
-	summary := Summary{ID: g.ID, Name: g.Name, Status: string(g.Status), RoundCount: g.RoundCount, ZeroSumRequired: g.ZeroSumRequired, RecentRounds: rounds, UpdatedAt: g.UpdatedAt, Version: g.Version}
+	summary := Summary{ID: g.ID, Name: g.Name, Status: string(g.Status), ScoreTransferCnt: g.ScoreTransferCnt, RecentRounds: rounds, UpdatedAt: g.UpdatedAt, Version: g.Version}
 	for _, p := range players {
-		summary.Players = append(summary.Players, PlayerSummary{ID: p.ID, DisplayName: p.DisplayName, TotalScore: p.TotalScore, AverageScore: average(p.TotalScore, g.RoundCount)})
+		summary.Players = append(summary.Players, PlayerSummary{ID: p.ID, DisplayName: p.DisplayName, TotalScore: p.TotalScore, AverageScore: average(p.TotalScore, g.ScoreTransferCnt)})
 	}
 	return summary, nil
 }
@@ -96,7 +95,7 @@ func (s *Service) Ranking(ctx context.Context, userID, gameSessionID string) ([]
 	}
 	items := make([]RankingItem, 0, len(players))
 	for i, p := range players {
-		items = append(items, RankingItem{Rank: i + 1, PlayerID: p.ID, DisplayName: p.DisplayName, TotalScore: p.TotalScore, RoundCount: g.RoundCount, AverageScore: average(p.TotalScore, g.RoundCount)})
+		items = append(items, RankingItem{Rank: i + 1, PlayerID: p.ID, DisplayName: p.DisplayName, TotalScore: p.TotalScore, ScoreTransferCnt: g.ScoreTransferCnt, AverageScore: average(p.TotalScore, g.ScoreTransferCnt)})
 	}
 	return items, nil
 }

@@ -59,7 +59,7 @@ func (s *Service) Create(ctx context.Context, userID, name string, zeroSumRequir
 	}
 	session := domain.GameSession{
 		ID: uuid.NewString(), Name: strings.TrimSpace(name), InviteCode: code, OwnerUserID: userID,
-		Status: domain.GameSessionStatusActive, ZeroSumRequired: zeroSumRequired, RoundCount: 0, Version: 1,
+		Status: domain.GameSessionStatusActive, ScoreTransferCnt: 0, Version: 1,
 		CreatedAt: now, UpdatedAt: now,
 	}
 	member := domain.GameMember{ID: uuid.NewString(), GameSessionID: session.ID, UserID: userID, Role: domain.GameMemberRoleOwner, JoinedAt: now}

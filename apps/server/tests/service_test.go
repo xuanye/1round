@@ -3,6 +3,7 @@ package tests
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"testing"
 	"time"
 
@@ -27,6 +28,28 @@ type testApp struct {
 	query  *querysvc.Service
 	hub    *realtime.MemoryHub
 	db     *sql.DB
+}
+
+func TestScoreTransferRequestValidation(t *testing.T) {
+	tests := []struct {
+		name      string
+		amount    int
+		receivers []string
+		wantErr   error
+	}{
+		{name: "zero amount", amount: 0, receivers: []string{"p2"}, wantErr: domain.ErrInvalidScoreTransferAmount},
+		{name: "negative amount", amount: -1, receivers: []string{"p2"}, wantErr: domain.ErrInvalidScoreTransferAmount},
+		{name: "no receivers", amount: 1, receivers: nil, wantErr: domain.ErrScoreTransferReceiverRequired},
+		{name: "valid", amount: 20, receivers: []string{"p2", "p3"}, wantErr: nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := domain.ValidateScoreTransferInput(tt.amount, tt.receivers)
+			if !errors.Is(err, tt.wantErr) {
+				t.Fatalf("expected %v, got %v", tt.wantErr, err)
+			}
+		})
+	}
 }
 
 func TestInviteCodeFormat(t *testing.T) {

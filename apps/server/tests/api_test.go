@@ -34,7 +34,7 @@ func TestFakeAuthCreateJoinAddSubmitSummaryRankingAPI(t *testing.T) {
 		"scores": []map[string]any{{"playerId": p1["id"], "score": 5}, {"playerId": p2["id"], "score": -5}},
 	})
 	summary := getJSON[map[string]any](t, router, token, "/api/game-sessions/"+gameID+"/summary")
-	if summary["roundCount"].(float64) != 1 {
+	if summary["scoreTransferCount"].(float64) != 1 {
 		t.Fatalf("unexpected summary: %+v", summary)
 	}
 	ranking := getJSON[[]any](t, router, token, "/api/game-sessions/"+gameID+"/ranking")

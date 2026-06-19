@@ -10,7 +10,7 @@ import (
 
 func (q *Queries) CreateGameSession(ctx context.Context, session domain.GameSession, ownerMember domain.GameMember) error {
 	_, err := q.db.ExecContext(ctx, `INSERT INTO game_sessions (id, name, invite_code, owner_user_id, status, zero_sum_required, round_count, version, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		session.ID, session.Name, session.InviteCode, session.OwnerUserID, session.Status, boolInt(session.ZeroSumRequired), session.RoundCount, session.Version, encodeTime(session.CreatedAt), encodeTime(session.UpdatedAt))
+		session.ID, session.Name, session.InviteCode, session.OwnerUserID, session.Status, 0, session.ScoreTransferCnt, session.Version, encodeTime(session.CreatedAt), encodeTime(session.UpdatedAt))
 	if err != nil {
 		return err
 	}
@@ -55,8 +55,7 @@ func scanGame(row interface{ Scan(...any) error }) (domain.GameSession, error) {
 	var g domain.GameSession
 	var zero int
 	var createdAt, updatedAt string
-	err := row.Scan(&g.ID, &g.Name, &g.InviteCode, &g.OwnerUserID, &g.Status, &zero, &g.RoundCount, &g.Version, &createdAt, &updatedAt)
-	g.ZeroSumRequired = zero == 1
+	err := row.Scan(&g.ID, &g.Name, &g.InviteCode, &g.OwnerUserID, &g.Status, &zero, &g.ScoreTransferCnt, &g.Version, &createdAt, &updatedAt)
 	if err == sql.ErrNoRows {
 		return g, domain.ErrNotFound
 	}

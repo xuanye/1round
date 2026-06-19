@@ -181,16 +181,23 @@ func (q *Queries) CreditPlayerScore(ctx context.Context, gameSessionID, playerID
 }
 
 // IncrementGameSessionForTransfer bumps round_count, version, updated_at, and last_scored_at.
-// Must be called in a transaction.
-func (q *Queries) IncrementGameSessionForTransfer(ctx context.Context, gameSessionID string, nextVersion int64, now time.Time) error {
-	res, err := q.db.ExecContext(ctx, `UPDATE game_sessions SET round_count = round_count + 1, version = ?, updated_at = ?, last_scored_at = ? WHERE id = ? AND status = 'active'`,
-		nextVersion, encodeTime(now), encodeTime(now), gameSessionID)
+// Uses atomic version = version + 1 to prevent concurrent regressions.
+// Returns the new version. Must be called in a transaction.
+func (q *Queries) IncrementGameSessionForTransfer(ctx context.Context, gameSessionID string, now time.Time) (int64, error) {
+	res, err := q.db.ExecContext(ctx, `UPDATE game_sessions SET round_count = round_count + 1, version = version + 1, updated_at = ?, last_scored_at = ? WHERE id = ? AND status = 'active'`,
+		encodeTime(now), encodeTime(now), gameSessionID)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	n, _ := res.RowsAffected()
 	if n == 0 {
-		return domain.ErrGameSessionFinished
+		return 0, domain.ErrGameSessionFinished
 	}
-	return nil
+	// Read back the new version
+	var newVersion int64
+	err = q.db.QueryRowContext(ctx, `SELECT version FROM game_sessions WHERE id = ?`, gameSessionID).Scan(&newVersion)
+	if err != nil {
+		return 0, err
+	}
+	return newVersion, nil
 }

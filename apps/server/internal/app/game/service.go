@@ -217,6 +217,14 @@ func (s *Service) Join(ctx context.Context, userID, inviteCode, displayName stri
 		}
 		now := s.now()
 		err = s.store.InTx(ctx, func(q *sqlite.Queries) error {
+			// Re-check game status inside transaction to prevent joins after settlement/void
+			currentSession, err := q.GetGameSession(ctx, session.ID)
+			if err != nil {
+				return err
+			}
+			if currentSession.Status != domain.GameSessionStatusActive {
+				return domain.ErrGameSessionFinished
+			}
 			// Re-check capacity inside transaction to prevent concurrent joins exceeding limit
 			if session.MaxParticipants != nil {
 				activeCount, err := q.CountActiveParticipants(ctx, session.ID)
@@ -255,6 +263,14 @@ func (s *Service) Join(ctx context.Context, userID, inviteCode, displayName stri
 	}
 	now := s.now()
 	err = s.store.InTx(ctx, func(q *sqlite.Queries) error {
+		// Re-check game status inside transaction to prevent joins after settlement/void
+		currentSession, err := q.GetGameSession(ctx, session.ID)
+		if err != nil {
+			return err
+		}
+		if currentSession.Status != domain.GameSessionStatusActive {
+			return domain.ErrGameSessionFinished
+		}
 		// Re-check capacity inside transaction to prevent concurrent joins exceeding limit
 		if session.MaxParticipants != nil {
 			activeCount, err := q.CountActiveParticipants(ctx, session.ID)

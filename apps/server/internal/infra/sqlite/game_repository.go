@@ -84,10 +84,14 @@ func (q *Queries) FinishGameSessionWithSettle(ctx context.Context, gameSessionID
 }
 
 func (q *Queries) VoidGameSession(ctx context.Context, gameSessionID string, now time.Time) (domain.GameSession, error) {
-	_, err := q.db.ExecContext(ctx, `UPDATE game_sessions SET status = ?, voided_at = ?, version = version + 1, updated_at = ? WHERE id = ?`,
+	res, err := q.db.ExecContext(ctx, `UPDATE game_sessions SET status = ?, voided_at = ?, version = version + 1, updated_at = ? WHERE id = ? AND status = 'active'`,
 		domain.GameSessionStatusVoided, encodeTime(now), encodeTime(now), gameSessionID)
 	if err != nil {
 		return domain.GameSession{}, err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return domain.GameSession{}, domain.ErrGameSessionFinished
 	}
 	return q.GetGameSession(ctx, gameSessionID)
 }

@@ -107,10 +107,10 @@ func (s *Service) Submit(ctx context.Context, userID, gameSessionID string, inpu
 	// New transfer: persist in one transaction
 	now := s.now()
 	transferID := uuid.NewString()
-	version := session.Version + 1
 	receiverCount := len(input.ReceiverPlayerIDs)
 
 	var sequenceNo int
+	var newVersion int64
 	err = s.store.InTx(ctx, func(q *sqlite.Queries) error {
 		// Re-validate game status inside transaction to prevent writes after finish
 		currentSession, err := q.GetGameSession(ctx, gameSessionID)
@@ -188,8 +188,9 @@ func (s *Service) Submit(ctx context.Context, userID, gameSessionID string, inpu
 				return err
 			}
 		}
-		// Increment round_count, version, updated_at, and last_scored_at
-		if err := q.IncrementGameSessionForTransfer(ctx, gameSessionID, version, now); err != nil {
+		// Increment round_count, version, updated_at, and last_scored_at using atomic version increment
+		newVersion, err = q.IncrementGameSessionForTransfer(ctx, gameSessionID, now)
+		if err != nil {
 			return err
 		}
 		return nil
@@ -203,11 +204,11 @@ func (s *Service) Submit(ctx context.Context, userID, gameSessionID string, inpu
 		s.hub.BroadcastToGame(ctx, gameSessionID, realtime.Event{
 			Type:          realtime.EventScoreTransferSubmitted,
 			GameSessionID: gameSessionID,
-			Version:       version,
+			Version:       newVersion,
 			Payload:       map[string]any{"transferId": transferID, "sequenceNo": sequenceNo},
 			SentAt:        now,
 		})
 	}
 
-	return SubmitResult{ID: transferID, SequenceNo: sequenceNo, Version: version}, nil
+	return SubmitResult{ID: transferID, SequenceNo: sequenceNo, Version: newVersion}, nil
 }

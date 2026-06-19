@@ -168,10 +168,14 @@ func (q *Queries) ListHistoricalPlayersForUser(ctx context.Context, gameSessionI
 }
 
 func (q *Queries) FinishGameSessionWithSettleAndToken(ctx context.Context, gameSessionID string, shareToken string, now time.Time) (domain.GameSession, error) {
-	_, err := q.db.ExecContext(ctx, `UPDATE game_sessions SET status = ?, settled_at = ?, public_share_token = ?, version = version + 1, updated_at = ? WHERE id = ?`,
+	res, err := q.db.ExecContext(ctx, `UPDATE game_sessions SET status = ?, settled_at = ?, public_share_token = ?, version = version + 1, updated_at = ? WHERE id = ? AND status = 'active'`,
 		domain.GameSessionStatusFinished, encodeTime(now), shareToken, encodeTime(now), gameSessionID)
 	if err != nil {
 		return domain.GameSession{}, err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return domain.GameSession{}, domain.ErrGameSessionFinished
 	}
 	return q.GetGameSession(ctx, gameSessionID)
 }

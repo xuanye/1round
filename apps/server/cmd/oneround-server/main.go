@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"log/slog"
 	"net/http"
@@ -95,8 +96,51 @@ func main() {
 		ScoreTransfer: scoreTransferService, Settlement: settlementService, Query: queryService, Tokens: tokens, WebSocket: wsHandler,
 	})
 	logger.Info("starting server", "addr", cfg.Server.HTTPAddr)
-	if err := http.ListenAndServe(cfg.Server.HTTPAddr, router); err != nil {
+	server := &http.Server{
+		Addr:    cfg.Server.HTTPAddr,
+		Handler: router,
+	}
+	if err := runHTTPServer(ctx, logger, server, 10*time.Second, hub.Close); err != nil {
 		logger.Error("server stopped", "error", err)
 		os.Exit(1)
+	}
+}
+
+func runHTTPServer(ctx context.Context, logger *slog.Logger, server *http.Server, shutdownTimeout time.Duration, shutdownHooks ...func(context.Context) error) error {
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- server.ListenAndServe()
+	}()
+
+	select {
+	case err := <-errCh:
+		if errors.Is(err, http.ErrServerClosed) {
+			return nil
+		}
+		return err
+	case <-ctx.Done():
+	}
+
+	logger.Info("shutting down server")
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
+
+	for _, hook := range shutdownHooks {
+		if err := hook(shutdownCtx); err != nil && !errors.Is(err, context.Canceled) {
+			logger.Error("shutdown hook failed", "error", err)
+		}
+	}
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		return err
+	}
+
+	select {
+	case err := <-errCh:
+		if errors.Is(err, http.ErrServerClosed) {
+			return nil
+		}
+		return err
+	case <-shutdownCtx.Done():
+		return shutdownCtx.Err()
 	}
 }

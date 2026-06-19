@@ -48,6 +48,16 @@ export ONEROUND_AUTH_SIGNING_KEY="$(openssl rand -base64 48)"
 
 真实 AppSecret 只能存在后端配置或环境变量中，不能提交到仓库。
 
+小程序 AppID 可以放在微信开发者工具的本地私有配置 `apps/miniprogram/project.private.config.json` 中；该文件已被 Git 忽略。`project.config.json` 保持 `touristappid`，避免把具体小程序归属写入可提交配置。
+
+启用真实微信登录时：
+
+1. 在微信公众平台获取小程序 AppID 和 AppSecret。
+2. 填入本地 `apps/server/config.yaml`。
+3. 将 `wechat.use_fake_auth` 改为 `false`。
+4. 使用强随机值替换 `auth.signing_key`。
+5. 在微信公众平台配置 request / socket 合法域名，正式环境必须使用 HTTPS/WSS。
+
 ## WebSocket 调试
 
 先调用 `/api/auth/wechat-login` 获取 token，再连接：
@@ -66,7 +76,7 @@ wscat -c "ws://localhost:8080/ws/game-sessions/<id>?token=<jwt>"
 apps/miniprogram
 ```
 
-本地调试时确认 `app.ts` 的 `baseUrl` 指向后端地址。正式环境必须使用 HTTPS/WSS 域名，并在微信小程序后台配置合法域名。
+本地调试时确认 `src/utils/config.ts` 的接口域名指向后端地址。正式环境必须使用 HTTPS/WSS 域名，并在微信小程序后台配置合法域名。
 
 ## 私有 VPC 部署
 

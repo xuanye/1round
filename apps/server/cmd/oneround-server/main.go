@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -29,7 +30,7 @@ import (
 )
 
 func main() {
-	configPath := flag.String("config", "config.example.yaml", "config file path")
+	configPath := flag.String("config", "config.yaml", "config file path")
 	migrateOnly := flag.Bool("migrate-only", false, "run migrations and exit")
 	flag.Parse()
 
@@ -69,7 +70,14 @@ func main() {
 	queries := sqlite.NewQueries(db)
 	hub := realtime.NewMemoryHub()
 	tokens := jwtauth.NewJWTService(cfg.Auth.SigningKey, cfg.TokenTTL())
-	wechatClient := wechat.FakeClient{}
+	var wechatClient wechat.Client = wechat.FakeClient{}
+	if !cfg.Wechat.UseFakeAuth {
+		if strings.TrimSpace(cfg.Wechat.AppID) == "" || strings.TrimSpace(cfg.Wechat.AppSecret) == "" {
+			logger.Error("wechat app_id and app_secret are required when fake auth is disabled")
+			os.Exit(1)
+		}
+		wechatClient = wechat.NewHTTPClient(cfg.Wechat.AppID, cfg.Wechat.AppSecret, "", http.DefaultClient)
+	}
 
 	gameService := gamesvc.NewService(store, queries, hub, now)
 	queryService := querysvc.NewService(queries, gameService)

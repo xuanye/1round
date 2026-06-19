@@ -11,20 +11,17 @@
     "skipLibCheck": true,
     "types": ["miniprogram-api-typings"],
     "lib": ["ES2019"],
-    "rootDir": ".",
+    "rootDir": "src",
+    "outDir": "dist",
     "sourceMap": true,
     "removeComments": false
   },
   "include": [
-    "app.ts",
-    "pages/**/*.ts",
-    "components/**/*.ts",
-    "services/**/*.ts",
-    "models/**/*.ts",
-    "utils/**/*.ts"
+    "src/**/*.ts"
   ],
   "exclude": [
     "node_modules",
+    "dist",
     "miniprogram_npm"
   ]
 }

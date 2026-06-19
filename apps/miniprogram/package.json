@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "node scripts/build.js",
     "check": "tsc -p tsconfig.json --noEmit",
-    "watch": "tsc -p tsconfig.json --watch --preserveWatchOutput"
+    "watch": "node scripts/build.js --watch"
   },
   "devDependencies": {
     "miniprogram-api-typings": "^4.0.7",

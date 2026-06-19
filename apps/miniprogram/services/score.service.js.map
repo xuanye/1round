@@ -1,1 +1,0 @@
-{"version":3,"file":"score.service.js","sourceRoot":"","sources":["score.service.ts"],"names":[],"mappings":";;AAEA,kDAWC;AAbD,iCAAiC;AAEjC,SAAgB,mBAAmB,CACjC,aAAqB,EACrB,iBAA2B,EAC3B,MAAc,EACd,cAAsB;IAEtB,OAAO,IAAA,cAAO,EAAC;QACb,GAAG,EAAE,sBAAsB,aAAa,kBAAkB;QAC1D,MAAM,EAAE,MAAM;QACd,IAAI,EAAE,EAAE,iBAAiB,EAAE,MAAM,EAAE,cAAc,EAAE;KACpD,CAAC,CAAC;AACL,CAAC"}

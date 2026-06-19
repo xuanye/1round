@@ -2,14 +2,22 @@
   "appid": "touristappid",
   "projectname": "OneRound",
   "compileType": "miniprogram",
-  "miniprogramRoot": "./",
+  "miniprogramRoot": "dist/",
   "setting": {
     "es6": true,
     "minified": true,
     "postcss": true,
-    "useCompilerPlugins": [
-      "typescript"
+    "useCompilerPlugins": ["typescript"]
+  },
+  "simulatorPluginLibVersion": {},
+  "packOptions": {
+    "include": [],
+    "ignore": [
+      {
+        "type": "folder",
+        "value": "/minitest"
+      }
     ]
   },
-  "simulatorPluginLibVersion": {}
+  "testRoot": "minitest/"
 }

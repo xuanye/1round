@@ -5,10 +5,12 @@ coverage/
 *.log
 
 apps/server/data/
+apps/server/.cache/
 apps/server/*.db
 apps/server/*.db-*
 apps/server/config.yaml
 
 apps/miniprogram/miniprogram_npm/
+apps/miniprogram/dist/
 apps/miniprogram/typings/
 apps/miniprogram/project.private.config.json

@@ -113,6 +113,7 @@ func applyEnv(cfg *Config) {
 		}
 	}
 	setString("ONEROUND_HTTP_ADDR", &cfg.Server.HTTPAddr)
+	setString("ONEROUND_PUBLIC_BASE_URL", &cfg.Server.PublicBaseURL)
 	setString("ONEROUND_DATABASE_PATH", &cfg.Database.Path)
 	setString("ONEROUND_WECHAT_APP_ID", &cfg.Wechat.AppID)
 	setString("ONEROUND_WECHAT_APP_SECRET", &cfg.Wechat.AppSecret)

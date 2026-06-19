@@ -26,6 +26,6 @@ Open this directory in WeChat DevTools:
 apps/miniprogram
 ```
 
-The `.ts` files are source files. The generated `.js` files are used by the Mini Program runtime.
+The `src/` directory contains source files. Build output is written to `dist/`, which is the Mini Program runtime root and is ignored by Git.
 
-WeChat DevTools should open this folder directly. The project config enables the TypeScript compiler plugin, and the npm scripts provide deterministic local checks.
+WeChat DevTools should open this folder directly. The project config points `miniprogramRoot` at `dist/`, and the npm scripts provide deterministic local checks.

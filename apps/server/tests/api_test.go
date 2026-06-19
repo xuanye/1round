@@ -24,21 +24,27 @@ func TestFakeAuthCreateJoinAddSubmitSummaryRankingAPI(t *testing.T) {
 	})
 
 	token := loginHTTP(t, router, "owner-code")
-	game := postJSON[map[string]any](t, router, token, "/api/game-sessions", map[string]any{"name": "家庭聚会", "zeroSumRequired": true})
+	game := postJSON[map[string]any](t, router, token, "/api/game-sessions", map[string]any{"name": "家庭聚会"})
 	gameID := game["id"].(string)
 	inviteCode := game["inviteCode"].(string)
 	_ = postJSON[map[string]any](t, router, token, "/api/game-sessions/join", map[string]any{"inviteCode": inviteCode})
+	// List existing players (owner player is auto-created)
+	existingPlayers := getJSON[[]map[string]any](t, router, token, "/api/game-sessions/"+gameID+"/players")
 	p1 := postJSON[map[string]any](t, router, token, "/api/game-sessions/"+gameID+"/players", map[string]any{"displayName": "A"})
 	p2 := postJSON[map[string]any](t, router, token, "/api/game-sessions/"+gameID+"/players", map[string]any{"displayName": "B"})
+	scores := []map[string]any{{"playerId": p1["id"], "score": 5}, {"playerId": p2["id"], "score": -5}}
+	for _, ep := range existingPlayers {
+		scores = append(scores, map[string]any{"playerId": ep["id"], "score": 0})
+	}
 	_ = postJSON[map[string]any](t, router, token, "/api/game-sessions/"+gameID+"/rounds", map[string]any{
-		"scores": []map[string]any{{"playerId": p1["id"], "score": 5}, {"playerId": p2["id"], "score": -5}},
+		"scores": scores,
 	})
 	summary := getJSON[map[string]any](t, router, token, "/api/game-sessions/"+gameID+"/summary")
 	if summary["scoreTransferCount"].(float64) != 1 {
 		t.Fatalf("unexpected summary: %+v", summary)
 	}
 	ranking := getJSON[[]any](t, router, token, "/api/game-sessions/"+gameID+"/ranking")
-	if len(ranking) != 2 {
+	if len(ranking) != 3 {
 		t.Fatalf("unexpected ranking: %+v", ranking)
 	}
 }

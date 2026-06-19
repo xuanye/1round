@@ -8,61 +8,108 @@ import (
 )
 
 func (q *Queries) CreatePlayer(ctx context.Context, p domain.Player) error {
-	_, err := q.db.ExecContext(ctx, `INSERT INTO players (id, game_session_id, user_id, display_name, total_score, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-		p.ID, p.GameSessionID, p.UserID, p.DisplayName, p.TotalScore, encodeTime(p.CreatedAt), encodeTime(p.UpdatedAt))
+	_, err := q.db.ExecContext(ctx, `INSERT INTO players (id, game_session_id, user_id, display_name, total_score, active, joined_order, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		p.ID, p.GameSessionID, p.UserID, p.DisplayName, p.TotalScore, boolToInt(p.Active), p.JoinedOrder, encodeTime(p.CreatedAt), encodeTime(p.UpdatedAt))
 	return err
 }
 
 func (q *Queries) ListPlayers(ctx context.Context, gameSessionID string) ([]domain.Player, error) {
-	rows, err := q.db.QueryContext(ctx, `SELECT id, game_session_id, user_id, display_name, total_score, created_at, updated_at FROM players WHERE game_session_id = ? ORDER BY created_at ASC`, gameSessionID)
+	rows, err := q.db.QueryContext(ctx, `SELECT id, game_session_id, user_id, display_name, total_score, active, joined_order, left_at, created_at, updated_at FROM players WHERE game_session_id = ? ORDER BY created_at ASC`, gameSessionID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var players []domain.Player
-	for rows.Next() {
-		var p domain.Player
-		var createdAt, updatedAt string
-		if err := rows.Scan(&p.ID, &p.GameSessionID, &p.UserID, &p.DisplayName, &p.TotalScore, &createdAt, &updatedAt); err != nil {
-			return nil, err
-		}
-		p.CreatedAt, err = decodeTime(createdAt)
-		if err != nil {
-			return nil, err
-		}
-		p.UpdatedAt, err = decodeTime(updatedAt)
-		if err != nil {
-			return nil, err
-		}
-		players = append(players, p)
-	}
-	return players, rows.Err()
+	return scanPlayers(rows)
 }
 
 func (q *Queries) ListRanking(ctx context.Context, gameSessionID string) ([]domain.Player, error) {
-	rows, err := q.db.QueryContext(ctx, `SELECT id, game_session_id, user_id, display_name, total_score, created_at, updated_at FROM players WHERE game_session_id = ? ORDER BY total_score DESC, display_name ASC`, gameSessionID)
+	rows, err := q.db.QueryContext(ctx, `SELECT id, game_session_id, user_id, display_name, total_score, active, joined_order, left_at, created_at, updated_at FROM players WHERE game_session_id = ? ORDER BY total_score DESC, display_name ASC`, gameSessionID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var players []domain.Player
-	for rows.Next() {
-		var p domain.Player
-		var createdAt, updatedAt string
-		if err := rows.Scan(&p.ID, &p.GameSessionID, &p.UserID, &p.DisplayName, &p.TotalScore, &createdAt, &updatedAt); err != nil {
-			return nil, err
-		}
-		p.CreatedAt, err = decodeTime(createdAt)
-		if err != nil {
-			return nil, err
-		}
-		p.UpdatedAt, err = decodeTime(updatedAt)
-		if err != nil {
-			return nil, err
-		}
-		players = append(players, p)
+	return scanPlayers(rows)
+}
+
+func (q *Queries) ListActivePlayers(ctx context.Context, gameSessionID string) ([]domain.Player, error) {
+	rows, err := q.db.QueryContext(ctx, `SELECT id, game_session_id, user_id, display_name, total_score, active, joined_order, left_at, created_at, updated_at FROM players WHERE game_session_id = ? AND active = 1 ORDER BY joined_order ASC`, gameSessionID)
+	if err != nil {
+		return nil, err
 	}
-	return players, rows.Err()
+	defer rows.Close()
+	return scanPlayers(rows)
+}
+
+func (q *Queries) ListHistoricalPlayers(ctx context.Context, gameSessionID string) ([]domain.Player, error) {
+	rows, err := q.db.QueryContext(ctx, `SELECT id, game_session_id, user_id, display_name, total_score, active, joined_order, left_at, created_at, updated_at FROM players WHERE game_session_id = ? ORDER BY joined_order ASC`, gameSessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanPlayers(rows)
+}
+
+func (q *Queries) CountActiveParticipants(ctx context.Context, gameSessionID string) (int, error) {
+	var n int
+	err := q.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM players WHERE game_session_id = ? AND active = 1`, gameSessionID).Scan(&n)
+	if err == sql.ErrNoRows {
+		return 0, nil
+	}
+	return n, err
+}
+
+func (q *Queries) NextJoinedOrder(ctx context.Context, gameSessionID string) (int, error) {
+	var max sql.NullInt64
+	err := q.db.QueryRowContext(ctx, `SELECT MAX(joined_order) FROM players WHERE game_session_id = ?`, gameSessionID).Scan(&max)
+	if err != nil {
+		return 0, err
+	}
+	if !max.Valid {
+		return 1, nil
+	}
+	return int(max.Int64) + 1, nil
+}
+
+func (q *Queries) GetActivePlayerByUser(ctx context.Context, gameSessionID, userID string) (domain.Player, error) {
+	var p domain.Player
+	var leftAt sql.NullString
+	var createdAt, updatedAt string
+	err := q.db.QueryRowContext(ctx, `SELECT id, game_session_id, user_id, display_name, total_score, active, joined_order, left_at, created_at, updated_at FROM players WHERE game_session_id = ? AND user_id = ? AND active = 1`, gameSessionID, userID).
+		Scan(&p.ID, &p.GameSessionID, &p.UserID, &p.DisplayName, &p.TotalScore, &p.Active, &p.JoinedOrder, &leftAt, &createdAt, &updatedAt)
+	if err == sql.ErrNoRows {
+		return p, domain.ErrNotFound
+	}
+	if err != nil {
+		return p, err
+	}
+	p.LeftAt, _ = nullTimePtr(leftAt)
+	p.CreatedAt, err = decodeTime(createdAt)
+	if err != nil {
+		return p, err
+	}
+	p.UpdatedAt, err = decodeTime(updatedAt)
+	return p, err
+}
+
+func (q *Queries) GetHistoricalPlayerByUser(ctx context.Context, gameSessionID, userID string) (domain.Player, error) {
+	var p domain.Player
+	var leftAt sql.NullString
+	var createdAt, updatedAt string
+	err := q.db.QueryRowContext(ctx, `SELECT id, game_session_id, user_id, display_name, total_score, active, joined_order, left_at, created_at, updated_at FROM players WHERE game_session_id = ? AND user_id = ?`, gameSessionID, userID).
+		Scan(&p.ID, &p.GameSessionID, &p.UserID, &p.DisplayName, &p.TotalScore, &p.Active, &p.JoinedOrder, &leftAt, &createdAt, &updatedAt)
+	if err == sql.ErrNoRows {
+		return p, domain.ErrNotFound
+	}
+	if err != nil {
+		return p, err
+	}
+	p.LeftAt, _ = nullTimePtr(leftAt)
+	p.CreatedAt, err = decodeTime(createdAt)
+	if err != nil {
+		return p, err
+	}
+	p.UpdatedAt, err = decodeTime(updatedAt)
+	return p, err
 }
 
 func (q *Queries) UpdatePlayer(ctx context.Context, gameSessionID, playerID, displayName string) (domain.Player, error) {
@@ -95,18 +142,52 @@ func (q *Queries) DeletePlayer(ctx context.Context, gameSessionID, playerID stri
 
 func (q *Queries) GetPlayer(ctx context.Context, gameSessionID, playerID string) (domain.Player, error) {
 	var p domain.Player
+	var leftAt sql.NullString
 	var createdAt, updatedAt string
-	err := q.db.QueryRowContext(ctx, `SELECT id, game_session_id, user_id, display_name, total_score, created_at, updated_at FROM players WHERE id = ? AND game_session_id = ?`, playerID, gameSessionID).
-		Scan(&p.ID, &p.GameSessionID, &p.UserID, &p.DisplayName, &p.TotalScore, &createdAt, &updatedAt)
+	err := q.db.QueryRowContext(ctx, `SELECT id, game_session_id, user_id, display_name, total_score, active, joined_order, left_at, created_at, updated_at FROM players WHERE id = ? AND game_session_id = ?`, playerID, gameSessionID).
+		Scan(&p.ID, &p.GameSessionID, &p.UserID, &p.DisplayName, &p.TotalScore, &p.Active, &p.JoinedOrder, &leftAt, &createdAt, &updatedAt)
 	if err == sql.ErrNoRows {
 		return p, domain.ErrNotFound
 	}
-	if err == nil {
+	if err != nil {
+		return p, err
+	}
+	p.LeftAt, _ = nullTimePtr(leftAt)
+	p.CreatedAt, err = decodeTime(createdAt)
+	if err != nil {
+		return p, err
+	}
+	p.UpdatedAt, err = decodeTime(updatedAt)
+	return p, err
+}
+
+func scanPlayers(rows *sql.Rows) ([]domain.Player, error) {
+	var players []domain.Player
+	for rows.Next() {
+		var p domain.Player
+		var leftAt sql.NullString
+		var createdAt, updatedAt string
+		if err := rows.Scan(&p.ID, &p.GameSessionID, &p.UserID, &p.DisplayName, &p.TotalScore, &p.Active, &p.JoinedOrder, &leftAt, &createdAt, &updatedAt); err != nil {
+			return nil, err
+		}
+		var err error
+		p.LeftAt, _ = nullTimePtr(leftAt)
 		p.CreatedAt, err = decodeTime(createdAt)
 		if err != nil {
-			return p, err
+			return nil, err
 		}
 		p.UpdatedAt, err = decodeTime(updatedAt)
+		if err != nil {
+			return nil, err
+		}
+		players = append(players, p)
 	}
-	return p, err
+	return players, rows.Err()
+}
+
+func boolToInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
 }

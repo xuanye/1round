@@ -64,15 +64,75 @@ func TestInviteCodeFormat(t *testing.T) {
 	}
 }
 
+func TestCreateGameStoresCapacityAndOwnerParticipant(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	user := login(t, app, "owner-code")
+	max := 4
+
+	game, err := app.game.Create(ctx, user, "家庭聚会", &max)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if game.MaxParticipants == nil || *game.MaxParticipants != 4 {
+		t.Fatalf("unexpected max participants: %+v", game.MaxParticipants)
+	}
+	participants, err := app.query.ActiveParticipants(ctx, user, game.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(participants) != 1 || participants[0].TotalScore != 0 || participants[0].JoinedOrder != 1 {
+		t.Fatalf("unexpected owner participant: %+v", participants)
+	}
+}
+
+func TestCurrentGameExcludesFinishedAndVoidedGames(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	user := login(t, app, "owner-code")
+	game := createGame(t, app, user, nil)
+
+	current, err := app.game.Current(ctx, user)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if current == nil || current.ID != game.ID {
+		t.Fatalf("unexpected current game: %+v", current)
+	}
+	if _, err := app.game.Finish(ctx, user, game.ID); err != nil {
+		t.Fatal(err)
+	}
+	current, err = app.game.Current(ctx, user)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if current != nil {
+		t.Fatalf("expected no current game, got %+v", current)
+	}
+}
+
 func TestSubmitRoundAccumulatesScoresAndRanking(t *testing.T) {
 	app := newTestApp(t)
 	ctx := context.Background()
 	user := login(t, app, "owner-code")
-	game := createGame(t, app, user, true)
+	game := createGame(t, app, user, nil)
+	players, _ := app.player.List(ctx, user, game.ID)
+	// Find owner player and add two more
+	var ownerPlayer domain.Player
+	for _, p := range players {
+		if p.UserID != nil && *p.UserID == user {
+			ownerPlayer = p
+			break
+		}
+	}
 	p1, _ := app.player.Add(ctx, user, game.ID, "爸爸")
 	p2, _ := app.player.Add(ctx, user, game.ID, "妈妈")
 
-	result, err := app.round.Submit(ctx, user, game.ID, []roundsvc.ScoreInput{{PlayerID: p1.ID, Score: 12}, {PlayerID: p2.ID, Score: -12}}, nil)
+	result, err := app.round.Submit(ctx, user, game.ID, []roundsvc.ScoreInput{
+		{PlayerID: ownerPlayer.ID, Score: 0},
+		{PlayerID: p1.ID, Score: 12},
+		{PlayerID: p2.ID, Score: -12},
+	}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -90,8 +150,11 @@ func TestSubmitRoundAccumulatesScoresAndRanking(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if ranking[0].PlayerID != p1.ID || ranking[1].PlayerID != p2.ID {
-		t.Fatalf("unexpected ranking: %+v", ranking)
+	if ranking[0].PlayerID != p1.ID {
+		t.Fatalf("unexpected first in ranking: %+v", ranking)
+	}
+	if len(ranking) != 3 {
+		t.Fatalf("unexpected ranking length: %+v", ranking)
 	}
 }
 
@@ -99,13 +162,25 @@ func TestFinishedGameRejectsRound(t *testing.T) {
 	app := newTestApp(t)
 	ctx := context.Background()
 	user := login(t, app, "owner-code")
-	game := createGame(t, app, user, true)
+	game := createGame(t, app, user, nil)
+	players, _ := app.player.List(ctx, user, game.ID)
+	var ownerPlayer domain.Player
+	for _, p := range players {
+		if p.UserID != nil && *p.UserID == user {
+			ownerPlayer = p
+			break
+		}
+	}
 	p1, _ := app.player.Add(ctx, user, game.ID, "A")
 	p2, _ := app.player.Add(ctx, user, game.ID, "B")
 	if _, err := app.game.Finish(ctx, user, game.ID); err != nil {
 		t.Fatal(err)
 	}
-	_, err := app.round.Submit(ctx, user, game.ID, []roundsvc.ScoreInput{{PlayerID: p1.ID, Score: 1}, {PlayerID: p2.ID, Score: -1}}, nil)
+	_, err := app.round.Submit(ctx, user, game.ID, []roundsvc.ScoreInput{
+		{PlayerID: ownerPlayer.ID, Score: 0},
+		{PlayerID: p1.ID, Score: 1},
+		{PlayerID: p2.ID, Score: -1},
+	}, nil)
 	if err != domain.ErrGameSessionFinished {
 		t.Fatalf("expected finished error, got %v", err)
 	}
@@ -116,7 +191,7 @@ func TestNonMemberCannotReadSummary(t *testing.T) {
 	ctx := context.Background()
 	owner := login(t, app, "owner-code")
 	other := login(t, app, "other-code")
-	game := createGame(t, app, owner, true)
+	game := createGame(t, app, owner, nil)
 	_, err := app.query.Summary(ctx, other, game.ID)
 	if err != domain.ErrGameMemberRequired {
 		t.Fatalf("expected member error, got %v", err)
@@ -185,9 +260,9 @@ func login(t *testing.T, app *testApp, code string) string {
 	return result.User.ID
 }
 
-func createGame(t *testing.T, app *testApp, userID string, zeroSum bool) domain.GameSession {
+func createGame(t *testing.T, app *testApp, userID string, maxParticipants *int) domain.GameSession {
 	t.Helper()
-	game, err := app.game.Create(context.Background(), userID, "家庭聚会", zeroSum)
+	game, err := app.game.Create(context.Background(), userID, "家庭聚会", maxParticipants)
 	if err != nil {
 		t.Fatal(err)
 	}

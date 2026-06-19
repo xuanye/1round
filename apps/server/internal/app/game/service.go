@@ -48,7 +48,7 @@ func ValidInviteCode(code string) bool {
 	return true
 }
 
-func (s *Service) Create(ctx context.Context, userID, name string, zeroSumRequired bool) (domain.GameSession, error) {
+func (s *Service) Create(ctx context.Context, userID, name string, maxParticipants *int) (domain.GameSession, error) {
 	if strings.TrimSpace(name) == "" {
 		return domain.GameSession{}, domain.ErrInvalidArgument
 	}
@@ -59,14 +59,25 @@ func (s *Service) Create(ctx context.Context, userID, name string, zeroSumRequir
 	}
 	session := domain.GameSession{
 		ID: uuid.NewString(), Name: strings.TrimSpace(name), InviteCode: code, OwnerUserID: userID,
-		Status: domain.GameSessionStatusActive, ScoreTransferCnt: 0, Version: 1,
+		Status: domain.GameSessionStatusActive, MaxParticipants: maxParticipants, ScoreTransferCnt: 0, Version: 1,
 		CreatedAt: now, UpdatedAt: now,
 	}
 	member := domain.GameMember{ID: uuid.NewString(), GameSessionID: session.ID, UserID: userID, Role: domain.GameMemberRoleOwner, JoinedAt: now}
+	ownerPlayer := domain.Player{
+		ID: uuid.NewString(), GameSessionID: session.ID, UserID: &userID, DisplayName: "房主",
+		Active: true, JoinedOrder: 1, TotalScore: 0, CreatedAt: now, UpdatedAt: now,
+	}
 	err = s.store.InTx(ctx, func(q *sqlite.Queries) error {
-		return q.CreateGameSession(ctx, session, member)
+		if err := q.CreateGameSession(ctx, session, member); err != nil {
+			return err
+		}
+		return q.CreatePlayer(ctx, ownerPlayer)
 	})
 	return session, err
+}
+
+func (s *Service) Current(ctx context.Context, userID string) (*domain.GameSession, error) {
+	return s.q.GetCurrentGameForUser(ctx, userID)
 }
 
 func (s *Service) Join(ctx context.Context, userID, inviteCode string) (string, error) {

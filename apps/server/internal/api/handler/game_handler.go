@@ -27,7 +27,7 @@ func (h *GameHandler) Create(w http.ResponseWriter, r *http.Request) {
 		response.Error(w, err)
 		return
 	}
-	result, err := h.game.Create(r.Context(), middleware.UserID(r.Context()), req.Name, req.ZeroSumRequired)
+	result, err := h.game.Create(r.Context(), middleware.UserID(r.Context()), req.Name, req.MaxParticipants)
 	if err != nil {
 		response.Error(w, err)
 		return

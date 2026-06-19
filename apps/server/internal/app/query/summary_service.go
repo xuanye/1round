@@ -58,6 +58,13 @@ func NewService(q *sqlite.Queries, game *gamesvc.Service) *Service {
 	return &Service{q: q, game: game}
 }
 
+func (s *Service) ActiveParticipants(ctx context.Context, userID, gameSessionID string) ([]domain.Player, error) {
+	if err := s.game.RequireMember(ctx, userID, gameSessionID); err != nil {
+		return nil, err
+	}
+	return s.q.ListActivePlayers(ctx, gameSessionID)
+}
+
 func (s *Service) Summary(ctx context.Context, userID, gameSessionID string) (Summary, error) {
 	if err := s.game.RequireMember(ctx, userID, gameSessionID); err != nil {
 		return Summary{}, err

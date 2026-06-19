@@ -2,8 +2,6 @@ package scoretransfer
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -174,16 +172,4 @@ func (s *Service) Submit(ctx context.Context, userID, gameSessionID string, inpu
 	}
 
 	return SubmitResult{ID: transferID, SequenceNo: sequenceNo, Version: version}, nil
-}
-
-// FormatTransferText produces a human-readable summary of a score transfer.
-func FormatTransferText(from string, receivers []string, amount int) string {
-	if len(receivers) == 1 {
-		return fmt.Sprintf("%s 给 %s +%d", from, receivers[0], amount)
-	}
-	return fmt.Sprintf("%s 给 %s 各 +%d", from, strings.Join(receivers, "、"), amount)
-}
-
-func encodeTime(t time.Time) string {
-	return t.UTC().Format(time.RFC3339Nano)
 }

@@ -8,12 +8,6 @@ import (
 	"github.com/xuanye/one-round/apps/server/internal/domain"
 )
 
-func (s *Store) InsertScoreTransfer(ctx context.Context, t domain.ScoreTransfer) error {
-	return s.InTx(ctx, func(q *Queries) error {
-		return q.InsertScoreTransferRaw(ctx, t)
-	})
-}
-
 // InsertScoreTransferRaw inserts a score transfer and its receivers.
 // It must be called within an existing transaction (e.g. via Store.InTx).
 func (q *Queries) InsertScoreTransferRaw(ctx context.Context, t domain.ScoreTransfer) error {
@@ -158,33 +152,45 @@ func (q *Queries) GetScoreTransferByIdempotencyKey(ctx context.Context, gameSess
 	return t, nil
 }
 
-func (q *Queries) GetScoreTransferCount(ctx context.Context, gameSessionID string) (int, error) {
-	var n int
-	err := q.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM score_transfers WHERE game_session_id = ?`, gameSessionID).Scan(&n)
-	if err == sql.ErrNoRows {
-		return 0, nil
-	}
-	return n, err
-}
-
 // DebitPlayerScore decreases a player's total_score. Must be called in a transaction.
 func (q *Queries) DebitPlayerScore(ctx context.Context, gameSessionID, playerID string, amount int, now time.Time) error {
-	_, err := q.db.ExecContext(ctx, `UPDATE players SET total_score = total_score - ?, updated_at = ? WHERE id = ? AND game_session_id = ?`,
+	res, err := q.db.ExecContext(ctx, `UPDATE players SET total_score = total_score - ?, updated_at = ? WHERE id = ? AND game_session_id = ?`,
 		amount, encodeTime(now), playerID, gameSessionID)
-	return err
+	if err != nil {
+		return err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return domain.ErrNotFound
+	}
+	return nil
 }
 
 // CreditPlayerScore increases a player's total_score. Must be called in a transaction.
 func (q *Queries) CreditPlayerScore(ctx context.Context, gameSessionID, playerID string, amount int, now time.Time) error {
-	_, err := q.db.ExecContext(ctx, `UPDATE players SET total_score = total_score + ?, updated_at = ? WHERE id = ? AND game_session_id = ?`,
+	res, err := q.db.ExecContext(ctx, `UPDATE players SET total_score = total_score + ?, updated_at = ? WHERE id = ? AND game_session_id = ?`,
 		amount, encodeTime(now), playerID, gameSessionID)
-	return err
+	if err != nil {
+		return err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return domain.ErrNotFound
+	}
+	return nil
 }
 
 // IncrementGameSessionForTransfer bumps round_count, version, updated_at, and last_scored_at.
 // Must be called in a transaction.
 func (q *Queries) IncrementGameSessionForTransfer(ctx context.Context, gameSessionID string, nextVersion int64, now time.Time) error {
-	_, err := q.db.ExecContext(ctx, `UPDATE game_sessions SET round_count = round_count + 1, version = ?, updated_at = ?, last_scored_at = ? WHERE id = ?`,
+	res, err := q.db.ExecContext(ctx, `UPDATE game_sessions SET round_count = round_count + 1, version = ?, updated_at = ?, last_scored_at = ? WHERE id = ?`,
 		nextVersion, encodeTime(now), encodeTime(now), gameSessionID)
-	return err
+	if err != nil {
+		return err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return domain.ErrNotFound
+	}
+	return nil
 }

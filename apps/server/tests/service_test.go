@@ -41,6 +41,8 @@ func TestScoreTransferRequestValidation(t *testing.T) {
 		{name: "negative amount", amount: -1, receivers: []string{"p2"}, wantErr: domain.ErrInvalidScoreTransferAmount},
 		{name: "no receivers", amount: 1, receivers: nil, wantErr: domain.ErrScoreTransferReceiverRequired},
 		{name: "valid", amount: 20, receivers: []string{"p2", "p3"}, wantErr: nil},
+		{name: "duplicate receiver", amount: 10, receivers: []string{"p2", "p2"}, wantErr: domain.ErrInvalidPlayer},
+		{name: "empty string receiver", amount: 10, receivers: []string{"p2", ""}, wantErr: domain.ErrInvalidPlayer},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -59,16 +61,6 @@ func TestInviteCodeFormat(t *testing.T) {
 	}
 	if !gamesvc.ValidInviteCode(code) {
 		t.Fatalf("invalid invite code: %q", code)
-	}
-}
-
-func TestZeroSumValidation(t *testing.T) {
-	err := roundsvc.ValidateZeroSum([]roundsvc.ScoreInput{{Score: 8}, {Score: -3}})
-	if err != domain.ErrScoreTotalMustBeZero {
-		t.Fatalf("expected zero sum error, got %v", err)
-	}
-	if err := roundsvc.ValidateZeroSum([]roundsvc.ScoreInput{{Score: 8}, {Score: -8}}); err != nil {
-		t.Fatalf("expected valid zero sum, got %v", err)
 	}
 }
 

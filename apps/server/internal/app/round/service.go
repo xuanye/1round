@@ -34,17 +34,6 @@ func NewService(store *sqlite.Store, q *sqlite.Queries, game *gamesvc.Service, h
 	return &Service{store: store, q: q, game: game, hub: hub, now: now}
 }
 
-func ValidateZeroSum(scores []ScoreInput) error {
-	total := 0
-	for _, s := range scores {
-		total += s.Score
-	}
-	if total != 0 {
-		return domain.ErrScoreTotalMustBeZero
-	}
-	return nil
-}
-
 func (s *Service) Submit(ctx context.Context, userID, gameSessionID string, scores []ScoreInput, note *string) (SubmitResult, error) {
 	if err := s.game.RequireMember(ctx, userID, gameSessionID); err != nil {
 		return SubmitResult{}, err

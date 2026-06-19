@@ -68,10 +68,3 @@ func scanGame(row interface{ Scan(...any) error }) (domain.GameSession, error) {
 	}
 	return g, err
 }
-
-func boolInt(v bool) int {
-	if v {
-		return 1
-	}
-	return 0
-}

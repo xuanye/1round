@@ -3,6 +3,7 @@ package game
 import (
 	"context"
 	"crypto/rand"
+	"fmt"
 	"strings"
 	"time"
 
@@ -107,10 +108,12 @@ type PlayerPreview struct {
 }
 
 func defaultDisplayName(userID string) string {
-	if len(userID) >= 2 {
-		return "老书记" + userID[len(userID)-2:]
+	// Derive a 2-digit numeric suffix from the userID bytes so names look like "老书记42"
+	sum := 0
+	for i := 0; i < len(userID); i++ {
+		sum += int(userID[i])
 	}
-	return "老书记00"
+	return fmt.Sprintf("老书记%02d", sum%100)
 }
 
 func (s *Service) JoinPreview(ctx context.Context, userID, inviteCode string) (JoinPreview, error) {
@@ -170,14 +173,10 @@ func (s *Service) Join(ctx context.Context, userID, inviteCode, displayName stri
 	}
 
 	// Check if user is already an active participant in this game (early return, no displayName needed)
-	existingPlayer, err := s.q.GetActivePlayerByUser(ctx, session.ID, userID)
-	if err != nil && err != domain.ErrNotFound {
-		return "", err
-	}
-	if err == nil {
-		// Already active in this game
-		_ = existingPlayer
+	if _, err := s.q.GetActivePlayerByUser(ctx, session.ID, userID); err == nil {
 		return session.ID, nil
+	} else if err != domain.ErrNotFound {
+		return "", err
 	}
 
 	if strings.TrimSpace(displayName) == "" {
@@ -219,7 +218,15 @@ func (s *Service) Join(ctx context.Context, userID, inviteCode, displayName stri
 			if err := q.ReactivatePlayer(ctx, historicalPlayer.ID, session.ID, displayName, 0, now); err != nil {
 				return err
 			}
-			return q.AddGameMember(ctx, domain.GameMember{ID: uuid.NewString(), GameSessionID: session.ID, UserID: userID, Role: domain.GameMemberRoleMember, JoinedAt: now})
+			// Only add membership if not already a member (user may have left without being removed from game_members)
+			isMember, err := q.IsGameMember(ctx, session.ID, userID)
+			if err != nil {
+				return err
+			}
+			if !isMember {
+				return q.AddGameMember(ctx, domain.GameMember{ID: uuid.NewString(), GameSessionID: session.ID, UserID: userID, Role: domain.GameMemberRoleMember, JoinedAt: now})
+			}
+			return nil
 		})
 		if err != nil {
 			return "", err

@@ -59,7 +59,19 @@ func (h *GameHandler) Current(w http.ResponseWriter, r *http.Request) {
 		response.Empty(w)
 		return
 	}
-	response.JSON(w, http.StatusOK, result)
+	resp := dto.CurrentGameResponse{
+		ID:               result.ID,
+		Name:             result.Name,
+		InviteCode:       result.InviteCode,
+		OwnerUserID:      result.OwnerUserID,
+		Status:           string(result.Status),
+		MaxParticipants:  result.MaxParticipants,
+		ScoreTransferCnt: result.ScoreTransferCnt,
+		Version:          result.Version,
+		CreatedAt:        result.CreatedAt,
+		UpdatedAt:        result.UpdatedAt,
+	}
+	response.JSON(w, http.StatusOK, resp)
 }
 
 func (h *GameHandler) JoinPreview(w http.ResponseWriter, r *http.Request) {

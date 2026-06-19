@@ -251,6 +251,85 @@ func TestJoinEnforcesCapacityAndDisplayNameUniqueness(t *testing.T) {
 	}
 }
 
+func TestJoinReactivationPath(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	owner := login(t, app, "owner-code")
+	joiner := login(t, app, "joiner-code")
+	game := createGame(t, app, owner, nil)
+
+	// Join the game
+	if _, err := app.game.Join(ctx, joiner, game.InviteCode, "妈妈"); err != nil {
+		t.Fatal(err)
+	}
+
+	// Verify joiner is an active participant
+	players, err := app.player.List(ctx, owner, game.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var joinerPlayerID string
+	found := false
+	for _, p := range players {
+		if p.UserID != nil && *p.UserID == joiner {
+			joinerPlayerID = p.ID
+			if !p.Active {
+				t.Fatal("expected joiner to be active after joining")
+			}
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("joiner not found in player list")
+	}
+
+	// Simulate leaving: deactivate the joiner's player via direct SQL
+	_, err = app.db.ExecContext(ctx, `UPDATE players SET active = 0, left_at = datetime('now') WHERE id = ?`, joinerPlayerID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Verify joiner is no longer active
+	activePlayers, err := app.query.ActiveParticipants(ctx, owner, game.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, p := range activePlayers {
+		if p.UserID != nil && *p.UserID == joiner {
+			t.Fatal("expected joiner to be inactive after leaving")
+		}
+	}
+
+	// Rejoin via invite code
+	if _, err := app.game.Join(ctx, joiner, game.InviteCode, "妈妈"); err != nil {
+		t.Fatalf("rejoin failed: %v", err)
+	}
+
+	// Verify the player was reactivated (same player ID, active again)
+	rejoinedPlayers, err := app.player.List(ctx, owner, game.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	reactivated := false
+	for _, p := range rejoinedPlayers {
+		if p.UserID != nil && *p.UserID == joiner {
+			if p.ID != joinerPlayerID {
+				t.Fatalf("expected same player ID after reactivation, got %s instead of %s", p.ID, joinerPlayerID)
+			}
+			if !p.Active {
+				t.Fatal("expected joiner to be active after reactivation")
+			}
+			if p.DisplayName != "妈妈" {
+				t.Fatalf("expected display name '妈妈' after reactivation, got %q", p.DisplayName)
+			}
+			reactivated = true
+		}
+	}
+	if !reactivated {
+		t.Fatal("joiner not found after reactivation")
+	}
+}
+
 func TestHubBroadcastOnlyTargetsRoom(t *testing.T) {
 	hub := realtime.NewMemoryHub()
 	c1 := &realtime.Client{Send: make(chan realtime.Event, 1)}

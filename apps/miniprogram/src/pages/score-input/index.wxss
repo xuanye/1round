@@ -201,6 +201,13 @@ button.select-all {
   font-size: 22rpx;
 }
 
+.score-helper {
+  margin-top: 16rpx;
+  color: #6f7976;
+  font-size: 24rpx;
+  text-align: center;
+}
+
 .num-pad {
   display: flex;
   flex-wrap: wrap;
@@ -281,6 +288,30 @@ button.select-all {
   font-weight: 900;
 }
 
+.feedback-banner {
+  margin-top: 22rpx;
+  padding: 18rpx 22rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.feedback-banner.info {
+  color: #2a667e;
+  background: rgba(169, 226, 255, 0.28);
+}
+
+.feedback-banner.success {
+  color: #1f695d;
+  background: rgba(169, 240, 224, 0.42);
+}
+
+.feedback-banner.error {
+  color: #ba1a1a;
+  background: rgba(251, 213, 213, 0.5);
+}
+
 .submit-dock {
   position: fixed;
   right: 0;
@@ -313,14 +344,13 @@ button.select-all {
 
 .quick-scores-row {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
   margin-top: 24rpx;
-  margin-left: 2%;
-  margin-right: 2%;
+  gap: 16rpx;
 }
 
 .quick-score-btn {
-  width: 30% !important;
+  width: calc((100% - 32rpx) / 3) !important;
   height: 76rpx;
   border-radius: 20rpx;
   color: #1f695d;
@@ -335,4 +365,6 @@ button.select-all {
   align-items: center;
   justify-content: center;
   box-shadow: 0 4rpx 12rpx rgba(31, 105, 93, 0.05);
+  box-sizing: border-box;
+  flex: 0 0 calc((100% - 32rpx) / 3);
 }

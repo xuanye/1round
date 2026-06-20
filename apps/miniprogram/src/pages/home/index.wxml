@@ -9,7 +9,7 @@
   <view class="greeting">
     <view>
       <view class="hello">你好，{{userName}}</view>
-      <view class="hello-copy">准备好和家人们来一场愉快的博弈了吗？</view>
+      <view class="hello-copy">{{currentGame ? '先回到当前牌局，继续记分或查看局势。' : '先扫码加入，或者新建一局开始记分。'}}</view>
     </view>
     <view class="greeting-art-img">
       <image class="greeting-img" src="/images/greeting-art.jpg" mode="aspectFit"></image>
@@ -23,7 +23,7 @@
           <view class="live-dot animate-pulse"></view>
           <view class="game-title">{{currentGame.name}}</view>
         </view>
-        <view class="game-meta">邀请码: {{currentGame.inviteCode}} · {{currentGame.participantCount}}人参与</view>
+        <view class="game-meta">进行中 · {{currentGame.participantCount}}人参与</view>
       </view>
       <view class="my-score">
         <view class="score-label">当前个人分值</view>
@@ -43,22 +43,29 @@
         <text class="iconfont button-icon">{{icons.exit}}</text>
         退出牌局
       </button>
-      <view class="exit-tip">分值清零后可退出</view>
+      <view class="exit-tip">当前分值不为 0，暂时不能退出</view>
     </block>
   </view>
   <view wx:else class="current-card card empty-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40rpx; min-height: 200rpx;">
-    <view class="empty-text" style="color: var(--text-muted); font-size: 28rpx; margin-bottom: 20rpx;">当前没有进行中的牌局</view>
+    <view class="empty-text" style="color: var(--text-muted); font-size: 28rpx; margin-bottom: 12rpx;">当前没有进行中的牌局</view>
+    <view class="empty-subtext">下一步先扫码加入，或自己创建一局。</view>
   </view>
 
   <view class="actions">
     <button wx:if="{{currentGame}}" class="create-disabled" disabled>
       <text class="iconfont button-icon">{{icons.plusCircle}}</text>
-      已在牌局中
+      你已有进行中的牌局
     </button>
-    <button wx:else class="button-primary create-button" hover-class="tap-feedback" bindtap="createGame">
-      <text class="iconfont button-icon">{{icons.plusCircle}}</text>
-      创建牌局
-    </button>
+    <view wx:else class="action-stack">
+      <button class="button-primary scan-button" hover-class="tap-feedback" bindtap="scanToJoin">
+        <text class="iconfont button-icon">{{icons.scan}}</text>
+        扫码加入
+      </button>
+      <button class="create-button secondary-action" hover-class="tap-feedback" bindtap="createGame">
+        <text class="iconfont button-icon">{{icons.plusCircle}}</text>
+        创建牌局
+      </button>
+    </view>
   </view>
 
   <view class="overview">

@@ -2,6 +2,21 @@ import { requireLogin } from '../../services/auth.service';
 import { getCurrentGame, getSummary, getHistory, getHistoryStats, leaveGame } from '../../services/game.service';
 import { formatFriendlyTime } from '../../utils/format';
 
+function extractInviteCode(scanResult: WechatMiniprogram.ScanCodeSuccessCallbackResult): string {
+  const candidates = [scanResult.path, scanResult.result].filter(Boolean) as string[];
+  for (const candidate of candidates) {
+    const inviteCodeMatch = candidate.match(/inviteCode=([A-Za-z0-9]+)/);
+    if (inviteCodeMatch) return inviteCodeMatch[1];
+
+    const sceneMatch = candidate.match(/(?:scene=|code=)([A-Za-z0-9]+)/);
+    if (sceneMatch) return decodeURIComponent(sceneMatch[1]);
+
+    const rawCodeMatch = candidate.match(/^[A-Za-z0-9]{4,}$/);
+    if (rawCodeMatch) return rawCodeMatch[0];
+  }
+  return '';
+}
+
 type HomeCurrentGame = {
   id: string;
   name: string;
@@ -25,6 +40,7 @@ Page({
   data: {
     icons: {
       dice: '\uf522',
+      scan: '\uf029',
       enter: '\uf2f6',
       exit: '\uf2f5',
       plusCircle: '\uf055',
@@ -118,6 +134,23 @@ Page({
 
   createGame() {
     wx.navigateTo({ url: '/pages/game-create/index' });
+  },
+  scanToJoin() {
+    wx.scanCode({
+      onlyFromCamera: false,
+      success: (res) => {
+        const inviteCode = extractInviteCode(res);
+        if (!inviteCode) {
+          wx.showToast({ title: '未识别到邀请码', icon: 'none' });
+          return;
+        }
+        wx.navigateTo({ url: `/pages/game-join/index?inviteCode=${inviteCode}` });
+      },
+      fail: (err) => {
+        if (err.errMsg?.includes('cancel')) return;
+        wx.showToast({ title: '扫码失败，请重试', icon: 'none' });
+      },
+    });
   },
   enterGame() {
     if (!this.data.currentGame) return;

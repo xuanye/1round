@@ -14,36 +14,17 @@
 
   <view class="join-title">
     <view>加入牌局</view>
-    <text>确认信息并设置您的显示名称</text>
+    <text>先确认牌局，再设置这局里显示的名字</text>
   </view>
 
   <view class="join-card card">
     <view class="game-info">
       <view>
-        <view class="field-label">牌局名称</view>
+        <view class="field-label">即将加入</view>
         <view class="game-name">{{game.name}}</view>
+        <view class="game-submeta">进行中 · {{game.participantText}} 人</view>
       </view>
       <text class="iconfont game-icon">{{icons.users}}</text>
-    </view>
-
-    <view class="creator-row">
-      <view class="creator-avatar-img text-avatar" style="margin-right: 18rpx;">{{game.creatorInitial}}</view>
-      <view>
-        <view class="field-label">创建者</view>
-        <view class="creator-name">{{game.creatorName}}</view>
-      </view>
-    </view>
-
-    <view class="divider"></view>
-
-    <view class="participant-head">
-      <view>当前参与者</view>
-      <text>{{game.participantText}}</text>
-    </view>
-    <view class="avatar-stack">
-      <block wx:for="{{participants}}" wx:key="id">
-        <view class="stack-avatar text-avatar">{{item.initial}}</view>
-      </block>
     </view>
 
     <view class="name-block">
@@ -57,6 +38,15 @@
         名称在牌局内必须唯一
       </view>
     </view>
+
+    <view class="divider"></view>
+
+    <view class="participant-head">
+      <view>当前参与者</view>
+      <text>{{game.participantText}}</text>
+    </view>
+    <view class="participant-summary">{{participantSummary}}{{participants.length > 4 ? ' 等' + participants.length + '人' : ''}}</view>
+    <view class="creator-note">房主：{{game.creatorName}}</view>
   </view>
 
   <view wx:if="{{conflictGame}}" class="conflict-warning" style="margin: 20rpx 40rpx; padding: 20rpx; background: #fdf2f2; border: 1rpx solid #fbd5d5; border-radius: 12rpx; color: #ba1a1a; font-size: 26rpx; display: flex; align-items: flex-start;">
@@ -83,7 +73,7 @@
         <text class="iconfont button-icon">{{icons.check}}</text> 已成功加入
       </block>
       <block wx:else>
-        {{conflictGame ? '退出原牌局并加入' : '确认加入'}}
+        {{conflictGame ? '退出原牌局并加入当前牌局' : '确认加入当前牌局'}}
         <text class="iconfont button-icon">{{icons.arrowRight}}</text>
       </block>
     </button>

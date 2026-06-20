@@ -5,7 +5,7 @@ import { isSystemDisplayName } from '../../utils/user-profile';
 
 type ParticipantPreview = {
   id: string;
-  initial: string;
+  displayName: string;
 };
 
 Page({
@@ -28,6 +28,7 @@ Page({
       participantText: string;
     } | null,
     participants: [] as ParticipantPreview[],
+    participantSummary: '',
     displayName: '',
     joining: false,
     joined: false,
@@ -96,8 +97,9 @@ Page({
         },
         participants: preview.participants.map(p => ({
           id: p.id,
-          initial: p.displayName.slice(0, 1),
+          displayName: p.displayName,
         })),
+        participantSummary: preview.participants.map((p) => p.displayName).slice(0, 4).join('、'),
         displayName: preferredDisplayName,
       });
     } catch (err) {
@@ -138,12 +140,15 @@ Page({
         if (!this.data.conflictGame.canLeave) {
           throw new Error('原当前牌局分值不为 0，不能退出并加入新牌局');
         }
+        wx.showLoading({ title: '正在退出原牌局...' });
         await leaveGame(this.data.conflictGame.id);
+        wx.showLoading({ title: '正在加入新牌局...' });
       }
 
       const res = await joinGame(this.data.inviteCode, displayName);
       saveRecentSession(res.gameSessionId); // Save recent session!
       this.setData({ joining: false, joined: true });
+      wx.showToast({ title: '已加入牌局', icon: 'success', duration: 500 });
       wx.redirectTo({ url: `/pages/game-detail/index?id=${res.gameSessionId}&inviteCode=${this.data.inviteCode}` });
     } catch (err) {
       this.setData({ joining: false });

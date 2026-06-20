@@ -115,14 +115,21 @@ func (q *Queries) ListScoreTransfersPaginated(ctx context.Context, gameSessionID
 		if err != nil {
 			return nil, err
 		}
-		receivers, err := q.listScoreTransferReceivers(ctx, t.ID)
+		transfers = append(transfers, t)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	_ = rows.Close()
+
+	for i := range transfers {
+		receivers, err := q.listScoreTransferReceivers(ctx, transfers[i].ID)
 		if err != nil {
 			return nil, err
 		}
-		t.Receivers = receivers
-		transfers = append(transfers, t)
+		transfers[i].Receivers = receivers
 	}
-	return transfers, rows.Err()
+	return transfers, nil
 }
 
 func (q *Queries) GetScoreTransferByIdempotencyKey(ctx context.Context, gameSessionID, userID, key string) (domain.ScoreTransfer, error) {

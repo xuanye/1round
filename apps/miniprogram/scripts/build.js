@@ -46,7 +46,7 @@ function parseEnvFile(filePath) {
 function loadBuildEnv() {
   return {
     ...parseEnvFile(path.join(projectRoot, ".env")),
-    //...parseEnvFile(path.join(projectRoot, ".env.local")),
+    ...parseEnvFile(path.join(projectRoot, ".env.local")),
     ...process.env,
   };
 }

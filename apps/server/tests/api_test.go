@@ -417,6 +417,19 @@ func TestGameScoringLifecycleE2E(t *testing.T) {
 		"idempotencyKey":    "e2e-transfer-1",
 	})
 
+	// 7b. List score transfers should return the transfer and not hang.
+	transfers := getJSON[[]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/score-transfers?limit=20")
+	if len(transfers) != 1 {
+		t.Fatalf("unexpected number of transfers: %d", len(transfers))
+	}
+	transfer := transfers[0].(map[string]any)
+	if transfer["amount"].(float64) != 10 {
+		t.Fatalf("unexpected transfer amount: %+v", transfer)
+	}
+	if len(transfer["receiverPlayerIds"].([]any)) != 2 {
+		t.Fatalf("unexpected receiverPlayerIds count: %+v", transfer)
+	}
+
 	// 8. Summary shows participants by join order (owner first, joiners after) and transfer details.
 	summary := getJSON[map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/summary")
 	participants := summary["players"].([]any)

@@ -37,11 +37,11 @@ export async function request<T>(options: {
           reject(new Error('unauthorized'));
           return;
         }
-        if (!res.data || res.data.code !== 0 || res.data.data === null) {
+        if (!res.data || res.data.code !== 0) {
           reject(new Error(res.data?.message || 'request failed'));
           return;
         }
-        resolve(res.data.data);
+        resolve(res.data.data as T);
       },
       fail: reject,
     });

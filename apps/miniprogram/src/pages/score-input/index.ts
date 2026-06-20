@@ -1,4 +1,4 @@
-import { ensureLogin } from '../../services/auth.service';
+import { requireLogin } from '../../services/auth.service';
 import { getSummary } from '../../services/game.service';
 import { submitScoreTransfer } from '../../services/score.service';
 import { getUser } from '../../utils/storage';
@@ -40,7 +40,7 @@ Page({
 
     wx.showLoading({ title: '加载中...' });
     try {
-      await ensureLogin();
+      await requireLogin();
       const summary = await getSummary(id);
       const user = getUser();
 
@@ -126,6 +126,7 @@ Page({
     const idempotencyKey = `score_transfer_${this.data.id}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
     try {
+      await requireLogin();
       await submitScoreTransfer(this.data.id, selectedIds, amount, idempotencyKey);
       wx.showToast({ title: '分值已记录', icon: 'success' });
       setTimeout(() => wx.navigateBack(), 600);

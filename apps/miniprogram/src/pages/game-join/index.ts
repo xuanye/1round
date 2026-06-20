@@ -1,4 +1,4 @@
-import { ensureLogin } from '../../services/auth.service';
+import { requireLogin } from '../../services/auth.service';
 import { joinPreview, joinGame, getCurrentGame, getSummary, leaveGame } from '../../services/game.service';
 import { getUser, saveRecentSession } from '../../utils/storage';
 
@@ -54,7 +54,7 @@ Page({
 
     wx.showLoading({ title: '正在获取预览...' });
     try {
-      await ensureLogin();
+      await requireLogin();
 
       // Check join preview
       const preview = await joinPreview(inviteCode);
@@ -127,6 +127,8 @@ Page({
     wx.showLoading({ title: '正在加入牌局...' });
 
     try {
+      await requireLogin();
+
       // If there is a conflict game, we must leave it first (and we only get here if canLeave is true)
       if (this.data.conflictGame) {
         if (!this.data.conflictGame.canLeave) {

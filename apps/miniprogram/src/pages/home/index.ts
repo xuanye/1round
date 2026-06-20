@@ -1,6 +1,5 @@
-import { ensureLogin } from '../../services/auth.service';
+import { requireLogin } from '../../services/auth.service';
 import { getCurrentGame, getSummary, getHistory, getHistoryStats, leaveGame } from '../../services/game.service';
-import { getUser } from '../../utils/storage';
 
 type HomeCurrentGame = {
   id: string;
@@ -44,9 +43,8 @@ Page({
   async onShow() {
     wx.showLoading({ title: '加载中...' });
     try {
-      await ensureLogin();
-      const user = getUser();
-      this.setData({ userName: user?.displayName || '老书记' });
+      const user = await requireLogin();
+      this.setData({ userName: user.displayName || '老书记' });
 
       // Fetch current game
       const current = await getCurrentGame();
@@ -128,6 +126,7 @@ Page({
       success: async (res) => {
         if (res.confirm) {
           try {
+            await requireLogin();
             await leaveGame(self.data.currentGame!.id);
             wx.showToast({ title: '已退出牌局', icon: 'success' });
             self.onShow(); // Reload

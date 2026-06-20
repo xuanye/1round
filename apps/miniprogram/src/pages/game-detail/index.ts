@@ -1,4 +1,4 @@
-import { ensureLogin } from '../../services/auth.service';
+import { requireLogin } from '../../services/auth.service';
 import {
   getSummary,
   getScoreTransfers,
@@ -98,7 +98,7 @@ Page({
         return;
       }
 
-      await ensureLogin();
+      await requireLogin();
       await this.loadGameData();
 
       // Connect to websocket if the game is active
@@ -112,6 +112,9 @@ Page({
     } catch (err) {
       console.error('Game detail load failed:', err);
       wx.showToast({ title: (err as any).message || '加载失败', icon: 'none' });
+      setTimeout(() => {
+        wx.redirectTo({ url: '/pages/home/index' });
+      }, 1500);
     } finally {
       wx.hideLoading();
     }
@@ -361,6 +364,7 @@ Page({
         success: async (res) => {
           if (res.confirm) {
             try {
+              await requireLogin();
               await finishGameDirect(self.data.id);
               wx.showToast({ title: '牌局已结束', icon: 'success' });
               self.loadGameData();
@@ -377,6 +381,7 @@ Page({
         success: async (res) => {
           if (res.confirm) {
             try {
+              await requireLogin();
               await requestFinish(self.data.id);
               wx.showToast({ title: '已发起申请', icon: 'success' });
               self.loadGameData();
@@ -392,6 +397,7 @@ Page({
   async approveFinish() {
     if (!this.data.pendingFinishRequest) return;
     try {
+      await requireLogin();
       await approveFinishRequest(this.data.id, this.data.pendingFinishRequest.id);
       wx.showToast({ title: '已同意结束', icon: 'success' });
       this.loadGameData();
@@ -403,6 +409,7 @@ Page({
   async rejectFinish() {
     if (!this.data.pendingFinishRequest) return;
     try {
+      await requireLogin();
       await rejectFinishRequest(this.data.id, this.data.pendingFinishRequest.id);
       wx.showToast({ title: '已拒绝结束', icon: 'success' });
       this.loadGameData();

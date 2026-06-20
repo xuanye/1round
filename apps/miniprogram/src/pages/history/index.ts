@@ -1,4 +1,4 @@
-import { ensureLogin } from '../../services/auth.service';
+import { requireLogin } from '../../services/auth.service';
 import { getHistory } from '../../services/game.service';
 import type { HistoryItem } from '../../models/game-session';
 import { formatScore } from '../../utils/format';
@@ -27,7 +27,7 @@ Page({
     this.setData({ isLoading: true });
     wx.showLoading({ title: '加载中...' });
     try {
-      await ensureLogin();
+      await requireLogin();
       const cursor = reload ? '' : this.data.nextCursor;
       const res = await getHistory(cursor, 20);
 

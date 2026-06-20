@@ -1,6 +1,6 @@
 import type { User } from '../models/user';
 import { request } from './http';
-import { setToken, getToken, setUser } from '../utils/storage';
+import { setToken, getToken, setUser, getUser } from '../utils/storage';
 
 type LoginResponse = {
   token: string;
@@ -42,4 +42,29 @@ export async function ensureLogin(): Promise<void> {
   const token = getToken();
   if (token) return;
   await login();
+}
+
+export async function requireLogin(): Promise<User> {
+  await ensureLogin();
+
+  const user = getUser();
+  if (user) {
+    return {
+      id: user.id,
+      displayName: user.displayName,
+      avatarUrl: user.avatarUrl,
+    };
+  }
+
+  await login();
+  const refreshedUser = getUser();
+  if (!refreshedUser) {
+    throw new Error('login required');
+  }
+
+  return {
+    id: refreshedUser.id,
+    displayName: refreshedUser.displayName,
+    avatarUrl: refreshedUser.avatarUrl,
+  };
 }

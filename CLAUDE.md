@@ -22,10 +22,10 @@
 
 | Command | Description |
 |---------|-------------|
-| `cd apps/miniprogram && npm install` | Install mini program dev dependencies |
-| `cd apps/miniprogram && npm run build` | Compile TypeScript to mini program JS |
-| `cd apps/miniprogram && npm run check` | Type-check without emitting JS |
-| `cd apps/miniprogram && npm run watch` | Watch TypeScript compilation |
+| `cd apps/miniprogram && pnpm install` | Install mini program dev dependencies |
+| `cd apps/miniprogram && pnpm run build` | Compile TypeScript to mini program JS |
+| `cd apps/miniprogram && pnpm run check` | Type-check without emitting JS |
+| `cd apps/miniprogram && pnpm run watch` | Watch TypeScript compilation |
 
 ### Deploy
 
@@ -81,8 +81,8 @@ While modifying files:
 After modifying files:
 
 1. For backend changes, run `cd apps/server && go test ./...`.
-2. For mini program TypeScript changes, run `cd apps/miniprogram && npm run check`.
-3. If `.ts` changes must update runtime output, run `cd apps/miniprogram && npm run build`.
+2. For mini program TypeScript changes, run `cd apps/miniprogram && pnpm run check`.
+3. If `.ts` changes must update runtime output, run `cd apps/miniprogram && pnpm run build`.
 4. For migration changes, run `cd apps/server && go run ./cmd/oneround-server -migrate-only` against a disposable/local DB when feasible.
 5. Report files changed, verification performed, test result, and remaining risks.
 
@@ -110,6 +110,6 @@ Project context is currently split across root `README.md`, app-level READMEs, `
 Use the smallest command set that covers the changed surface:
 
 - Backend only: `cd apps/server && go test ./...`
-- Mini program type changes: `cd apps/miniprogram && npm run check`
-- Mini program emitted JS required: `cd apps/miniprogram && npm run build`
+- Mini program type changes: `cd apps/miniprogram && pnpm run check`
+- Mini program emitted JS required: `cd apps/miniprogram && pnpm run build`
 - Cross-cutting API/client changes: run both backend tests and mini program check

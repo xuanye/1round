@@ -5,19 +5,19 @@
 Install dependencies:
 
 ```bash
-npm install
+pnpm install
 ```
 
 Compile once:
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 Watch during development:
 
 ```bash
-npm run watch
+pnpm run watch
 ```
 
 ## Environment
@@ -39,7 +39,7 @@ ONEROUND_API_BASE_URL=https://1round.xuanye.wang
 Local backend:
 
 ```bash
-ONEROUND_API_BASE_URL=http://localhost:8080 npm run build
+ONEROUND_API_BASE_URL=http://localhost:8080 pnpm run build
 ```
 
 Or create `apps/miniprogram/.env.local`:
@@ -56,4 +56,4 @@ apps/miniprogram
 
 The `src/` directory contains source files. Build output is written to `dist/`, which is the Mini Program runtime root and is ignored by Git.
 
-WeChat DevTools should open this folder directly. The project config points `miniprogramRoot` at `dist/`, and the npm scripts provide deterministic local checks.
+WeChat DevTools should open this folder directly. The project config points `miniprogramRoot` at `dist/`, and the pnpm scripts provide deterministic local checks.

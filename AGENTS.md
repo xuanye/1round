@@ -66,6 +66,7 @@ You are an AI coding agent working inside a small production-oriented monorepo. 
 8. **No premature abstraction** — simple, explicit code beats speculative framework layers.
 9. **Chinese product context** — user-facing mini program copy may be Chinese; code identifiers and comments should be English unless existing local context requires otherwise.
 10. **Security-sensitive auth** — validate JWT handling, room membership, and session ownership when touching auth, game, round, player, or WebSocket code.
+11. **Branching for complex changes** — all relatively complex feature modifications must be done in a dedicated branch, using the format `feature/{feature-name}`.
 
 ## Backend Principles
 

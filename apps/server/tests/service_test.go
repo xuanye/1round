@@ -28,6 +28,7 @@ type testApp struct {
 	scoreTransfer *scoretransfersvc.Service
 	settlement    *settlementsvc.Service
 	query         *querysvc.Service
+	q             *sqlite.Queries
 	hub           *realtime.MemoryHub
 	db            *sql.DB
 	nowRef        *time.Time
@@ -111,6 +112,61 @@ func TestCurrentGameExcludesFinishedAndVoidedGames(t *testing.T) {
 	}
 	if current != nil {
 		t.Fatalf("expected no current game, got %+v", current)
+	}
+}
+
+func TestLoginAssignsDefaultGlobalDisplayName(t *testing.T) {
+	app := newTestApp(t)
+
+	result, err := app.auth.LoginWithWechatCode(context.Background(), "owner-code")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.User.DisplayName == nil || *result.User.DisplayName == "" {
+		t.Fatalf("expected default display name, got %+v", result.User)
+	}
+}
+
+func TestUpdateMyProfileSyncsGlobalDisplayName(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	user := login(t, app, "owner-code")
+	game := createGame(t, app, user, nil)
+
+	updated, err := app.player.UpdateMyProfile(ctx, user, game.ID, "新昵称")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if updated.DisplayName != "新昵称" {
+		t.Fatalf("unexpected player profile: %+v", updated)
+	}
+
+	loginResult, err := app.auth.LoginWithWechatCode(ctx, "owner-code")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if loginResult.User.DisplayName == nil || *loginResult.User.DisplayName != "新昵称" {
+		t.Fatalf("expected global display name to sync, got %+v", loginResult.User)
+	}
+}
+
+func TestJoinPreviewUsesGlobalDisplayNameWhenNoHistoricalName(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	owner := login(t, app, "owner-code")
+	joiner := login(t, app, "joiner-code")
+	game := createGame(t, app, owner, nil)
+
+	if _, err := app.q.UpdateUserDisplayName(ctx, joiner, stringPtr("全局昵称"), *app.nowRef); err != nil {
+		t.Fatal(err)
+	}
+
+	preview, err := app.game.JoinPreview(ctx, joiner, game.InviteCode)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if preview.CurrentUserDisplayName != "全局昵称" {
+		t.Fatalf("expected join preview to use global name, got %+v", preview)
 	}
 }
 
@@ -763,6 +819,7 @@ func newTestApp(t *testing.T) *testApp {
 		scoreTransfer: scoretransfersvc.NewService(store, q, gameService, hub, now),
 		settlement:    settlementService,
 		query:         querysvc.NewService(q, gameService),
+		q:             q,
 		hub:           hub,
 		db:            db,
 		nowRef:        nowRef,
@@ -796,6 +853,10 @@ func newTestAppAt(t *testing.T, initial time.Time) *testApp {
 	app := newTestApp(t)
 	app.setNow(initial)
 	return app
+}
+
+func stringPtr(value string) *string {
+	return &value
 }
 
 func TestAutoVoidUnscoredGameAfter24Hours(t *testing.T) {

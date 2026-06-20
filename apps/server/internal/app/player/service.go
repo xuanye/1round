@@ -107,7 +107,16 @@ func (s *Service) UpdateMyProfile(ctx context.Context, userID, gameSessionID, di
 	}
 
 	now := s.now()
-	updated, err := s.q.UpdatePlayer(ctx, gameSessionID, player.ID, displayName)
+	var updated domain.Player
+	err = s.store.InTx(ctx, func(q *sqlite.Queries) error {
+		var txErr error
+		updated, txErr = q.UpdatePlayer(ctx, gameSessionID, player.ID, displayName)
+		if txErr != nil {
+			return txErr
+		}
+		_, txErr = q.UpdateUserDisplayName(ctx, userID, &displayName, now)
+		return txErr
+	})
 	if err != nil {
 		return domain.Player{}, err
 	}

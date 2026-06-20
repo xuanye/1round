@@ -74,8 +74,13 @@ func (s *Service) Create(ctx context.Context, userID, name string, maxParticipan
 		CreatedAt: now, UpdatedAt: now,
 	}
 	member := domain.GameMember{ID: uuid.NewString(), GameSessionID: session.ID, UserID: userID, Role: domain.GameMemberRoleOwner, JoinedAt: now}
+	displayName := defaultDisplayName(userID)
+	user, err := s.q.GetUserByID(ctx, userID)
+	if err == nil && user.DisplayName != nil && strings.TrimSpace(*user.DisplayName) != "" {
+		displayName = strings.TrimSpace(*user.DisplayName)
+	}
 	ownerPlayer := domain.Player{
-		ID: uuid.NewString(), GameSessionID: session.ID, UserID: &userID, DisplayName: defaultDisplayName(userID),
+		ID: uuid.NewString(), GameSessionID: session.ID, UserID: &userID, DisplayName: displayName,
 		Active: true, JoinedOrder: 1, TotalScore: 0, CreatedAt: now, UpdatedAt: now,
 	}
 	err = s.store.InTx(ctx, func(q *sqlite.Queries) error {
@@ -165,9 +170,17 @@ func (s *Service) JoinPreview(ctx context.Context, userID, inviteCode string) (J
 		}
 	}
 
-	// If user is not yet a participant, generate a default display name
+	// If user is not yet a participant, prefer the latest global nickname.
 	if currentUserDisplayName == "" {
-		currentUserDisplayName = defaultDisplayName(userID)
+		user, err := s.q.GetUserByID(ctx, userID)
+		if err != nil {
+			return JoinPreview{}, err
+		}
+		if user.DisplayName != nil && strings.TrimSpace(*user.DisplayName) != "" {
+			currentUserDisplayName = strings.TrimSpace(*user.DisplayName)
+		} else {
+			currentUserDisplayName = defaultDisplayName(userID)
+		}
 	}
 	preview.CurrentUserDisplayName = currentUserDisplayName
 

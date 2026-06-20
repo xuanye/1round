@@ -1,11 +1,11 @@
 import { requireLogin } from '../../services/auth.service';
 import { joinPreview, joinGame, getCurrentGame, getSummary, leaveGame } from '../../services/game.service';
 import { getUser, saveRecentSession } from '../../utils/storage';
+import { isSystemDisplayName } from '../../utils/user-profile';
 
 type ParticipantPreview = {
   id: string;
   initial: string;
-  avatarUrl?: string;
 };
 
 Page({
@@ -66,7 +66,7 @@ Page({
 
       // Check if user has another active game
       const current = await getCurrentGame();
-      if (current && current.id !== preview.gameSessionId) {
+      if (current?.id && current.id !== preview.gameSessionId) {
         const summary = await getSummary(current.id);
         const user = getUser();
         let myScore = 0;
@@ -82,6 +82,10 @@ Page({
       }
 
       const ownerInit = preview.ownerDisplayName ? preview.ownerDisplayName.slice(0, 1) : '创';
+      const preferredDisplayName = !isSystemDisplayName(preview.currentUserDisplayName)
+        ? preview.currentUserDisplayName
+        : (getUser()?.displayName || preview.currentUserDisplayName);
+
       this.setData({
         game: {
           id: preview.gameSessionId,
@@ -94,7 +98,7 @@ Page({
           id: p.id,
           initial: p.displayName.slice(0, 1),
         })),
-        displayName: preview.currentUserDisplayName,
+        displayName: preferredDisplayName,
       });
     } catch (err) {
       wx.showModal({

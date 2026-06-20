@@ -26,3 +26,25 @@ func (q *Queries) UpsertUserByOpenID(ctx context.Context, openID string, now tim
 	_, err = q.db.ExecContext(ctx, `INSERT INTO users (id, open_id, created_at, updated_at) VALUES (?, ?, ?, ?)`, u.ID, u.OpenID, encodeTime(u.CreatedAt), encodeTime(u.UpdatedAt))
 	return u, err
 }
+
+func (q *Queries) GetUserByID(ctx context.Context, userID string) (domain.User, error) {
+	var u domain.User
+	var createdAt, updatedAt string
+	err := q.db.QueryRowContext(ctx, `SELECT id, open_id, union_id, display_name, avatar_url, created_at, updated_at FROM users WHERE id = ?`, userID).
+		Scan(&u.ID, &u.OpenID, &u.UnionID, &u.DisplayName, &u.AvatarURL, &createdAt, &updatedAt)
+	if err != nil {
+		return u, err
+	}
+	u.CreatedAt, _ = decodeTime(createdAt)
+	u.UpdatedAt, _ = decodeTime(updatedAt)
+	return u, nil
+}
+
+func (q *Queries) UpdateUserDisplayName(ctx context.Context, userID string, displayName *string, now time.Time) (domain.User, error) {
+	_, err := q.db.ExecContext(ctx, `UPDATE users SET display_name = ?, updated_at = ? WHERE id = ?`,
+		displayName, encodeTime(now), userID)
+	if err != nil {
+		return domain.User{}, err
+	}
+	return q.GetUserByID(ctx, userID)
+}

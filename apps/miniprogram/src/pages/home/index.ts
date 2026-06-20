@@ -49,7 +49,7 @@ Page({
       // Fetch current game
       const current = await getCurrentGame();
       let homeCurrent: HomeCurrentGame | null = null;
-      if (current) {
+      if (current?.id) {
         const summary = await getSummary(current.id);
         // Find my score using robust userId matching
         let myScore = 0;
@@ -70,6 +70,8 @@ Page({
           myScore: myScore,
           canExit: myScore === 0,
         };
+      } else if (current) {
+        console.warn('Ignoring malformed current game response:', current);
       }
       this.setData({ currentGame: homeCurrent });
 

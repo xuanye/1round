@@ -42,8 +42,7 @@
     </view>
     <view class="avatar-stack">
       <block wx:for="{{participants}}" wx:key="id">
-        <image wx:if="{{item.avatarUrl}}" class="stack-avatar" src="{{item.avatarUrl}}" mode="aspectFill"></image>
-        <view wx:else class="stack-avatar text-avatar">{{item.initial}}</view>
+        <view class="stack-avatar text-avatar">{{item.initial}}</view>
       </block>
     </view>
 

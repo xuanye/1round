@@ -27,8 +27,7 @@
       bindtap="toggleReceiver"
       hover-class="tap-feedback"
     >
-      <image wx:if="{{item.avatarUrl}}" class="receiver-avatar" src="{{item.avatarUrl}}" mode="aspectFill"></image>
-      <view wx:else class="receiver-avatar text-avatar">{{item.initial}}</view>
+      <view class="receiver-avatar text-avatar">{{item.initial}}</view>
       <view class="receiver-main">
         <view class="receiver-name">{{item.displayName}}</view>
         <view class="receiver-score">当前: {{item.currentScore}}</view>

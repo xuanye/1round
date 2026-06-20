@@ -9,7 +9,6 @@ type Receiver = {
   currentScore: number;
   initial: string;
   selected: boolean;
-  avatarUrl?: string;
 };
 
 Page({

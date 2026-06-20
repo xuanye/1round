@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	jwtauth "github.com/xuanye/one-round/apps/server/internal/infra/auth"
@@ -40,6 +41,13 @@ func (s *Service) LoginWithWechatCode(ctx context.Context, code string) (LoginRe
 	if err != nil {
 		return LoginResult{}, err
 	}
+	if user.DisplayName == nil {
+		defaultName := defaultDisplayName(user.ID)
+		user, err = s.queries.UpdateUserDisplayName(ctx, user.ID, &defaultName, s.now())
+		if err != nil {
+			return LoginResult{}, err
+		}
+	}
 	token, err := s.tokens.Issue(user.ID, s.now())
 	if err != nil {
 		return LoginResult{}, err
@@ -48,4 +56,12 @@ func (s *Service) LoginWithWechatCode(ctx context.Context, code string) (LoginRe
 		Token: token,
 		User:  UserView{ID: user.ID, DisplayName: user.DisplayName, AvatarURL: user.AvatarURL},
 	}, nil
+}
+
+func defaultDisplayName(userID string) string {
+	sum := 0
+	for i := 0; i < len(userID); i++ {
+		sum += int(userID[i])
+	}
+	return fmt.Sprintf("老书记%02d", sum%100)
 }

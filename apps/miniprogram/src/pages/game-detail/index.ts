@@ -112,6 +112,9 @@ Page({
     } catch (err) {
       console.error('Game detail load failed:', err);
       wx.showToast({ title: (err as any).message || '加载失败', icon: 'none' });
+      setTimeout(() => {
+        wx.redirectTo({ url: '/pages/home/index' });
+      }, 1500);
     } finally {
       wx.hideLoading();
     }

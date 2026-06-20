@@ -25,16 +25,16 @@ Page({
     this.setData({ pickerIndex: Number(event.detail.value) });
   },
   async submit() {
-    await requireLogin();
-
-    const name = String(this.data.name).trim();
-    if (!name) return wx.showToast({ title: '请输入牌局名称', icon: 'none' });
-    
-    // Derive maxParticipants
-    const idx = this.data.pickerIndex;
-    const maxParticipants = idx === 0 ? null : idx + 1;
-
     try {
+      await requireLogin();
+
+      const name = String(this.data.name).trim();
+      if (!name) return wx.showToast({ title: '请输入牌局名称', icon: 'none' });
+      
+      // Derive maxParticipants
+      const idx = this.data.pickerIndex;
+      const maxParticipants = idx === 0 ? null : idx + 1;
+
       const game = await createGame(name, maxParticipants);
       saveRecentSession(game.id);
       wx.redirectTo({ url: `/pages/game-detail/index?id=${game.id}&inviteCode=${game.inviteCode}` });

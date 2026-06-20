@@ -20,11 +20,11 @@ Page({
     this.setData({ displayName: event.detail.value });
   },
   async submit() {
-    await requireLogin();
-
-    const displayName = String(this.data.displayName).trim();
-    if (!displayName) return wx.showToast({ title: '请输入玩家名称', icon: 'none' });
     try {
+      await requireLogin();
+
+      const displayName = String(this.data.displayName).trim();
+      if (!displayName) return wx.showToast({ title: '请输入玩家名称', icon: 'none' });
       await updateMyProfile(this.data.id, displayName);
       // Success, update local storage display name if needed
       const user = wx.getStorageSync('one_round_user');

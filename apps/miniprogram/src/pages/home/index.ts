@@ -126,6 +126,7 @@ Page({
       success: async (res) => {
         if (res.confirm) {
           try {
+            await requireLogin();
             await leaveGame(self.data.currentGame!.id);
             wx.showToast({ title: '已退出牌局', icon: 'success' });
             self.onShow(); // Reload

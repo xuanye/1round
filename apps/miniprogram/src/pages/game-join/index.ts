@@ -127,6 +127,8 @@ Page({
     wx.showLoading({ title: '正在加入牌局...' });
 
     try {
+      await requireLogin();
+
       // If there is a conflict game, we must leave it first (and we only get here if canLeave is true)
       if (this.data.conflictGame) {
         if (!this.data.conflictGame.canLeave) {

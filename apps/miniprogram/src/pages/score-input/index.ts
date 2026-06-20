@@ -126,6 +126,7 @@ Page({
     const idempotencyKey = `score_transfer_${this.data.id}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
     try {
+      await requireLogin();
       await submitScoreTransfer(this.data.id, selectedIds, amount, idempotencyKey);
       wx.showToast({ title: '分值已记录', icon: 'success' });
       setTimeout(() => wx.navigateBack(), 600);

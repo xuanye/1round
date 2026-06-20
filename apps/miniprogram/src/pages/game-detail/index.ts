@@ -364,6 +364,7 @@ Page({
         success: async (res) => {
           if (res.confirm) {
             try {
+              await requireLogin();
               await finishGameDirect(self.data.id);
               wx.showToast({ title: '牌局已结束', icon: 'success' });
               self.loadGameData();
@@ -380,6 +381,7 @@ Page({
         success: async (res) => {
           if (res.confirm) {
             try {
+              await requireLogin();
               await requestFinish(self.data.id);
               wx.showToast({ title: '已发起申请', icon: 'success' });
               self.loadGameData();
@@ -395,6 +397,7 @@ Page({
   async approveFinish() {
     if (!this.data.pendingFinishRequest) return;
     try {
+      await requireLogin();
       await approveFinishRequest(this.data.id, this.data.pendingFinishRequest.id);
       wx.showToast({ title: '已同意结束', icon: 'success' });
       this.loadGameData();
@@ -406,6 +409,7 @@ Page({
   async rejectFinish() {
     if (!this.data.pendingFinishRequest) return;
     try {
+      await requireLogin();
       await rejectFinishRequest(this.data.id, this.data.pendingFinishRequest.id);
       wx.showToast({ title: '已拒绝结束', icon: 'success' });
       this.loadGameData();

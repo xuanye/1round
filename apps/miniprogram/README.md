@@ -57,3 +57,19 @@ apps/miniprogram
 The `src/` directory contains source files. Build output is written to `dist/`, which is the Mini Program runtime root and is ignored by Git.
 
 WeChat DevTools should open this folder directly. The project config points `miniprogramRoot` at `dist/`, and the pnpm scripts provide deterministic local checks.
+
+## Authentication
+
+All Mini Program pages require a OneRound login identity except the public settlement share view.
+
+Protected pages call `requireLogin()` from `src/services/auth.service.ts` before loading protected game, score, ranking, or history data.
+
+Public exception:
+
+```text
+pages/game-detail/index?shareToken=<publicShareToken>
+```
+
+That path uses `getPublicSettlement(..., auth: false)` and must not force login.
+
+The login identity is created from `wx.login()` plus the backend `/api/auth/wechat-login` response. Do not treat this as WeChat profile authorization for nickname or avatar.

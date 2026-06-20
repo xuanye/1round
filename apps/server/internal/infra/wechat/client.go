@@ -85,7 +85,7 @@ func (c *HTTPClient) CodeToSession(ctx context.Context, code string) (Session, e
 		return Session{}, err
 	}
 	if body.ErrCode != 0 {
-		return Session{}, fmt.Errorf("%w: wechat jscode2session error %d: %s", domain.ErrUnauthorized, body.ErrCode, body.ErrMsg)
+		return Session{}, fmt.Errorf("%w: wechat jscode2session error %d: %s", domain.ErrExternalServiceFailed, body.ErrCode, body.ErrMsg)
 	}
 	if body.OpenID == "" {
 		return Session{}, errors.New("wechat jscode2session missing openid")

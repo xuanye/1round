@@ -48,6 +48,10 @@
   justify-content: space-between;
 }
 
+.history-link {
+  color: #6b7280;
+}
+
 .rank-head,
 .rank-row {
   display: grid;
@@ -120,6 +124,13 @@
 
 .history-row:last-child {
   border-bottom: 0;
+}
+
+.history-empty {
+  padding: 24rpx 0 8rpx;
+  color: #9ca3af;
+  font-size: 24rpx;
+  text-align: center;
 }
 
 .calendar {

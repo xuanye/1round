@@ -26,21 +26,14 @@
   <view class="history-card card">
     <view class="history-head">
       <text>历史牌局</text>
-      <text class="muted">查看全部 ›</text>
+      <text class="muted history-link" bindtap="openHistory">查看全部 ›</text>
     </view>
-    <view class="history-row">
-      <view class="calendar green"></view>
+    <view wx:if="{{historyItems.length === 0}}" class="history-empty">暂无历史牌局</view>
+    <view wx:for="{{historyItems}}" wx:key="id" class="history-row" data-id="{{item.id}}" bindtap="openDetail">
+      <view class="calendar {{item.accentTone}}"></view>
       <view class="history-main">
-        <view class="history-name">周末家庭局</view>
-        <view class="history-meta">2024-05-18 14:00　4 人　12 局</view>
-      </view>
-      <text class="status running">进行中</text>
-    </view>
-    <view class="history-row">
-      <view class="calendar yellow"></view>
-      <view class="history-main">
-        <view class="history-name">五一家庭局</view>
-        <view class="history-meta">2024-05-01 19:30　5 人　18 局</view>
+        <view class="history-name">{{item.name}}</view>
+        <view class="history-meta">{{item.meta}}</view>
       </view>
       <text class="status ended">已结束</text>
     </view>

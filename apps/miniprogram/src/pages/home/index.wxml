@@ -12,7 +12,7 @@
       <view class="hello-copy">准备好和家人们来一场愉快的博弈了吗？</view>
     </view>
     <view class="greeting-art-img">
-      <image class="greeting-img" src="/images/greeting-art.png" mode="aspectFit"></image>
+      <image class="greeting-img" src="/images/greeting-art.jpg" mode="aspectFit"></image>
     </view>
   </view>
 

@@ -229,11 +229,17 @@ func TestSubmitScoreTransferAccumulatesScoresAndRanking(t *testing.T) {
 	if scores[p2.ID] != -12 {
 		t.Fatalf("unexpected p2 score: %+v", scores)
 	}
-	ranking, err := app.query.Ranking(ctx, user, game.ID)
+
+	// Settle the game to make it eligible for global ranking
+	if _, err := app.settlement.FinishDirect(ctx, user, game.ID); err != nil {
+		t.Fatal(err)
+	}
+
+	ranking, err := app.query.Ranking(ctx, user)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if ranking[0].PlayerID != p1.ID {
+	if ranking[0].PlayerID != u2 {
 		t.Fatalf("unexpected first in ranking: %+v", ranking)
 	}
 	if len(ranking) != 3 {
@@ -759,6 +765,19 @@ func TestHistoryOnlyListsSettledGamesForParticipant(t *testing.T) {
 	}
 	if len(ownerHistory.Items) != 1 || ownerHistory.Items[0].ID != game.ID {
 		t.Fatalf("unexpected owner history: %+v", ownerHistory)
+	}
+	item := ownerHistory.Items[0]
+	if item.ParticipantCount != 1 {
+		t.Fatalf("expected ParticipantCount to be 1, got %d", item.ParticipantCount)
+	}
+	if item.WinnerName == "" {
+		t.Fatalf("expected WinnerName to be non-empty")
+	}
+	if item.WinnerScore != 0 {
+		t.Fatalf("expected WinnerScore to be 0, got %d", item.WinnerScore)
+	}
+	if item.CreatedAt.IsZero() {
+		t.Fatalf("expected CreatedAt to be non-zero")
 	}
 	otherHistory, err := app.query.History(ctx, other, nil, 20)
 	if err != nil {

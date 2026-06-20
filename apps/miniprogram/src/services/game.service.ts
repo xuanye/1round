@@ -32,8 +32,8 @@ export function getSummary(gameSessionId: string): Promise<GameSummary> {
   return request({ url: `/api/game-sessions/${gameSessionId}/summary` });
 }
 
-export function getRanking(gameSessionId: string): Promise<RankingItem[]> {
-  return request({ url: `/api/game-sessions/${gameSessionId}/ranking` });
+export function getRanking(): Promise<RankingItem[]> {
+  return request({ url: '/api/ranking' });
 }
 
 export function getScoreTransfers(gameSessionId: string, beforeSequenceNo?: number, limit?: number): Promise<ScoreTransfer[]> {

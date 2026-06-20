@@ -5,7 +5,7 @@
       <view class="calendar {{index % 2 === 0 ? 'green' : 'yellow'}}" style="width: 12rpx; height: 80rpx; border-radius: 6rpx; background: {{index % 2 === 0 ? '#1f695d' : '#eab308'}}; margin-right: 24rpx;"></view>
       <view class="history-main" style="flex: 1; min-width: 0;">
         <view class="history-name" style="font-size: 30rpx; font-weight: 900; color: #1a1c1a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{item.name}}</view>
-        <view class="history-meta" style="font-size: 22rpx; color: #6f7976; margin-top: 6rpx;">{{item.dateText}} · {{item.scoreTransferCount}} 次计分</view>
+        <view class="history-meta" style="font-size: 22rpx; color: #6f7976; margin-top: 6rpx;">{{item.friendlyTime}} · {{item.participantCount}}人 · {{item.scoreTransferCount}}局{{item.winnerName ? ' · 胜者: ' + item.winnerName + ' (' + (item.winnerScore > 0 ? '+' : '') + item.winnerScore + '分)' : ''}}</view>
       </view>
       <view class="history-side" style="text-align: right; margin-right: 16rpx;">
         <view class="score" style="font-size: 34rpx; font-weight: 900; color: {{item.myFinalScore >= 0 ? '#1f695d' : '#ba1a1a'}};">

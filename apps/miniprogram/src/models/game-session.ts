@@ -81,6 +81,10 @@ export type HistoryItem = {
   settledAt: string;
   scoreTransferCount: number;
   myFinalScore: number;
+  participantCount?: number;
+  winnerName?: string;
+  winnerScore?: number;
+  createdAt?: string;
 };
 
 export type HistoryPage = {

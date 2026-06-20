@@ -12,18 +12,14 @@ type RankedPlayer = RankingItem & {
 
 Page({
   data: {
-    id: '',
     players: [] as RankedPlayer[]
   },
 
-  async onLoad(query: Record<string, string>) {
-    const id = query.id || '';
-    this.setData({ id });
-
+  async onLoad() {
     wx.showLoading({ title: '加载中...' });
     try {
       await requireLogin();
-      const list = await getRanking(id);
+      const list = await getRanking();
       this.setData({
         players: list.map((item) => ({
           ...item,

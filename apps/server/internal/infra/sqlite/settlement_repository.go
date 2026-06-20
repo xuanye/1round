@@ -225,7 +225,8 @@ func (q *Queries) GetUserStats(ctx context.Context, userID string) (int, int, er
 		 JOIN players p ON p.game_session_id = gs.id
 		 WHERE p.user_id = ?
 		   AND gs.status = 'finished'
-		   AND gs.settled_at IS NOT NULL`, userID)
+		   AND gs.settled_at IS NOT NULL
+		   AND gs.settled_at >= datetime('now', '-6 months')`, userID)
 	var count, maxScore int
 	err := row.Scan(&count, &maxScore)
 	return count, maxScore, err

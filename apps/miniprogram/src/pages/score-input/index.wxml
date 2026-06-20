@@ -45,6 +45,12 @@
     </view>
   </view>
 
+  <view class="quick-scores-row">
+    <button class="quick-score-btn" data-value="20" bindtap="quickScore" hover-class="tap-feedback">+20</button>
+    <button class="quick-score-btn" data-value="30" bindtap="quickScore" hover-class="tap-feedback">+30</button>
+    <button class="quick-score-btn" data-value="40" bindtap="quickScore" hover-class="tap-feedback">+40</button>
+  </view>
+
   <view class="num-pad">
     <button wx:for="{{numKeys}}" wx:key="*this" data-value="{{item}}" bindtap="pressKey" hover-class="tap-feedback">{{item}}</button>
     <button class="clear-key" data-value="clear" bindtap="pressKey" hover-class="tap-feedback">

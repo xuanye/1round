@@ -1,5 +1,6 @@
 import { requireLogin } from '../../services/auth.service';
 import { getCurrentGame, getSummary, getHistory, getHistoryStats, leaveGame } from '../../services/game.service';
+import { formatFriendlyTime } from '../../utils/format';
 
 type HomeCurrentGame = {
   id: string;
@@ -15,7 +16,8 @@ type RecentHomeGame = {
   title: string;
   meta: string;
   status: string;
-  score: string;
+  winnerName: string;
+  winnerScoreText: string;
   iconCode: string;
 };
 
@@ -26,7 +28,6 @@ Page({
       enter: '\uf2f6',
       exit: '\uf2f5',
       plusCircle: '\uf055',
-      userPlus: '\uf234',
       history: '\uf1da',
       home: '\uf015',
       ranking: '\ue561',
@@ -78,13 +79,22 @@ Page({
       // Fetch history
       const historyPage = await getHistory('', 5);
       const recent = historyPage.items.map(item => {
-        const dateStr = new Date(item.settledAt).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
+        const friendlyTime = formatFriendlyTime(item.settledAt);
+        const settledDate = new Date(item.settledAt);
+        const now = new Date();
+        const isOver24h = now.getTime() - settledDate.getTime() > 24 * 3600 * 1000;
+        let status = '已结束';
+        if (isOver24h && item.createdAt) {
+          const startDate = new Date(item.createdAt);
+          status = `${String(startDate.getMonth() + 1).padStart(2, '0')}/${String(startDate.getDate()).padStart(2, '0')}`;
+        }
         return {
           id: item.id,
           title: item.name,
-          meta: `${dateStr} · ${item.scoreTransferCount}次计分`,
-          status: '已结束',
-          score: `${item.myFinalScore >= 0 ? '+' : ''}${item.myFinalScore}`,
+          meta: `${friendlyTime} · ${item.participantCount || 0}人 · ${item.scoreTransferCount}局`,
+          status,
+          winnerName: item.winnerName || '',
+          winnerScoreText: item.winnerScore !== undefined ? `${item.winnerScore > 0 ? '+' : ''}${item.winnerScore}` : '',
           iconCode: '\uf522',
         };
       });
@@ -113,8 +123,8 @@ Page({
     if (!this.data.currentGame) return;
     wx.navigateTo({ url: `/pages/game-detail/index?id=${this.data.currentGame.id}&inviteCode=${this.data.currentGame.inviteCode}` });
   },
-  joinGame() {
-    wx.navigateTo({ url: '/pages/game-join/index' });
+  goToRanking() {
+    wx.navigateTo({ url: '/pages/ranking/index' });
   },
   showExitTip() {
     wx.showToast({ title: '分值清零后可退出', icon: 'none' });

@@ -13,6 +13,10 @@ type HistoryItem struct {
 	SettledAt          time.Time `json:"settledAt"`
 	ScoreTransferCount int       `json:"scoreTransferCount"`
 	MyFinalScore       int       `json:"myFinalScore"`
+	ParticipantCount   int       `json:"participantCount"`
+	WinnerName         string    `json:"winnerName"`
+	WinnerScore        int       `json:"winnerScore"`
+	CreatedAt          time.Time `json:"createdAt"`
 }
 
 type SettlementDetail struct {

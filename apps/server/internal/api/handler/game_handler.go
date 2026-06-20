@@ -123,7 +123,7 @@ func (h *GameHandler) Summary(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *GameHandler) Ranking(w http.ResponseWriter, r *http.Request) {
-	result, err := h.query.Ranking(r.Context(), middleware.UserID(r.Context()), chi.URLParam(r, "id"))
+	result, err := h.query.Ranking(r.Context(), middleware.UserID(r.Context()))
 	if err != nil {
 		response.Error(w, err)
 		return

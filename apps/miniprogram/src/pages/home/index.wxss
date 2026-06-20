@@ -324,13 +324,11 @@ button.action-card + button.action-card,
   justify-content: space-between;
 }
 
-.section-head button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.section-head .more-btn {
   color: #1f695d;
-  background: transparent;
   font-size: 24rpx;
+  font-weight: 500;
+  padding: 10rpx 0 10rpx 20rpx;
 }
 
 .recent-list {

@@ -248,3 +248,36 @@ func boolToInt(b bool) int {
 	}
 	return 0
 }
+
+type GlobalRankingItem struct {
+	UserID           string
+	DisplayName      string
+	AccumulatedScore int
+	GameCount        int
+}
+
+func (q *Queries) ListGlobalRanking(ctx context.Context) ([]GlobalRankingItem, error) {
+	rows, err := q.db.QueryContext(ctx,
+		`SELECT p.user_id, COALESCE(u.display_name, '未知用户') AS display_name, SUM(p.total_score) AS accumulated_score, COUNT(DISTINCT gs.id) AS game_count
+		 FROM players p
+		 JOIN users u ON u.id = p.user_id
+		 JOIN game_sessions gs ON gs.id = p.game_session_id
+		 WHERE gs.status = 'finished'
+		   AND p.user_id IS NOT NULL
+		 GROUP BY p.user_id
+		 ORDER BY accumulated_score DESC, display_name ASC
+		 LIMIT 10`)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = rows.Close() }()
+	var items []GlobalRankingItem
+	for rows.Next() {
+		var item GlobalRankingItem
+		if err := rows.Scan(&item.UserID, &item.DisplayName, &item.AccumulatedScore, &item.GameCount); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+	return items, rows.Err()
+}

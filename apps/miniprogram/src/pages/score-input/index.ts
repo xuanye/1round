@@ -93,6 +93,11 @@ Page({
     this.applyState(this.data.receivers, scoreText);
   },
 
+  quickScore(event: WechatMiniprogram.TouchEvent) {
+    const value = String(event.currentTarget.dataset.value);
+    this.applyState(this.data.receivers, value);
+  },
+
   applyState(receivers: Receiver[], scoreText: string) {
     const selectedCount = receivers.filter((receiver) => receiver.selected).length;
     const score = Number(scoreText);

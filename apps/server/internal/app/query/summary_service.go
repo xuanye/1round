@@ -149,21 +149,21 @@ func (s *Service) Summary(ctx context.Context, userID, gameSessionID string) (Su
 	return summary, nil
 }
 
-func (s *Service) Ranking(ctx context.Context, userID, gameSessionID string) ([]RankingItem, error) {
-	if err := s.game.RequireMember(ctx, userID, gameSessionID); err != nil {
-		return nil, err
-	}
-	g, err := s.q.GetGameSession(ctx, gameSessionID)
-	if err != nil {
-		return nil, err
-	}
-	players, err := s.q.ListRanking(ctx, gameSessionID)
+func (s *Service) Ranking(ctx context.Context, userID string) ([]RankingItem, error) {
+	players, err := s.q.ListGlobalRanking(ctx)
 	if err != nil {
 		return nil, err
 	}
 	items := make([]RankingItem, 0, len(players))
 	for i, p := range players {
-		items = append(items, RankingItem{Rank: i + 1, PlayerID: p.ID, DisplayName: p.DisplayName, TotalScore: p.TotalScore, ScoreTransferCnt: g.ScoreTransferCnt, AverageScore: average(p.TotalScore, g.ScoreTransferCnt)})
+		items = append(items, RankingItem{
+			Rank:             i + 1,
+			PlayerID:         p.UserID,
+			DisplayName:      p.DisplayName,
+			TotalScore:       p.AccumulatedScore,
+			ScoreTransferCnt: p.GameCount,
+			AverageScore:     average(p.AccumulatedScore, p.GameCount),
+		})
 	}
 	return items, nil
 }
@@ -253,11 +253,37 @@ func (s *Service) History(ctx context.Context, userID string, beforeSettledAt *t
 			return dto.HistoryPage{}, err
 		}
 
+		// Get all historical players to compute participant count and winner
+		players, err := s.q.ListHistoricalPlayers(ctx, g.ID)
+		if err != nil {
+			return dto.HistoryPage{}, err
+		}
+
+		var winnerName string
+		var winnerScore int
+		if len(players) > 0 {
+			// Find the player with the maximum total score
+			maxScore := -999999
+			var maxPlayer domain.Player
+			for _, p := range players {
+				if p.TotalScore > maxScore {
+					maxScore = p.TotalScore
+					maxPlayer = p
+				}
+			}
+			winnerName = maxPlayer.DisplayName
+			winnerScore = maxPlayer.TotalScore
+		}
+
 		item := dto.HistoryItem{
 			ID:                 g.ID,
 			Name:               g.Name,
 			ScoreTransferCount: g.ScoreTransferCnt,
 			MyFinalScore:       player.TotalScore,
+			ParticipantCount:   len(players),
+			WinnerName:         winnerName,
+			WinnerScore:        winnerScore,
+			CreatedAt:          g.CreatedAt,
 		}
 		if g.SettledAt != nil {
 			item.SettledAt = *g.SettledAt

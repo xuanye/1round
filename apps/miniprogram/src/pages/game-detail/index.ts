@@ -10,9 +10,40 @@ import {
   getPublicSettlement,
   getJoinMiniProgramCode,
 } from '../../services/game.service';
+import { formatScore, formatTimeOnly } from '../../utils/format';
 import { getUser, saveRecentSession } from '../../utils/storage';
 import { RealtimeService } from '../../services/realtime.service';
-import { formatScore } from '../../utils/format';
+
+type ParsedTransferPart = {
+  text: string;
+  type: 'name' | 'normal' | 'value';
+};
+
+function parseTransferText(text: string): ParsedTransferPart[] {
+  const parts: ParsedTransferPart[] = [];
+  const geiParts = text.split(' 给 ');
+  if (geiParts.length < 2) {
+    return [{ text, type: 'normal' }];
+  }
+  const sender = geiParts[0];
+  const rest = geiParts[1];
+  
+  parts.push({ text: sender, type: 'name' });
+  parts.push({ text: ' 给 ', type: 'normal' });
+  
+  if (rest.indexOf(' 各 +') !== -1) {
+    const subparts = rest.split(' 各 +');
+    parts.push({ text: subparts[0], type: 'name' });
+    parts.push({ text: ' 各 +' + subparts[1], type: 'value' });
+  } else if (rest.indexOf(' +') !== -1) {
+    const subparts = rest.split(' +');
+    parts.push({ text: subparts[0], type: 'name' });
+    parts.push({ text: ' +' + subparts[1], type: 'value' });
+  } else {
+    parts.push({ text: rest, type: 'normal' });
+  }
+  return parts;
+}
 
 type DetailParticipant = {
   id: string;
@@ -201,11 +232,12 @@ Page({
     try {
       const list = await getScoreTransfers(this.data.id, beforeSeq, 20);
       const mapped = list.map(t => {
-        const timeText = new Date(t.createdAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+        const timeText = formatTimeOnly(t.createdAt);
         return {
           id: t.id,
           iconCode: t.receiverPlayerIds.length > 1 ? '\uf0c0' : '\uf362',
           text: t.text,
+          parsedParts: parseTransferText(t.text),
           time: timeText,
           sequenceNo: t.sequenceNo,
         };
@@ -240,11 +272,12 @@ Page({
       }));
 
       const mappedTransfers = detail.scoreTransfers.map(t => {
-        const timeText = new Date(t.createdAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+        const timeText = formatTimeOnly(t.createdAt);
         return {
           id: t.id,
           iconCode: '\uf362',
           text: t.text,
+          parsedParts: parseTransferText(t.text),
           time: timeText,
           sequenceNo: t.sequenceNo,
         };
@@ -284,11 +317,12 @@ Page({
       }));
 
       const mappedTransfers = detail.scoreTransfers.map(t => {
-        const timeText = new Date(t.createdAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+        const timeText = formatTimeOnly(t.createdAt);
         return {
           id: t.id,
           iconCode: '\uf362',
           text: t.text,
+          parsedParts: parseTransferText(t.text),
           time: timeText,
           sequenceNo: t.sequenceNo,
         };
@@ -350,7 +384,7 @@ Page({
   },
 
   ranking() {
-    wx.navigateTo({ url: `/pages/ranking/index?id=${this.data.id}` });
+    wx.navigateTo({ url: '/pages/ranking/index' });
   },
 
   renameSelf() {

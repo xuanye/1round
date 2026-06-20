@@ -57,11 +57,10 @@ func TestFakeAuthCreateJoinAddSubmitSummaryRankingAPI(t *testing.T) {
 		"amount":            5,
 		"idempotencyKey":    "api-test-1",
 	})
-	summary = getJSON[map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/summary")
-	if summary["scoreTransferCount"].(float64) != 1 {
-		t.Fatalf("unexpected summary: %+v", summary)
-	}
-	ranking := getJSON[[]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/ranking")
+	// Finish/settle the game session to make it eligible for global ranking
+	_ = postJSON[map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/finish", nil)
+
+	ranking := getJSON[[]any](t, router, ownerToken, "/api/ranking")
 	if len(ranking) != 2 {
 		t.Fatalf("unexpected ranking: %+v", ranking)
 	}
@@ -453,25 +452,6 @@ func TestGameScoringLifecycleE2E(t *testing.T) {
 		t.Fatalf("unexpected score transfer count: %+v", summary)
 	}
 
-	// Check ranking: score desc, display name asc for ties.
-	ranking := getJSON[[]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/ranking")
-	if len(ranking) != 3 {
-		t.Fatalf("unexpected ranking: %+v", ranking)
-	}
-	// Both receivers (+10) tie; display name ASC for tie-break.
-	first := ranking[0].(map[string]any)
-	if first["totalScore"].(float64) != 10 {
-		t.Fatalf("unexpected first score: %+v", first)
-	}
-	second := ranking[1].(map[string]any)
-	if second["totalScore"].(float64) != 10 {
-		t.Fatalf("unexpected second score: %+v", second)
-	}
-	ownerRanking := ranking[2].(map[string]any)
-	if ownerRanking["totalScore"].(float64) != -20 {
-		t.Fatalf("unexpected owner ranking score: %+v", ownerRanking)
-	}
-
 	// 9. Non-owner creates finish request.
 	finishReq := postJSON[map[string]any](t, router, joinerToken, "/api/game-sessions/"+gameID+"/finish-requests", map[string]any{})
 	if finishReq["Status"] != "pending" {
@@ -486,6 +466,24 @@ func TestGameScoringLifecycleE2E(t *testing.T) {
 	shareToken := finished["publicShareToken"].(string)
 	if shareToken == "" {
 		t.Fatalf("expected share token, got %+v", finished)
+	}
+
+	// 10b. Check global ranking: score desc.
+	ranking := getJSON[[]any](t, router, ownerToken, "/api/ranking")
+	if len(ranking) != 3 {
+		t.Fatalf("unexpected ranking: %+v", ranking)
+	}
+	first := ranking[0].(map[string]any)
+	if first["totalScore"].(float64) != 10 {
+		t.Fatalf("unexpected first score: %+v", first)
+	}
+	second := ranking[1].(map[string]any)
+	if second["totalScore"].(float64) != 10 {
+		t.Fatalf("unexpected second score: %+v", second)
+	}
+	ownerRanking := ranking[2].(map[string]any)
+	if ownerRanking["totalScore"].(float64) != -20 {
+		t.Fatalf("unexpected owner ranking score: %+v", ownerRanking)
 	}
 
 	// 11. History lists finished game for participants.

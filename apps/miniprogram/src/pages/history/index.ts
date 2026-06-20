@@ -1,10 +1,11 @@
 import { requireLogin } from '../../services/auth.service';
 import { getHistory } from '../../services/game.service';
 import type { HistoryItem } from '../../models/game-session';
-import { formatScore } from '../../utils/format';
+import { formatScore, formatFriendlyTime } from '../../utils/format';
 
 type ViewHistoryItem = HistoryItem & {
   dateText: string;
+  friendlyTime: string;
   scoreText: string;
 };
 
@@ -41,6 +42,7 @@ Page({
         return {
           ...item,
           dateText,
+          friendlyTime: formatFriendlyTime(item.settledAt),
           scoreText: formatScore(item.myFinalScore),
         };
       });

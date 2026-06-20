@@ -169,6 +169,39 @@ func TestCurrentPreviewJoinAndProfileAPI(t *testing.T) {
 	}
 }
 
+func TestCurrentGameReturnsNullWhenUserHasNoActiveGame(t *testing.T) {
+	app := newTestApp(t)
+	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
+	router := api.NewRouter(slog.Default(), api.Services{
+		Auth: app.auth, Game: app.game, Player: app.player, ScoreTransfer: app.scoreTransfer, Settlement: app.settlement, Query: app.query,
+		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
+	})
+
+	token := loginHTTP(t, router, "idle-code")
+	req := httptest.NewRequest(http.MethodGet, "/api/game-sessions/current", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("GET current status %d body %s", rec.Code, rec.Body.String())
+	}
+
+	var envelope struct {
+		Code int             `json:"code"`
+		Data json.RawMessage `json:"data"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &envelope); err != nil {
+		t.Fatal(err)
+	}
+	if envelope.Code != 0 {
+		t.Fatalf("unexpected code %d body %s", envelope.Code, rec.Body.String())
+	}
+	if string(envelope.Data) != "null" {
+		t.Fatalf("expected null current game, got %s", envelope.Data)
+	}
+}
+
 func loginHTTP(t *testing.T, router http.Handler, code string) string {
 	t.Helper()
 	result := postJSON[map[string]any](t, router, "", "/api/auth/wechat-login", map[string]any{"code": code})

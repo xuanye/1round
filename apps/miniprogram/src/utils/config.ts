@@ -1,16 +1,11 @@
+const DEFAULT_BASE_URL = 'https://1round.xuanye.wang';
+const BUILD_API_BASE_URL = '__ONEROUND_API_BASE_URL__';
+const BUILD_API_BASE_URL_TOKEN = '__' + 'ONEROUND_API_BASE_URL' + '__';
+
 export function getBaseUrl(): string {
-  try {
-    const accountInfo = wx.getAccountInfoSync();
-    const env = accountInfo.miniProgram.envVersion;
-    if (env === 'develop') {
-      return 'http://localhost:8080';
-    } else if (env === 'trial') {
-      return 'https://api-staging.example.com';
-    } else if (env === 'release') {
-      return 'https://api.example.com';
-    }
-  } catch (e) {
-    // fallback
+  if (BUILD_API_BASE_URL && BUILD_API_BASE_URL !== BUILD_API_BASE_URL_TOKEN) {
+    return BUILD_API_BASE_URL;
   }
-  return 'http://localhost:8080';
+
+  return DEFAULT_BASE_URL;
 }

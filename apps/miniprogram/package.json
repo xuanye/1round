@@ -5,6 +5,7 @@
   "scripts": {
     "build": "node scripts/build.js",
     "check": "tsc -p tsconfig.json --noEmit",
+    "test": "node scripts/build.test.js",
     "watch": "node scripts/build.js --watch"
   },
   "devDependencies": {

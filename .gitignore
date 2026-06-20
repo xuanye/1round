@@ -9,8 +9,10 @@ apps/server/.cache/
 apps/server/*.db
 apps/server/*.db-*
 apps/server/config.yaml
+apps/server/oneround-server
 
 apps/miniprogram/miniprogram_npm/
 apps/miniprogram/dist/
 apps/miniprogram/typings/
 apps/miniprogram/project.private.config.json
+apps/miniprogram/.env.local

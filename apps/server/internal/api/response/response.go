@@ -21,7 +21,9 @@ func JSON[T any](w http.ResponseWriter, status int, data T) {
 }
 
 func Empty(w http.ResponseWriter) {
-	JSON(w, http.StatusOK, map[string]any{})
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(APIResponse[any]{Code: 0, Message: "ok", Data: nil})
 }
 
 func Error(w http.ResponseWriter, err error) {

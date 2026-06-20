@@ -10,7 +10,7 @@ import type {
 } from '../models/game-session';
 import type { Player } from '../models/player';
 import type { ScoreTransfer } from '../models/score-transfer';
-import { request } from './http';
+import { request, requestBinary } from './http';
 
 export function createGame(name: string, maxParticipants: number | null): Promise<GameSession> {
   return request({ url: '/api/game-sessions', method: 'POST', data: { name, maxParticipants } });
@@ -92,3 +92,11 @@ export function getHistoryStats(): Promise<{ totalGames: number; maxScore: numbe
   return request({ url: '/api/history/stats' });
 }
 
+export async function getJoinMiniProgramCode(gameSessionId: string): Promise<string> {
+  const imageData = await requestBinary({ url: `/api/game-sessions/${gameSessionId}/join-mini-program-code` });
+  const fileSystemManager = wx.getFileSystemManager();
+  const filePath = `${wx.env.USER_DATA_PATH}/oneround-join-${gameSessionId}.png`;
+  const base64 = wx.arrayBufferToBase64(imageData);
+  fileSystemManager.writeFileSync(filePath, base64, 'base64');
+  return filePath;
+}

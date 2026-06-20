@@ -374,17 +374,6 @@ button.finish-button:active {
   margin-bottom: 30rpx;
 }
 
-.invite-code-box {
-  background: #f4f3f1;
-  border-radius: 20rpx;
-  padding: 16rpx 36rpx;
-  font-size: 32rpx;
-  font-weight: 900;
-  color: #1f695d;
-  margin-bottom: 24rpx;
-  letter-spacing: 2rpx;
-}
-
 .invite-popup-hint {
   font-size: 24rpx;
   color: #6f7976;

@@ -22,6 +22,7 @@ export type GameSession = {
 export type GameSummary = {
   id: string;
   name: string;
+  inviteCode: string;
   ownerUserId: string;
   status: 'active' | 'finished';
   scoreTransferCount: number;

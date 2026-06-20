@@ -1,5 +1,5 @@
 {
-  "appid": "touristappid",
+  "appid": "wx7b59bc47a96b8897",
   "projectname": "OneRound",
   "compileType": "miniprogram",
   "miniprogramRoot": "dist/",
@@ -7,17 +7,38 @@
     "es6": true,
     "minified": true,
     "postcss": true,
-    "useCompilerPlugins": ["typescript"]
+    "useCompilerPlugins": [
+      "typescript"
+    ],
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "enhance": false,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
   },
   "simulatorPluginLibVersion": {},
   "packOptions": {
     "include": [],
     "ignore": [
       {
-        "type": "folder",
-        "value": "/minitest"
+        "value": "/minitest",
+        "type": "folder"
       }
     ]
   },
-  "testRoot": "minitest/"
+  "testRoot": "minitest/",
+  "editorSetting": {}
 }

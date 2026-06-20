@@ -10,20 +10,23 @@ import (
 	"github.com/google/uuid"
 	"github.com/xuanye/one-round/apps/server/internal/domain"
 	"github.com/xuanye/one-round/apps/server/internal/infra/sqlite"
+	"github.com/xuanye/one-round/apps/server/internal/infra/wechat"
 	"github.com/xuanye/one-round/apps/server/internal/realtime"
 )
 
 const inviteAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+const joinPagePath = "pages/game-join/index"
 
 type Service struct {
 	store *sqlite.Store
 	q     *sqlite.Queries
 	hub   realtime.Hub
+	wechat wechat.Client
 	now   func() time.Time
 }
 
-func NewService(store *sqlite.Store, q *sqlite.Queries, hub realtime.Hub, now func() time.Time) *Service {
-	return &Service{store: store, q: q, hub: hub, now: now}
+func NewService(store *sqlite.Store, q *sqlite.Queries, hub realtime.Hub, wechatClient wechat.Client, now func() time.Time) *Service {
+	return &Service{store: store, q: q, hub: hub, wechat: wechatClient, now: now}
 }
 
 func GenerateInviteCode() (string, error) {
@@ -352,6 +355,23 @@ func (s *Service) GetForHistoricalMember(ctx context.Context, userID, gameSessio
 
 func (s *Service) RequireMember(ctx context.Context, userID, gameSessionID string) error {
 	return s.requireMember(ctx, userID, gameSessionID)
+}
+
+func (s *Service) JoinMiniProgramCode(ctx context.Context, userID, gameSessionID string) ([]byte, error) {
+	if err := s.requireMember(ctx, userID, gameSessionID); err != nil {
+		return nil, err
+	}
+	gameSession, err := s.q.GetGameSession(ctx, gameSessionID)
+	if err != nil {
+		return nil, err
+	}
+	if gameSession.Status != domain.GameSessionStatusActive {
+		return nil, domain.ErrGameSessionFinished
+	}
+	if s.wechat == nil {
+		return nil, domain.ErrExternalServiceFailed
+	}
+	return s.wechat.GetUnlimitedQRCode(ctx, joinPagePath, "code="+gameSession.InviteCode)
 }
 
 func (s *Service) requireMember(ctx context.Context, userID, gameSessionID string) error {

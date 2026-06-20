@@ -169,6 +169,25 @@ func TestCurrentPreviewJoinAndProfileAPI(t *testing.T) {
 	}
 }
 
+func TestJoinMiniProgramCodeAPI(t *testing.T) {
+	app := newTestApp(t)
+	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
+	router := api.NewRouter(slog.Default(), api.Services{
+		Auth: app.auth, Game: app.game, Player: app.player, ScoreTransfer: app.scoreTransfer, Settlement: app.settlement, Query: app.query,
+		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
+	})
+
+	ownerToken := loginHTTP(t, router, "owner-code")
+	game := postJSON[map[string]any](t, router, ownerToken, "/api/game-sessions", map[string]any{"name": "家庭聚会"})
+	body, contentType := getBinary(t, router, ownerToken, "/api/game-sessions/"+game["id"].(string)+"/join-mini-program-code")
+	if len(body) == 0 {
+		t.Fatal("expected mini program code bytes")
+	}
+	if contentType != "image/png" {
+		t.Fatalf("unexpected content-type %q", contentType)
+	}
+}
+
 func TestCurrentGameReturnsNullWhenUserHasNoActiveGame(t *testing.T) {
 	app := newTestApp(t)
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
@@ -236,6 +255,20 @@ func getJSON[T any](t *testing.T, router http.Handler, token, path string) T {
 		t.Fatalf("GET %s status %d body %s", path, rec.Code, rec.Body.String())
 	}
 	return decodeData[T](t, rec.Body.Bytes())
+}
+
+func getBinary(t *testing.T, router http.Handler, token, path string) ([]byte, string) {
+	t.Helper()
+	req := httptest.NewRequest(http.MethodGet, path, nil)
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code < 200 || rec.Code >= 300 {
+		t.Fatalf("GET %s status %d body %s", path, rec.Code, rec.Body.String())
+	}
+	return rec.Body.Bytes(), rec.Header().Get("Content-Type")
 }
 
 func patchJSON[T any](t *testing.T, router http.Handler, token, path string, payload any) T {

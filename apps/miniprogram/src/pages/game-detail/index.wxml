@@ -142,9 +142,11 @@
   <view wx:if="{{showInviteOverlay}}" class="invite-overlay" bindtap="hideInvite">
     <view class="invite-popup" catchtap="none">
       <view class="invite-popup-title">微信扫码加入</view>
-      <canvas class="qr-image" canvas-id="inviteQR" style="width: 360rpx; height: 360rpx;"></canvas>
-      <view class="invite-code-box">{{game.inviteCode}}</view>
-      <view class="invite-popup-hint">长按或扫码上方二维码快速加入牌局</view>
+      <view wx:if="{{isLoadingJoinCode}}" style="width: 360rpx; height: 360rpx; display: flex; align-items: center; justify-content: center; color: var(--text-muted);">
+        正在生成小程序码...
+      </view>
+      <image wx:else class="qr-image" src="{{qrCodeUrl}}" mode="aspectFit"></image>
+      <view class="invite-popup-hint">用微信扫一扫上方小程序码可直接进入加入页</view>
       <button class="invite-close-btn" bindtap="hideInvite" hover-class="tap-feedback">关闭</button>
     </view>
   </view>

@@ -36,6 +36,7 @@ type FinishRequestView struct {
 type Summary struct {
 	ID                   string             `json:"id"`
 	Name                 string             `json:"name"`
+	InviteCode           string             `json:"inviteCode"`
 	OwnerUserID          string             `json:"ownerUserId"`
 	Status               string             `json:"status"`
 	ScoreTransferCnt     int                `json:"scoreTransferCount"`
@@ -99,6 +100,7 @@ func (s *Service) Summary(ctx context.Context, userID, gameSessionID string) (Su
 	summary := Summary{
 		ID:               g.ID,
 		Name:             g.Name,
+		InviteCode:       g.InviteCode,
 		OwnerUserID:      g.OwnerUserID,
 		Status:           string(g.Status),
 		ScoreTransferCnt: g.ScoreTransferCnt,
@@ -400,4 +402,3 @@ func (s *Service) UserStats(ctx context.Context, userID string) (dto.UserStatsRe
 }
 
 var _ = domain.GameSession{}
-

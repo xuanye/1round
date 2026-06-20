@@ -8,10 +8,10 @@ import {
   approveFinishRequest,
   rejectFinishRequest,
   getPublicSettlement,
+  getJoinMiniProgramCode,
 } from '../../services/game.service';
 import { getUser, saveRecentSession } from '../../utils/storage';
 import { RealtimeService } from '../../services/realtime.service';
-import { drawQRCode } from '../../utils/qrcode';
 import { formatScore } from '../../utils/format';
 
 type DetailParticipant = {
@@ -70,6 +70,7 @@ Page({
     // Invite Overlay
     showInviteOverlay: false,
     qrCodeUrl: '',
+    isLoadingJoinCode: false,
 
     // Pagination
     hasMoreTransfers: true,
@@ -169,7 +170,7 @@ Page({
         game: {
           name: summary.name,
           createdAtText: new Date(summary.updatedAt).toLocaleString('zh-CN'),
-          inviteCode: this.data.inviteCode,
+          inviteCode: summary.inviteCode || this.data.inviteCode,
           isCreator: isCreator,
           status: 'active',
           publicShareToken: summary.publicShareToken || '',
@@ -322,19 +323,24 @@ Page({
     wx.redirectTo({ url: '/pages/home/index' });
   },
 
-  showInvite() {
-    const inviteLink = `https://oneround.app/join?code=${this.data.inviteCode}`;
+  async showInvite() {
     this.setData({
       showInviteOverlay: true,
-    }, () => {
-      wx.nextTick(() => {
-        drawQRCode('inviteQR', inviteLink, 180, this);
-      });
+      isLoadingJoinCode: true,
+      qrCodeUrl: '',
     });
+    try {
+      await requireLogin();
+      const qrCodeUrl = await getJoinMiniProgramCode(this.data.id);
+      this.setData({ qrCodeUrl, isLoadingJoinCode: false });
+    } catch (err) {
+      this.setData({ isLoadingJoinCode: false, showInviteOverlay: false });
+      wx.showToast({ title: (err as any).message || '生成分享码失败', icon: 'none' });
+    }
   },
 
   hideInvite() {
-    this.setData({ showInviteOverlay: false });
+    this.setData({ showInviteOverlay: false, isLoadingJoinCode: false });
   },
 
   none() {},

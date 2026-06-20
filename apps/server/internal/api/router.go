@@ -52,6 +52,7 @@ func NewRouter(logger *slog.Logger, services Services) http.Handler {
 			r.Get("/game-sessions/current", gameHandler.Current)
 			r.Post("/game-sessions/join", gameHandler.Join)
 			r.Post("/game-sessions/join-preview", gameHandler.JoinPreview)
+			r.Get("/game-sessions/{id}/join-mini-program-code", gameHandler.JoinMiniProgramCode)
 			r.Get("/game-sessions/{id}", gameHandler.Get)
 			r.Get("/game-sessions/{id}/summary", gameHandler.Summary)
 			r.Post("/game-sessions/{id}/finish", gameHandler.Finish)

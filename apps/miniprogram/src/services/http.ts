@@ -47,3 +47,40 @@ export async function request<T>(options: {
     });
   });
 }
+
+export async function requestBinary(options: {
+  url: string;
+  method?: Method;
+  data?: unknown;
+  auth?: boolean;
+}): Promise<ArrayBuffer> {
+  return new Promise((resolve, reject) => {
+    const headers: Record<string, string> = {};
+    if (options.auth !== false) {
+      const token = getToken();
+      if (token) headers.Authorization = `Bearer ${token}`;
+    }
+
+    wx.request({
+      url: `${baseUrl()}${options.url}`,
+      method: (options.method || 'GET') as WechatMiniprogram.RequestOption['method'],
+      data: options.data as WechatMiniprogram.RequestOption['data'],
+      header: headers,
+      responseType: 'arraybuffer',
+      success(res) {
+        if (res.statusCode === 401) {
+          clearToken();
+          wx.redirectTo({ url: '/pages/home/index' });
+          reject(new Error('unauthorized'));
+          return;
+        }
+        if (res.statusCode < 200 || res.statusCode >= 300 || !(res.data instanceof ArrayBuffer)) {
+          reject(new Error('request failed'));
+          return;
+        }
+        resolve(res.data);
+      },
+      fail: reject,
+    });
+  });
+}

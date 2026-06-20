@@ -80,7 +80,7 @@ func main() {
 		wechatClient = wechat.NewHTTPClient(cfg.Wechat.AppID, cfg.Wechat.AppSecret, "", http.DefaultClient)
 	}
 
-	gameService := gamesvc.NewService(store, queries, hub, now)
+	gameService := gamesvc.NewService(store, queries, hub, wechatClient, now)
 	queryService := querysvc.NewService(queries, gameService)
 	authService := authsvc.NewService(queries, wechatClient, tokens, now)
 	playerService := playersvc.NewService(store, queries, gameService, hub, now)

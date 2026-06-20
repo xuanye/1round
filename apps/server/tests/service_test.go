@@ -313,6 +313,33 @@ func TestJoinPreviewDoesNotCreateParticipant(t *testing.T) {
 	}
 }
 
+func TestJoinMiniProgramCodeRequiresActiveMemberGame(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	owner := login(t, app, "owner-code")
+	game := createGame(t, app, owner, nil)
+
+	image, err := app.game.JoinMiniProgramCode(ctx, owner, game.ID)
+	if err != nil {
+		t.Fatalf("JoinMiniProgramCode returned error: %v", err)
+	}
+	if len(image) == 0 {
+		t.Fatal("expected mini program code image bytes")
+	}
+
+	outsider := login(t, app, "outsider-code")
+	if _, err := app.game.JoinMiniProgramCode(ctx, outsider, game.ID); err != domain.ErrGameMemberRequired {
+		t.Fatalf("expected member required error, got %v", err)
+	}
+
+	if _, err := app.settlement.FinishDirect(ctx, owner, game.ID); err != nil {
+		t.Fatalf("FinishDirect returned error: %v", err)
+	}
+	if _, err := app.game.JoinMiniProgramCode(ctx, owner, game.ID); err != domain.ErrGameSessionFinished {
+		t.Fatalf("expected finished game error, got %v", err)
+	}
+}
+
 func TestJoinEnforcesCapacityAndDisplayNameUniqueness(t *testing.T) {
 	app := newTestApp(t)
 	ctx := context.Background()
@@ -810,10 +837,11 @@ func newTestApp(t *testing.T) *testApp {
 	nowRef := &initial
 	now := func() time.Time { return *nowRef }
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
-	gameService := gamesvc.NewService(store, q, hub, now)
+	wechatClient := wechat.FakeClient{}
+	gameService := gamesvc.NewService(store, q, hub, wechatClient, now)
 	settlementService := settlementsvc.NewService(store, q, gameService, hub, now)
 	return &testApp{
-		auth:          authsvc.NewService(q, wechat.FakeClient{}, tokens, now),
+		auth:          authsvc.NewService(q, wechatClient, tokens, now),
 		game:          gameService,
 		player:        playersvc.NewService(store, q, gameService, hub, now),
 		scoreTransfer: scoretransfersvc.NewService(store, q, gameService, hub, now),

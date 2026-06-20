@@ -1,8 +1,17 @@
+import { requireLogin } from '../../services/auth.service';
 import { updateMyProfile } from '../../services/game.service';
 
 Page({
   data: { id: '', displayName: '' },
-  onLoad(query: Record<string, string>) {
+  async onLoad(query: Record<string, string>) {
+    try {
+      await requireLogin();
+    } catch (err) {
+      wx.showToast({ title: (err as any).message || '登录失败', icon: 'none' });
+      wx.redirectTo({ url: '/pages/home/index' });
+      return;
+    }
+
     const id = query.id || '';
     const displayName = query.displayName ? decodeURIComponent(query.displayName) : '';
     this.setData({ id, displayName });
@@ -11,6 +20,8 @@ Page({
     this.setData({ displayName: event.detail.value });
   },
   async submit() {
+    await requireLogin();
+
     const displayName = String(this.data.displayName).trim();
     if (!displayName) return wx.showToast({ title: '请输入玩家名称', icon: 'none' });
     try {

@@ -1,4 +1,4 @@
-import { ensureLogin } from '../../services/auth.service';
+import { requireLogin } from '../../services/auth.service';
 import { getRanking } from '../../services/game.service';
 import type { RankingItem } from '../../models/game-session';
 import { formatScore } from '../../utils/format';
@@ -22,7 +22,7 @@ Page({
 
     wx.showLoading({ title: '加载中...' });
     try {
-      await ensureLogin();
+      await requireLogin();
       const list = await getRanking(id);
       this.setData({
         players: list.map((item) => ({

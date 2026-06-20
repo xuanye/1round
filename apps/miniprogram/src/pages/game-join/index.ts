@@ -1,4 +1,4 @@
-import { ensureLogin } from '../../services/auth.service';
+import { requireLogin } from '../../services/auth.service';
 import { joinPreview, joinGame, getCurrentGame, getSummary, leaveGame } from '../../services/game.service';
 import { getUser, saveRecentSession } from '../../utils/storage';
 
@@ -54,7 +54,7 @@ Page({
 
     wx.showLoading({ title: '正在获取预览...' });
     try {
-      await ensureLogin();
+      await requireLogin();
 
       // Check join preview
       const preview = await joinPreview(inviteCode);

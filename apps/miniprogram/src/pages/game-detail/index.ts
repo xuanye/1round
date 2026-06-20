@@ -1,4 +1,4 @@
-import { ensureLogin } from '../../services/auth.service';
+import { requireLogin } from '../../services/auth.service';
 import {
   getSummary,
   getScoreTransfers,
@@ -98,7 +98,7 @@ Page({
         return;
       }
 
-      await ensureLogin();
+      await requireLogin();
       await this.loadGameData();
 
       // Connect to websocket if the game is active

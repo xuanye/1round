@@ -1,4 +1,4 @@
-import { ensureLogin } from '../../services/auth.service';
+import { requireLogin } from '../../services/auth.service';
 import { getSummary } from '../../services/game.service';
 import { submitScoreTransfer } from '../../services/score.service';
 import { getUser } from '../../utils/storage';
@@ -40,7 +40,7 @@ Page({
 
     wx.showLoading({ title: '加载中...' });
     try {
-      await ensureLogin();
+      await requireLogin();
       const summary = await getSummary(id);
       const user = getUser();
 

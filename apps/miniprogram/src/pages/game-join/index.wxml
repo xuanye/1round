@@ -26,7 +26,7 @@
       <text class="iconfont game-icon">{{icons.users}}</text>
     </view>
 
-    <view class="creator-row" style="display: flex;">
+    <view class="creator-row">
       <view class="creator-avatar-img text-avatar" style="margin-right: 18rpx;">{{game.creatorInitial}}</view>
       <view>
         <view class="field-label">创建者</view>

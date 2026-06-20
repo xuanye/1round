@@ -28,8 +28,6 @@
 }
 
 .join-topbar,
-.join-title,
-.join-actions,
 .join-brand,
 .game-info,
 .creator-row,

@@ -137,6 +137,15 @@
   -webkit-box-orient: vertical;
 }
 
+.game-submeta,
+.participant-summary,
+.creator-note {
+  margin-top: 10rpx;
+  color: #3f4946;
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
 .game-icon {
   width: 64rpx;
   height: 64rpx;
@@ -147,38 +156,6 @@
   line-height: 64rpx;
   text-align: center;
   display: block;
-}
-
-.creator-row {
-  align-items: center;
-  margin-top: 28rpx;
-}
-
-.creator-avatar {
-  margin-right: 18rpx;
-}
-
-.creator-avatar-img {
-  width: 64rpx;
-  height: 64rpx;
-  border-radius: 50%;
-  flex: 0 0 64rpx;
-}
-
-.creator-avatar-img.text-avatar {
-  background: #1f695d;
-  color: #ffffff;
-  font-size: 28rpx;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.creator-name {
-  color: #1a1c1a;
-  font-size: 28rpx;
-  font-weight: 900;
 }
 
 .divider {
@@ -202,33 +179,8 @@
   background: rgba(31, 105, 93, 0.1);
 }
 
-.avatar-stack {
-  margin-top: 18rpx;
-  padding-left: 12rpx;
-}
-
-.stack-avatar {
-  width: 72rpx;
-  height: 72rpx;
-  margin-left: -12rpx;
-  border: 4rpx solid #faf9f6;
-  border-radius: 50%;
-  box-shadow: 0 8rpx 24rpx rgba(31, 105, 93, 0.1);
-  box-sizing: border-box;
-  flex-shrink: 0;
-}
-
-.stack-avatar.text-avatar {
-  color: #3f4946;
-  background: #e3e2e0;
-  font-size: 22rpx;
-  font-weight: 900;
-  line-height: 64rpx;
-  text-align: center;
-}
-
 .name-block {
-  margin-top: 38rpx;
+  margin-top: 32rpx;
 }
 
 .input-shell {

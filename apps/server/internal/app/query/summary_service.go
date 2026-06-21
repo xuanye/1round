@@ -33,6 +33,14 @@ type FinishRequestView struct {
 	CreatedAt           time.Time `json:"createdAt"`
 }
 
+type RoundStatus struct {
+	RoundNo            int      `json:"roundNo"`
+	Status             string   `json:"status"`
+	PendingPlayerIDs   []string `json:"pendingPlayerIds"`
+	PendingPlayerNames []string `json:"pendingPlayerNames"`
+	CanStartNextRound  bool     `json:"canStartNextRound"`
+}
+
 type Summary struct {
 	ID                   string             `json:"id"`
 	Name                 string             `json:"name"`
@@ -45,6 +53,7 @@ type Summary struct {
 	Version              int64              `json:"version"`
 	PendingFinishRequest *FinishRequestView `json:"pendingFinishRequest,omitempty"`
 	PublicShareToken     *string            `json:"publicShareToken,omitempty"`
+	RoundStatus          RoundStatus        `json:"roundStatus"`
 }
 
 type RankingItem struct {
@@ -57,13 +66,16 @@ type RankingItem struct {
 }
 
 type ScoreTransferView struct {
-	ID           string    `json:"id"`
-	SequenceNo   int       `json:"sequenceNo"`
-	FromPlayerID string    `json:"fromPlayerId"`
-	ReceiverIDs  []string  `json:"receiverPlayerIds"`
-	Amount       int       `json:"amount"`
-	CreatedAt    time.Time `json:"createdAt"`
-	Text         string    `json:"text"`
+	ID                   string     `json:"id"`
+	SequenceNo           int        `json:"sequenceNo"`
+	FromPlayerID         string     `json:"fromPlayerId"`
+	ReceiverIDs          []string   `json:"receiverPlayerIds"`
+	Amount               int        `json:"amount"`
+	CreatedAt            time.Time  `json:"createdAt"`
+	Text                 string     `json:"text"`
+	TransferKind         string     `json:"transferKind"`
+	ReversalOfTransferID *string    `json:"reversalOfTransferId,omitempty"`
+	ReversedAt           *time.Time `json:"reversedAt,omitempty"`
 }
 
 func NewService(q *sqlite.Queries, game *gamesvc.Service) *Service {
@@ -146,6 +158,36 @@ func (s *Service) Summary(ctx context.Context, userID, gameSessionID string) (Su
 		}
 	}
 
+	round, err := s.q.GetLatestRoundCycle(ctx, gameSessionID)
+	if err != nil {
+		return Summary{}, err
+	}
+	statuses, err := s.q.ListRoundParticipationStatuses(ctx, round.ID)
+	if err != nil {
+		return Summary{}, err
+	}
+
+	pendingIDs := make([]string, 0)
+	pendingNames := make([]string, 0)
+	nameByID := map[string]string{}
+	for _, p := range players {
+		nameByID[p.ID] = p.DisplayName
+	}
+	for _, status := range statuses {
+		if status.Status == domain.ParticipationStatusPending {
+			pendingIDs = append(pendingIDs, status.PlayerID)
+			pendingNames = append(pendingNames, nameByID[status.PlayerID])
+		}
+	}
+
+	summary.RoundStatus = RoundStatus{
+		RoundNo:            round.RoundNo,
+		Status:             string(round.Status),
+		PendingPlayerIDs:   pendingIDs,
+		PendingPlayerNames: pendingNames,
+		CanStartNextRound:  round.Status == domain.RoundCycleStatusComplete,
+	}
+
 	return summary, nil
 }
 
@@ -213,15 +255,26 @@ func (s *Service) ListScoreTransfers(ctx context.Context, userID, gameSessionID 
 		if fromName == "" {
 			fromName = t.FromPlayerID
 		}
-		text := formatTransferText(fromName, receiverNames, t.Amount)
+		var text string
+		if t.Kind == domain.ScoreTransferKindReversal {
+			text = formatReversalText(fromName, receiverNames, t.Amount)
+		} else {
+			text = formatTransferText(fromName, receiverNames, t.Amount)
+			if t.ReversedAt != nil {
+				text += " (已撤销)"
+			}
+		}
 		views = append(views, ScoreTransferView{
-			ID:           t.ID,
-			SequenceNo:   t.SequenceNo,
-			FromPlayerID: t.FromPlayerID,
-			ReceiverIDs:  receiverIDs,
-			Amount:       t.Amount,
-			CreatedAt:    t.CreatedAt,
-			Text:         text,
+			ID:                   t.ID,
+			SequenceNo:           t.SequenceNo,
+			FromPlayerID:         t.FromPlayerID,
+			ReceiverIDs:          receiverIDs,
+			Amount:               t.Amount,
+			CreatedAt:            t.CreatedAt,
+			Text:                 text,
+			TransferKind:         string(t.Kind),
+			ReversalOfTransferID: t.ReversalOfTransferID,
+			ReversedAt:           t.ReversedAt,
 		})
 	}
 	return views, nil
@@ -232,6 +285,13 @@ func formatTransferText(from string, receivers []string, amount int) string {
 		return fmt.Sprintf("%s 给 %s +%d", from, receivers[0], amount)
 	}
 	return fmt.Sprintf("%s 给 %s 各 +%d", from, strings.Join(receivers, "、"), amount)
+}
+
+func formatReversalText(from string, receivers []string, amount int) string {
+	if len(receivers) == 1 {
+		return fmt.Sprintf("撤销：%s 给 %s +%d", from, receivers[0], amount)
+	}
+	return fmt.Sprintf("撤销：%s 给 %s 各 +%d", from, strings.Join(receivers, "、"), amount)
 }
 
 // History returns a page of settled game sessions for the given user.
@@ -347,12 +407,45 @@ func (s *Service) SettlementDetail(ctx context.Context, userID, gameSessionID st
 		return dto.SettlementDetail{}, err
 	}
 
+	nameMap := make(map[string]string)
+	for _, p := range players {
+		nameMap[p.ID] = p.DisplayName
+	}
+
 	transferSummaries := make([]dto.ScoreTransferSummary, 0, len(transfers))
 	for _, t := range transfers {
+		receiverNames := make([]string, 0, len(t.Receivers))
+		for _, r := range t.Receivers {
+			if n, ok := nameMap[r.PlayerID]; ok {
+				receiverNames = append(receiverNames, n)
+			} else {
+				receiverNames = append(receiverNames, r.PlayerID)
+			}
+		}
+		fromName := nameMap[t.FromPlayerID]
+		if fromName == "" {
+			fromName = t.FromPlayerID
+		}
+
+		var text string
+		if t.Kind == domain.ScoreTransferKindReversal {
+			text = formatReversalText(fromName, receiverNames, t.Amount)
+		} else {
+			text = formatTransferText(fromName, receiverNames, t.Amount)
+			if t.ReversedAt != nil {
+				text += " (已撤销)"
+			}
+		}
+
 		transferSummaries = append(transferSummaries, dto.ScoreTransferSummary{
-			ID:        t.ID,
-			Amount:    t.Amount,
-			CreatedAt: t.CreatedAt.UTC().Format(time.RFC3339),
+			ID:                   t.ID,
+			SequenceNo:           t.SequenceNo,
+			Amount:               t.Amount,
+			CreatedAt:            t.CreatedAt.UTC().Format(time.RFC3339),
+			Text:                 text,
+			TransferKind:         string(t.Kind),
+			ReversalOfTransferID: t.ReversalOfTransferID,
+			ReversedAt:           t.ReversedAt,
 		})
 	}
 

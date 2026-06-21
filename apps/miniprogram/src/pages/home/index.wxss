@@ -204,6 +204,12 @@
   margin-top: 28rpx;
 }
 
+.action-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
+}
+
 .create-disabled {
   display: flex;
   align-items: center;
@@ -216,6 +222,7 @@
   line-height: 1;
 }
 
+.scan-button,
 .create-button {
   display: flex;
   align-items: center;
@@ -224,6 +231,18 @@
   height: 86rpx;
   font-size: 28rpx;
   line-height: 1;
+}
+
+.secondary-action {
+  color: #1f695d;
+  background: rgba(31, 105, 93, 0.1);
+  box-shadow: none;
+}
+
+.empty-subtext {
+  color: #6f7976;
+  font-size: 24rpx;
+  text-align: center;
 }
 
 .action-grid,

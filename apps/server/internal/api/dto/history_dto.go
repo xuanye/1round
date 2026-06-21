@@ -37,9 +37,14 @@ type SettlementParticipant struct {
 }
 
 type ScoreTransferSummary struct {
-	ID        string `json:"id"`
-	Amount    int    `json:"amount"`
-	CreatedAt string `json:"createdAt"`
+	ID                   string     `json:"id"`
+	SequenceNo           int        `json:"sequenceNo"`
+	Amount               int        `json:"amount"`
+	CreatedAt            string     `json:"createdAt"`
+	Text                 string     `json:"text"`
+	TransferKind         string     `json:"transferKind,omitempty"`
+	ReversalOfTransferID *string    `json:"reversalOfTransferId,omitempty"`
+	ReversedAt           *time.Time `json:"reversedAt,omitempty"`
 }
 
 type PublicSettlement struct {

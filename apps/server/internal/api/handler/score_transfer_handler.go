@@ -57,3 +57,26 @@ func (h *ScoreTransferHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 	response.JSON(w, http.StatusOK, result)
 }
+
+func (h *ScoreTransferHandler) Reverse(w http.ResponseWriter, r *http.Request) {
+	var req dto.ReverseScoreTransferRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.Error(w, err)
+		return
+	}
+	result, err := h.scoreTransfer.Reverse(
+		r.Context(),
+		middleware.UserID(r.Context()),
+		chi.URLParam(r, "id"),
+		chi.URLParam(r, "transferId"),
+		scoretransfersvc.ReverseInput{
+			IdempotencyKey: req.IdempotencyKey,
+			Reason:         req.Reason,
+		},
+	)
+	if err != nil {
+		response.Error(w, err)
+		return
+	}
+	response.JSON(w, http.StatusOK, result)
+}

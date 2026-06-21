@@ -1,4 +1,5 @@
 import { requireLogin } from '../../services/auth.service';
+import { reverseScoreTransfer } from '../../services/score.service';
 import {
   getSummary,
   getScoreTransfers,
@@ -21,13 +22,22 @@ type ParsedTransferPart = {
 
 function parseTransferText(text: string): ParsedTransferPart[] {
   const parts: ParsedTransferPart[] = [];
-  const geiParts = text.split(' 给 ');
+  let prefix = '';
+  let cleanText = text;
+  if (text.startsWith('撤销：')) {
+    prefix = '撤销：';
+    cleanText = text.substring(3);
+  }
+  const geiParts = cleanText.split(' 给 ');
   if (geiParts.length < 2) {
     return [{ text, type: 'normal' }];
   }
   const sender = geiParts[0];
   const rest = geiParts[1];
   
+  if (prefix) {
+    parts.push({ text: prefix, type: 'normal' });
+  }
   parts.push({ text: sender, type: 'name' });
   parts.push({ text: ' 给 ', type: 'normal' });
   
@@ -62,6 +72,11 @@ type DetailTransfer = {
   text: string;
   time: string;
   sequenceNo: number;
+  receiverPlayerIds: string[];
+  transferKind?: string;
+  reversalOfTransferId?: string;
+  reversedAt?: string;
+  canReverse: boolean;
 };
 
 Page({
@@ -76,6 +91,8 @@ Page({
       flag: '\uf024',
       home: '\uf015',
       chart: '\uf201',
+      info: '\uf05a',
+      undo: '\uf0e2', // Added undo icon code
     },
     id: '',
     inviteCode: '',
@@ -97,6 +114,15 @@ Page({
       requestedByName: string;
       createdAt: string;
     } | null,
+    roundStatus: null as {
+      roundNo: number;
+      status: string;
+      pendingPlayerIds: string[];
+      pendingPlayerNames: string[];
+      canStartNextRound: boolean;
+    } | null,
+    uninvolvedNamesText: '',
+    myPlayerId: '', // Added myPlayerId
 
     // Invite Overlay
     showInviteOverlay: false,
@@ -197,6 +223,14 @@ Page({
         };
       });
 
+      const roundStatus = summary.roundStatus || null;
+      const uninvolvedNamesText = roundStatus && roundStatus.pendingPlayerNames
+        ? roundStatus.pendingPlayerNames.join('、')
+        : '';
+
+      const me = participants.find(p => p.isMe);
+      const myPlayerId = me ? me.id : '';
+
       this.setData({
         game: {
           name: summary.name,
@@ -208,17 +242,20 @@ Page({
         },
         participants,
         pendingFinishRequest: summary.pendingFinishRequest || null,
+        roundStatus,
+        uninvolvedNamesText,
         hasMoreTransfers: true,
+        myPlayerId,
       });
 
       // Load first page of transfers
-      await this.loadTransfers(true);
+      await this.loadTransfers(true, myPlayerId);
     } catch (err) {
       console.error('Fetch game data failed:', err);
     }
   },
 
-  async loadTransfers(reload = false) {
+  async loadTransfers(reload = false, currentMyPlayerId?: string) {
     if (this.data.isLoadingTransfers) return;
     if (!reload && !this.data.hasMoreTransfers) return;
 
@@ -229,10 +266,18 @@ Page({
       beforeSeq = this.data.transfers[this.data.transfers.length - 1].sequenceNo;
     }
 
+    const myPlayerId = currentMyPlayerId || this.data.myPlayerId;
+
     try {
       const list = await getScoreTransfers(this.data.id, beforeSeq, 20);
       const mapped = list.map(t => {
         const timeText = formatTimeOnly(t.createdAt);
+        const canReverse =
+          this.data.game.status === 'active' &&
+          !t.reversedAt &&
+          t.transferKind !== 'reversal' &&
+          t.receiverPlayerIds.includes(myPlayerId);
+
         return {
           id: t.id,
           iconCode: t.receiverPlayerIds.length > 1 ? '\uf0c0' : '\uf362',
@@ -240,6 +285,11 @@ Page({
           parsedParts: parseTransferText(t.text),
           time: timeText,
           sequenceNo: t.sequenceNo,
+          receiverPlayerIds: t.receiverPlayerIds,
+          transferKind: t.transferKind,
+          reversalOfTransferId: t.reversalOfTransferId,
+          reversedAt: t.reversedAt,
+          canReverse: canReverse,
         };
       });
 
@@ -271,6 +321,9 @@ Page({
         isMe: p.displayName === user?.displayName,
       }));
 
+      const myPlayer = mappedParticipants.find(p => p.isMe);
+      const myPlayerId = myPlayer ? myPlayer.id : '';
+
       const mappedTransfers = detail.scoreTransfers.map(t => {
         const timeText = formatTimeOnly(t.createdAt);
         return {
@@ -280,6 +333,11 @@ Page({
           parsedParts: parseTransferText(t.text),
           time: timeText,
           sequenceNo: t.sequenceNo,
+          receiverPlayerIds: t.receiverPlayerIds || [],
+          transferKind: t.transferKind,
+          reversalOfTransferId: t.reversalOfTransferId,
+          reversedAt: t.reversedAt,
+          canReverse: false,
         };
       });
 
@@ -296,6 +354,7 @@ Page({
         transfers: mappedTransfers,
         pendingFinishRequest: null,
         hasMoreTransfers: false,
+        myPlayerId,
       });
     } catch (err) {
       console.error('Load settled game failed:', err);
@@ -325,6 +384,11 @@ Page({
           parsedParts: parseTransferText(t.text),
           time: timeText,
           sequenceNo: t.sequenceNo,
+          receiverPlayerIds: t.receiverPlayerIds || [],
+          transferKind: t.transferKind,
+          reversalOfTransferId: t.reversalOfTransferId,
+          reversedAt: t.reversedAt,
+          canReverse: false,
         };
       });
 
@@ -341,6 +405,7 @@ Page({
         transfers: mappedTransfers,
         pendingFinishRequest: null,
         hasMoreTransfers: false,
+        myPlayerId: '',
       });
     } catch (err) {
       console.error('Load public settlement failed:', err);
@@ -380,7 +445,56 @@ Page({
   none() {},
 
   inputScore() {
+    const me = this.data.participants.find(p => p.isMe);
+    const roundStatus = this.data.roundStatus;
+    if (me && roundStatus && roundStatus.pendingPlayerNames.length > 0) {
+      const isMeInvolved = !roundStatus.pendingPlayerIds.includes(me.id);
+      if (isMeInvolved) {
+        wx.showModal({
+          title: '提示',
+          content: `当前轮（第 ${roundStatus.roundNo} 局）还有 ${roundStatus.pendingPlayerNames.join('、')} 尚未计分/被计分。你确定要开始新一轮计分吗？`,
+          confirmText: '开始新轮',
+          cancelText: '取消',
+          success: (res) => {
+            if (res.confirm) {
+              wx.navigateTo({ url: `/pages/score-input/index?id=${this.data.id}` });
+            }
+          }
+        });
+        return;
+      }
+    }
     wx.navigateTo({ url: `/pages/score-input/index?id=${this.data.id}` });
+  },
+
+  async onReverseTransfer(e: any) {
+    const transferId = e.currentTarget.dataset.transferId;
+    if (!transferId) return;
+
+    const self = this;
+    wx.showModal({
+      title: '确认撤销计分',
+      content: '确定要撤销这笔计分吗？撤销后，各接收者的得分将被扣回，并返还发送者的得分。',
+      confirmText: '确认撤销',
+      confirmColor: '#ba1a1a',
+      cancelText: '取消',
+      success: async (res) => {
+        if (res.confirm) {
+          wx.showLoading({ title: '撤销中...' });
+          try {
+            const idempotencyKey = `reverse_${transferId}`;
+            await reverseScoreTransfer(self.data.id, transferId, idempotencyKey, 'user_reversal');
+            wx.showToast({ title: '已撤销', icon: 'success' });
+            await self.loadGameData();
+          } catch (err) {
+            console.error('Reverse transfer failed:', err);
+            wx.showToast({ title: (err as any).message || '撤销失败', icon: 'none' });
+          } finally {
+            wx.hideLoading();
+          }
+        }
+      }
+    });
   },
 
   ranking() {

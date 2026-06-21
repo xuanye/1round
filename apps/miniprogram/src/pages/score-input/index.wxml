@@ -43,12 +43,16 @@
       <view class="score-number">{{scoreText}}</view>
       <view class="score-unit">分 / 每人</view>
     </view>
+    <view class="score-helper">{{helperText}}</view>
   </view>
 
   <view class="quick-scores-row">
+    <button class="quick-score-btn" data-value="10" bindtap="quickScore" hover-class="tap-feedback">+10</button>
     <button class="quick-score-btn" data-value="20" bindtap="quickScore" hover-class="tap-feedback">+20</button>
     <button class="quick-score-btn" data-value="30" bindtap="quickScore" hover-class="tap-feedback">+30</button>
     <button class="quick-score-btn" data-value="40" bindtap="quickScore" hover-class="tap-feedback">+40</button>
+    <button class="quick-score-btn" data-value="50" bindtap="quickScore" hover-class="tap-feedback">+50</button>
+    <button class="quick-score-btn" data-value="60" bindtap="quickScore" hover-class="tap-feedback">+60</button>
   </view>
 
   <view class="num-pad">
@@ -68,6 +72,10 @@
       <view class="preview-title">分发给 {{selectedCount}} 位好友</view>
       <view class="preview-deduction">{{deductionText}}</view>
     </view>
+  </view>
+
+  <view wx:if="{{feedbackMessage}}" class="feedback-banner {{feedbackTone}}">
+    {{feedbackMessage}}
   </view>
 
   <view class="submit-dock">

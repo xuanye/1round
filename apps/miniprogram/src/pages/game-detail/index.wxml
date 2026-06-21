@@ -31,6 +31,14 @@
       </block>
     </view>
 
+    <!-- Round Warning Banner -->
+    <view wx:if="{{roundStatus && roundStatus.pendingPlayerNames.length > 0 && transfers.length > 0}}" class="round-warning-banner card">
+      <view class="round-warning-text">
+        <text class="iconfont inline-icon animate-pulse" style="margin-right: 8rpx; color: #ba1a1a;">{{icons.info}}</text>
+        本轮（第{{roundStatus.roundNo}}局）还有 {{uninvolvedNamesText}} 尚未计分/被计分。
+      </view>
+    </view>
+
     <!-- Active Participants Section -->
     <view class="section-row">
       <view class="section-label">当前参与者</view>
@@ -111,7 +119,16 @@
             <text wx:else>{{part.text}}</text>
           </block>
         </view>
-        <view class="transfer-time">{{item.time}}</view>
+        <view class="transfer-meta" style="display: flex; align-items: center; justify-content: space-between; margin-top: 8rpx;">
+          <view class="transfer-time" style="margin-top: 0;">{{item.time}}</view>
+          <view wx:if="{{game.status === 'active' && !item.reversedAt && item.transferKind !== 'reversal' && item.canReverse}}" 
+                class="reverse-action-btn" 
+                style="padding: 10rpx 20rpx; margin-right: -10rpx;"
+                bindtap="onReverseTransfer" 
+                data-transfer-id="{{item.id}}">
+            <text class="iconfont" style="color: var(--text-muted); font-size: 28rpx; opacity: 0.6;">{{icons.undo}}</text>
+          </view>
+        </view>
       </view>
     </view>
     <view wx:if="{{transfers.length === 0}}" style="text-align: center; color: var(--text-muted); font-size: 26rpx; padding: 40rpx;">

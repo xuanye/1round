@@ -2,16 +2,27 @@ package domain
 
 import "time"
 
+type ScoreTransferKind string
+
+const (
+	ScoreTransferKindNormal   ScoreTransferKind = "normal"
+	ScoreTransferKindReversal ScoreTransferKind = "reversal"
+)
+
 type ScoreTransfer struct {
-	ID              string
-	GameSessionID   string
-	SequenceNo      int
-	FromPlayerID    string
-	CreatedByUserID string
-	IdempotencyKey  string
-	Amount          int
-	CreatedAt       time.Time
-	Receivers       []ScoreTransferReceiver
+	ID                   string
+	GameSessionID        string
+	RoundCycleID         string
+	SequenceNo           int
+	FromPlayerID         string
+	CreatedByUserID      string
+	IdempotencyKey       string
+	Amount               int
+	Kind                 ScoreTransferKind
+	ReversalOfTransferID *string
+	ReversedAt           *time.Time
+	CreatedAt            time.Time
+	Receivers            []ScoreTransferReceiver
 }
 
 type ScoreTransferReceiver struct {

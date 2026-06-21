@@ -39,12 +39,31 @@ func (s *Service) Add(ctx context.Context, userID, gameSessionID, displayName st
 		return domain.Player{}, domain.ErrGameSessionFinished
 	}
 	now := s.now()
-	joinedOrder, err := s.q.NextJoinedOrder(ctx, gameSessionID)
-	if err != nil {
-		return domain.Player{}, err
-	}
-	p := domain.Player{ID: uuid.NewString(), GameSessionID: gameSessionID, DisplayName: strings.TrimSpace(displayName), Active: true, JoinedOrder: joinedOrder, CreatedAt: now, UpdatedAt: now}
-	err = s.q.CreatePlayer(ctx, p)
+	var p domain.Player
+	err = s.store.InTx(ctx, func(q *sqlite.Queries) error {
+		joinedOrder, err := q.NextJoinedOrder(ctx, gameSessionID)
+		if err != nil {
+			return err
+		}
+		p = domain.Player{ID: uuid.NewString(), GameSessionID: gameSessionID, DisplayName: strings.TrimSpace(displayName), Active: true, JoinedOrder: joinedOrder, CreatedAt: now, UpdatedAt: now}
+		if err := q.CreatePlayer(ctx, p); err != nil {
+			return err
+		}
+		rc, err := q.GetActiveRoundCycle(ctx, gameSessionID)
+		if err == nil {
+			return q.UpsertRoundParticipationStatus(ctx, domain.RoundParticipationStatus{
+				ID:           uuid.NewString(),
+				RoundCycleID: rc.ID,
+				PlayerID:     p.ID,
+				Status:       domain.ParticipationStatusPending,
+				UpdatedAt:    now,
+			})
+		}
+		if err != domain.ErrNotFound {
+			return err
+		}
+		return nil
+	})
 	if err == nil && s.hub != nil {
 		s.hub.BroadcastToGame(ctx, gameSessionID, realtime.Event{Type: realtime.EventPlayerAdded, GameSessionID: gameSessionID, Version: session.Version, SentAt: s.now()})
 	}
@@ -159,6 +178,38 @@ func (s *Service) Leave(ctx context.Context, userID, gameSessionID string) error
 	err = s.store.InTx(ctx, func(q *sqlite.Queries) error {
 		// Mark player inactive and set left_at
 		if err := q.DeactivatePlayer(ctx, gameSessionID, userID, now); err != nil {
+			return err
+		}
+
+		rc, err := q.GetActiveRoundCycle(ctx, gameSessionID)
+		if err == nil {
+			err := q.UpsertRoundParticipationStatus(ctx, domain.RoundParticipationStatus{
+				ID:           uuid.NewString(),
+				RoundCycleID: rc.ID,
+				PlayerID:     player.ID,
+				Status:       domain.ParticipationStatusExempt,
+				UpdatedAt:    now,
+			})
+			if err != nil {
+				return err
+			}
+			statuses, err := q.ListRoundParticipationStatuses(ctx, rc.ID)
+			if err != nil {
+				return err
+			}
+			roundComplete := true
+			for _, st := range statuses {
+				if st.Status == domain.ParticipationStatusPending {
+					roundComplete = false
+					break
+				}
+			}
+			if roundComplete {
+				if err := q.CompleteRoundCycle(ctx, rc.ID, now); err != nil {
+					return err
+				}
+			}
+		} else if err != domain.ErrNotFound {
 			return err
 		}
 

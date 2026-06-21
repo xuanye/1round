@@ -12,3 +12,16 @@ export function submitScoreTransfer(
     data: { receiverPlayerIds, amount, idempotencyKey },
   });
 }
+
+export function reverseScoreTransfer(
+  gameSessionId: string,
+  transferId: string,
+  idempotencyKey: string,
+  reason: string
+): Promise<{ id: string; sequenceNo: number; version: number }> {
+  return request({
+    url: `/api/game-sessions/${gameSessionId}/score-transfers/${transferId}/reversal`,
+    method: 'POST',
+    data: { idempotencyKey, reason },
+  });
+}

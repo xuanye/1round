@@ -19,6 +19,14 @@ export type GameSession = {
   version: number;
 };
 
+export type RoundStatus = {
+  roundNo: number;
+  status: string;
+  pendingPlayerIds: string[];
+  pendingPlayerNames: string[];
+  canStartNextRound: boolean;
+};
+
 export type GameSummary = {
   id: string;
   name: string;
@@ -32,6 +40,7 @@ export type GameSummary = {
   version: number;
   pendingFinishRequest?: PendingFinishRequest;
   publicShareToken?: string;
+  roundStatus?: RoundStatus;
 };
 
 export type PlayerPreview = {

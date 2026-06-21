@@ -459,3 +459,20 @@ button.finish-banner-btn {
   color: #1f695d;
   font-weight: bold;
 }
+
+/* Round Warning Banner */
+.round-warning-banner {
+  background: #fdf2f2;
+  border: 1rpx solid #fde8e8;
+  border-radius: 28rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+}
+
+.round-warning-text {
+  font-size: 26rpx;
+  color: #ba1a1a;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+}

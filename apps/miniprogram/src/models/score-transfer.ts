@@ -6,4 +6,7 @@ export type ScoreTransfer = {
   amount: number;
   createdAt: string;
   text: string;
+  transferKind?: string;
+  reversalOfTransferId?: string;
+  reversedAt?: string;
 };

@@ -12,6 +12,7 @@ import (
 	gamesvc "github.com/xuanye/one-round/apps/server/internal/app/game"
 	playersvc "github.com/xuanye/one-round/apps/server/internal/app/player"
 	querysvc "github.com/xuanye/one-round/apps/server/internal/app/query"
+	"github.com/xuanye/one-round/apps/server/internal/app/roundcycle"
 	scoretransfersvc "github.com/xuanye/one-round/apps/server/internal/app/scoretransfer"
 	settlementsvc "github.com/xuanye/one-round/apps/server/internal/app/settlement"
 	"github.com/xuanye/one-round/apps/server/internal/domain"
@@ -859,11 +860,12 @@ func newTestApp(t *testing.T) *testApp {
 	wechatClient := wechat.FakeClient{}
 	gameService := gamesvc.NewService(store, q, hub, wechatClient, now)
 	settlementService := settlementsvc.NewService(store, q, gameService, hub, now)
+	roundCycleService := roundcycle.NewService(q, now)
 	return &testApp{
 		auth:          authsvc.NewService(q, wechatClient, tokens, now),
 		game:          gameService,
 		player:        playersvc.NewService(store, q, gameService, hub, now),
-		scoreTransfer: scoretransfersvc.NewService(store, q, gameService, hub, now),
+		scoreTransfer: scoretransfersvc.NewService(store, q, gameService, roundCycleService, hub, now),
 		settlement:    settlementService,
 		query:         querysvc.NewService(q, gameService),
 		q:             q,

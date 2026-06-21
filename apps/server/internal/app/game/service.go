@@ -90,7 +90,28 @@ func (s *Service) Create(ctx context.Context, userID, name string, maxParticipan
 		if err := q.CreateGameSession(ctx, session, member); err != nil {
 			return err
 		}
-		return q.CreatePlayer(ctx, ownerPlayer)
+		if err := q.CreatePlayer(ctx, ownerPlayer); err != nil {
+			return err
+		}
+
+		// Seed Round 1
+		round := domain.RoundCycle{
+			ID:            uuid.NewString(),
+			GameSessionID: session.ID,
+			RoundNo:       1,
+			Status:        domain.RoundCycleStatusActive,
+			CreatedAt:     now,
+		}
+		if err := q.CreateRoundCycle(ctx, round); err != nil {
+			return err
+		}
+		return q.UpsertRoundParticipationStatus(ctx, domain.RoundParticipationStatus{
+			ID:           uuid.NewString(),
+			RoundCycleID: round.ID,
+			PlayerID:     ownerPlayer.ID,
+			Status:       domain.ParticipationStatusPending,
+			UpdatedAt:    now,
+		})
 	})
 	return session, err
 }
@@ -254,6 +275,20 @@ func (s *Service) Join(ctx context.Context, userID, inviteCode, displayName stri
 			if err := q.ReactivatePlayer(ctx, historicalPlayer.ID, session.ID, displayName, 0, now); err != nil {
 				return err
 			}
+			rc, err := q.GetActiveRoundCycle(ctx, session.ID)
+			if err == nil {
+				if err := q.UpsertRoundParticipationStatus(ctx, domain.RoundParticipationStatus{
+					ID:           uuid.NewString(),
+					RoundCycleID: rc.ID,
+					PlayerID:     historicalPlayer.ID,
+					Status:       domain.ParticipationStatusPending,
+					UpdatedAt:    now,
+				}); err != nil {
+					return err
+				}
+			} else if err != domain.ErrNotFound {
+				return err
+			}
 			// Only add membership if not already a member (user may have left without being removed from game_members)
 			isMember, err := q.IsGameMember(ctx, session.ID, userID)
 			if err != nil {
@@ -306,6 +341,20 @@ func (s *Service) Join(ctx context.Context, userID, inviteCode, displayName stri
 			Active: true, JoinedOrder: joinedOrder, TotalScore: 0, CreatedAt: now, UpdatedAt: now,
 		}
 		if err := q.CreatePlayer(ctx, p); err != nil {
+			return err
+		}
+		rc, err := q.GetActiveRoundCycle(ctx, session.ID)
+		if err == nil {
+			if err := q.UpsertRoundParticipationStatus(ctx, domain.RoundParticipationStatus{
+				ID:           uuid.NewString(),
+				RoundCycleID: rc.ID,
+				PlayerID:     p.ID,
+				Status:       domain.ParticipationStatusPending,
+				UpdatedAt:    now,
+			}); err != nil {
+				return err
+			}
+		} else if err != domain.ErrNotFound {
 			return err
 		}
 		return q.AddGameMember(ctx, domain.GameMember{ID: uuid.NewString(), GameSessionID: session.ID, UserID: userID, Role: domain.GameMemberRoleMember, JoinedAt: now})

@@ -17,7 +17,14 @@ type APIResponse[T any] struct {
 // ErrorCapture is implemented by the response writer wrapper in the
 // middleware layer so that response.Error can stash the error for logging.
 type ErrorCapture interface {
-	SetError(error)
+	SetError(error, int)
+}
+
+// MetadataCapture is the internal writer contract used by middleware and
+// handlers to attach request-scoped metadata for structured logging.
+type MetadataCapture interface {
+	ErrorCapture
+	SetUserID(string)
 }
 
 func JSON[T any](w http.ResponseWriter, status int, data T) {
@@ -33,11 +40,11 @@ func Empty(w http.ResponseWriter) {
 }
 
 func Error(w http.ResponseWriter, err error) {
+	code, status, msg := mapError(err)
 	if ec, ok := w.(ErrorCapture); ok {
-		ec.SetError(err)
+		ec.SetError(err, code)
 	}
 
-	code, status, msg := mapError(err)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(APIResponse[any]{Code: code, Message: msg, Data: nil})

@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/xuanye/one-round/apps/server/internal/api/response"
+	"github.com/xuanye/one-round/apps/server/internal/domain"
 	jwtauth "github.com/xuanye/one-round/apps/server/internal/infra/auth"
 )
 
@@ -19,8 +21,14 @@ func Auth(tokens *jwtauth.JWTService) func(http.Handler) http.Handler {
 			}
 			userID, err := tokens.Verify(token)
 			if err != nil {
+				if capture, ok := w.(response.ErrorCapture); ok {
+					capture.SetError(domain.ErrUnauthorized, 40101)
+				}
 				http.Error(w, "unauthorized", http.StatusUnauthorized)
 				return
+			}
+			if capture, ok := w.(response.MetadataCapture); ok {
+				capture.SetUserID(userID)
 			}
 			next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), userIDKey{}, userID)))
 		})

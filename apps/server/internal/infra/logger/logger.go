@@ -130,6 +130,11 @@ func parseLogLevel(level string) zapcore.Level {
 }
 
 func NewZapLoggerAdapter(config *config.Config) Logger {
+	// Ensure the log directory exists before lumberjack tries to write.
+	if dir := path.Dir(config.Log.OutputPath); dir != "" && dir != "." {
+		_ = os.MkdirAll(dir, 0o755)
+	}
+
 	encoderConfig := zap.NewProductionEncoderConfig()
 	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	consoleEncoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())

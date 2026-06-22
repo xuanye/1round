@@ -14,6 +14,12 @@ type APIResponse[T any] struct {
 	Data    *T     `json:"data"`
 }
 
+// ErrorCapture is implemented by the response writer wrapper in the
+// middleware layer so that response.Error can stash the error for logging.
+type ErrorCapture interface {
+	SetError(error)
+}
+
 func JSON[T any](w http.ResponseWriter, status int, data T) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
@@ -27,6 +33,10 @@ func Empty(w http.ResponseWriter) {
 }
 
 func Error(w http.ResponseWriter, err error) {
+	if ec, ok := w.(ErrorCapture); ok {
+		ec.SetError(err)
+	}
+
 	code, status, msg := mapError(err)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

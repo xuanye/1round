@@ -1,16 +1,18 @@
 package middleware
 
 import (
-	"log/slog"
 	"net/http"
+
+	"github.com/xuanye/one-round/apps/server/internal/infra/logger"
+	"go.uber.org/zap"
 )
 
-func Recover(logger *slog.Logger) func(http.Handler) http.Handler {
+func Recover(log logger.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if recovered := recover(); recovered != nil {
-					logger.Error("request panic", "value", recovered)
+					log.Error("request panic", zap.Any("value", recovered))
 					http.Error(w, "internal error", http.StatusInternalServerError)
 				}
 			}()

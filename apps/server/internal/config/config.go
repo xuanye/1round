@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"time"
 
+	_ "go.uber.org/zap"
+	_ "gopkg.in/natefinch/lumberjack.v2"
 	"gopkg.in/yaml.v3"
 )
 
@@ -36,6 +38,10 @@ type Config struct {
 		AutoCheckIntervalSeconds int `yaml:"auto_check_interval_seconds"`
 		InactivityHours          int `yaml:"inactivity_hours"`
 	} `yaml:"settlement"`
+	Log struct {
+		Level      string `yaml:"level"`
+		OutputPath string `yaml:"output_path"`
+	} `yaml:"log"`
 }
 
 func Default() Config {
@@ -53,6 +59,8 @@ func Default() Config {
 	cfg.Realtime.ClientSendQueueSize = 32
 	cfg.Settlement.AutoCheckIntervalSeconds = 300
 	cfg.Settlement.InactivityHours = 24
+	cfg.Log.Level = "info"
+	cfg.Log.OutputPath = "./logs/oneround.log"
 	return cfg
 }
 
@@ -122,4 +130,6 @@ func applyEnv(cfg *Config) {
 	setInt("ONEROUND_AUTH_TOKEN_TTL_HOURS", &cfg.Auth.TokenTTLHours)
 	setInt("ONEROUND_SETTLEMENT_AUTO_CHECK_INTERVAL_SECONDS", &cfg.Settlement.AutoCheckIntervalSeconds)
 	setInt("ONEROUND_SETTLEMENT_INACTIVITY_HOURS", &cfg.Settlement.InactivityHours)
+	setString("ONEROUND_LOG_LEVEL", &cfg.Log.Level)
+	setString("ONEROUND_LOG_OUTPUT_PATH", &cfg.Log.OutputPath)
 }

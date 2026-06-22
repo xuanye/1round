@@ -24,3 +24,8 @@ realtime:
 settlement:
   auto_check_interval_seconds: 300
   inactivity_hours: 24
+
+log:
+  level: info
+  output_path: ./logs/oneround.log
+

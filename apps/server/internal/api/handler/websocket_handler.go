@@ -8,6 +8,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/xuanye/one-round/apps/server/internal/api/middleware"
+	"github.com/xuanye/one-round/apps/server/internal/api/response"
+	"github.com/xuanye/one-round/apps/server/internal/domain"
 	gamesvc "github.com/xuanye/one-round/apps/server/internal/app/game"
 	"github.com/xuanye/one-round/apps/server/internal/realtime"
 )
@@ -27,6 +29,9 @@ func (h *WebSocketHandler) Connect(w http.ResponseWriter, r *http.Request) {
 	gameSessionID := chi.URLParam(r, "id")
 	userID := middleware.UserID(r.Context())
 	if err := h.game.RequireMember(r.Context(), userID, gameSessionID); err != nil {
+		if capture, ok := w.(response.ErrorCapture); ok {
+			capture.SetError(domain.ErrForbidden, 40301)
+		}
 		http.Error(w, "forbidden", http.StatusForbidden)
 		return
 	}

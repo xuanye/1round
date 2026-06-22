@@ -80,7 +80,7 @@ func main() {
 			logAdapter.Error("wechat app_id and app_secret are required when fake auth is disabled")
 			os.Exit(1)
 		}
-		wechatClient = wechat.NewHTTPClient(cfg.Wechat.AppID, cfg.Wechat.AppSecret, "", http.DefaultClient)
+		wechatClient = wechat.NewHTTPClient(cfg.Wechat.AppID, cfg.Wechat.AppSecret, "", http.DefaultClient, logAdapter)
 	}
 
 	gameService := gamesvc.NewService(store, queries, hub, wechatClient, now)

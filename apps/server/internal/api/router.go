@@ -1,7 +1,6 @@
 package api
 
 import (
-	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -14,6 +13,7 @@ import (
 	scoretransfersvc "github.com/xuanye/one-round/apps/server/internal/app/scoretransfer"
 	settlementsvc "github.com/xuanye/one-round/apps/server/internal/app/settlement"
 	jwtauth "github.com/xuanye/one-round/apps/server/internal/infra/auth"
+	"github.com/xuanye/one-round/apps/server/internal/infra/logger"
 )
 
 type Services struct {
@@ -27,10 +27,10 @@ type Services struct {
 	WebSocket     *handler.WebSocketHandler
 }
 
-func NewRouter(logger *slog.Logger, services Services) http.Handler {
+func NewRouter(log logger.Logger, services Services) http.Handler {
 	r := chi.NewRouter()
-	r.Use(middleware.Recover(logger))
-	r.Use(middleware.RequestLog(logger))
+	r.Use(middleware.RequestLog(log))
+	r.Use(middleware.Recover(log))
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok"))

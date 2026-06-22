@@ -8,17 +8,16 @@ import (
 	"testing"
 	"time"
 
-	"log/slog"
-
 	"github.com/xuanye/one-round/apps/server/internal/api"
 	wshandler "github.com/xuanye/one-round/apps/server/internal/api/handler"
 	jwtauth "github.com/xuanye/one-round/apps/server/internal/infra/auth"
+	"github.com/xuanye/one-round/apps/server/internal/infra/logger"
 )
 
 func TestFakeAuthCreateJoinAddSubmitSummaryRankingAPI(t *testing.T) {
 	app := newTestApp(t)
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
-	router := api.NewRouter(slog.Default(), api.Services{
+	router := api.NewRouter(logger.NewConsole(), api.Services{
 		Auth: app.auth, Game: app.game, Player: app.player, ScoreTransfer: app.scoreTransfer, Settlement: app.settlement, Query: app.query,
 		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
 	})
@@ -69,7 +68,7 @@ func TestFakeAuthCreateJoinAddSubmitSummaryRankingAPI(t *testing.T) {
 func TestLeaveGameAPI(t *testing.T) {
 	app := newTestApp(t)
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
-	router := api.NewRouter(slog.Default(), api.Services{
+	router := api.NewRouter(logger.NewConsole(), api.Services{
 		Auth: app.auth, Game: app.game, Player: app.player, ScoreTransfer: app.scoreTransfer, Settlement: app.settlement, Query: app.query,
 		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
 	})
@@ -88,7 +87,7 @@ func TestLeaveGameAPI(t *testing.T) {
 func TestLeaveRequiresZeroScoreAPI(t *testing.T) {
 	app := newTestApp(t)
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
-	router := api.NewRouter(slog.Default(), api.Services{
+	router := api.NewRouter(logger.NewConsole(), api.Services{
 		Auth: app.auth, Game: app.game, Player: app.player, ScoreTransfer: app.scoreTransfer, Settlement: app.settlement, Query: app.query,
 		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
 	})
@@ -141,7 +140,7 @@ func TestLeaveRequiresZeroScoreAPI(t *testing.T) {
 func TestCurrentPreviewJoinAndProfileAPI(t *testing.T) {
 	app := newTestApp(t)
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
-	router := api.NewRouter(slog.Default(), api.Services{
+	router := api.NewRouter(logger.NewConsole(), api.Services{
 		Auth: app.auth, Game: app.game, Player: app.player, ScoreTransfer: app.scoreTransfer, Settlement: app.settlement, Query: app.query,
 		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
 	})
@@ -171,7 +170,7 @@ func TestCurrentPreviewJoinAndProfileAPI(t *testing.T) {
 func TestJoinMiniProgramCodeAPI(t *testing.T) {
 	app := newTestApp(t)
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
-	router := api.NewRouter(slog.Default(), api.Services{
+	router := api.NewRouter(logger.NewConsole(), api.Services{
 		Auth: app.auth, Game: app.game, Player: app.player, ScoreTransfer: app.scoreTransfer, Settlement: app.settlement, Query: app.query,
 		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
 	})
@@ -190,7 +189,7 @@ func TestJoinMiniProgramCodeAPI(t *testing.T) {
 func TestCurrentGameReturnsNullWhenUserHasNoActiveGame(t *testing.T) {
 	app := newTestApp(t)
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
-	router := api.NewRouter(slog.Default(), api.Services{
+	router := api.NewRouter(logger.NewConsole(), api.Services{
 		Auth: app.auth, Game: app.game, Player: app.player, ScoreTransfer: app.scoreTransfer, Settlement: app.settlement, Query: app.query,
 		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
 	})
@@ -338,7 +337,7 @@ func patchJSONExpectStatus(t *testing.T, router http.Handler, token, path string
 func TestGameScoringLifecycleE2E(t *testing.T) {
 	app := newTestApp(t)
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
-	router := api.NewRouter(slog.Default(), api.Services{
+	router := api.NewRouter(logger.NewConsole(), api.Services{
 		Auth: app.auth, Game: app.game, Player: app.player, ScoreTransfer: app.scoreTransfer, Settlement: app.settlement, Query: app.query,
 		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
 	})
@@ -536,7 +535,7 @@ func TestGameScoringLifecycleE2E(t *testing.T) {
 func TestPublicSettlementAPI(t *testing.T) {
 	app := newTestApp(t)
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
-	router := api.NewRouter(slog.Default(), api.Services{
+	router := api.NewRouter(logger.NewConsole(), api.Services{
 		Auth: app.auth, Game: app.game, Player: app.player,
 		ScoreTransfer: app.scoreTransfer, Settlement: app.settlement, Query: app.query,
 		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),

@@ -4,14 +4,15 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
-	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
 	gamesvc "github.com/xuanye/one-round/apps/server/internal/app/game"
 	"github.com/xuanye/one-round/apps/server/internal/domain"
+	"github.com/xuanye/one-round/apps/server/internal/infra/logger"
 	"github.com/xuanye/one-round/apps/server/internal/infra/sqlite"
 	"github.com/xuanye/one-round/apps/server/internal/realtime"
+	"go.uber.org/zap"
 )
 
 type Service struct {
@@ -20,11 +21,11 @@ type Service struct {
 	game   *gamesvc.Service
 	hub    realtime.Hub
 	now    func() time.Time
-	logger *slog.Logger
+	logger logger.Logger
 }
 
-func NewService(store *sqlite.Store, q *sqlite.Queries, game *gamesvc.Service, hub realtime.Hub, now func() time.Time) *Service {
-	return &Service{store: store, q: q, game: game, hub: hub, now: now, logger: slog.Default()}
+func NewService(store *sqlite.Store, q *sqlite.Queries, game *gamesvc.Service, hub realtime.Hub, now func() time.Time, log logger.Logger) *Service {
+	return &Service{store: store, q: q, game: game, hub: hub, now: now, logger: log}
 }
 
 func GenerateShareToken() (string, error) {
@@ -89,7 +90,7 @@ func (s *Service) SettleInactiveGames(ctx context.Context, threshold time.Durati
 	for _, c := range candidates {
 		action, err := s.settleOneInactive(ctx, c.ID, now)
 		if err != nil {
-			s.logger.Error("auto settlement failed for game", "game_id", c.ID, "error", err)
+			s.logger.Error("auto settlement failed for game", zap.String("game_id", c.ID), zap.Error(err))
 			continue
 		}
 		switch action {

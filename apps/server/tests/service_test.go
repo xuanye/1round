@@ -17,6 +17,7 @@ import (
 	settlementsvc "github.com/xuanye/one-round/apps/server/internal/app/settlement"
 	"github.com/xuanye/one-round/apps/server/internal/domain"
 	jwtauth "github.com/xuanye/one-round/apps/server/internal/infra/auth"
+	"github.com/xuanye/one-round/apps/server/internal/infra/logger"
 	"github.com/xuanye/one-round/apps/server/internal/infra/sqlite"
 	"github.com/xuanye/one-round/apps/server/internal/infra/wechat"
 	"github.com/xuanye/one-round/apps/server/internal/realtime"
@@ -859,7 +860,7 @@ func newTestApp(t *testing.T) *testApp {
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
 	wechatClient := wechat.FakeClient{}
 	gameService := gamesvc.NewService(store, q, hub, wechatClient, now)
-	settlementService := settlementsvc.NewService(store, q, gameService, hub, now)
+	settlementService := settlementsvc.NewService(store, q, gameService, hub, now, logger.NewNop())
 	roundCycleService := roundcycle.NewService(q, now)
 	return &testApp{
 		auth:          authsvc.NewService(q, wechatClient, tokens, now),

@@ -25,6 +25,7 @@ type Session struct {
 
 type Client interface {
 	CodeToSession(ctx context.Context, code string) (Session, error)
+	GetQRCode(ctx context.Context, path string) ([]byte, error)
 	GetUnlimitedQRCode(ctx context.Context, page string, scene string) ([]byte, error)
 }
 
@@ -171,6 +172,65 @@ func (c *HTTPClient) GetUnlimitedQRCode(ctx context.Context, page string, scene 
 		}
 		err := fmt.Errorf("%w: wechat getwxacodeunlimit error %d: %s", domain.ErrExternalServiceFailed, apiErr.ErrCode, apiErr.ErrMsg)
 		c.logRequestFailure("get_unlimited_qrcode", res.StatusCode, err, zap.Int("wechat_errcode", apiErr.ErrCode), zap.String("wechat_errmsg", apiErr.ErrMsg))
+		return nil, err
+	}
+	return body, nil
+}
+
+func (c *HTTPClient) GetQRCode(ctx context.Context, path string) ([]byte, error) {
+	path = strings.TrimSpace(path)
+	if c.appID == "" || c.appSecret == "" || path == "" {
+		return nil, domain.ErrInvalidArgument
+	}
+
+	accessToken, err := c.fetchAccessToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	endpoint := fmt.Sprintf("%s/wxa/getwxacode?access_token=%s", c.baseURL, url.QueryEscape(accessToken))
+	payload, err := json.Marshal(map[string]any{
+		"path":       path,
+		"check_path": false,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(payload))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := c.client.Do(req)
+	if err != nil {
+		c.logRequestFailure("get_qrcode", 0, err)
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		c.logRequestFailure("get_qrcode", res.StatusCode, err)
+		return nil, err
+	}
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		err := fmt.Errorf("wechat getwxacode status %d", res.StatusCode)
+		c.logRequestFailure("get_qrcode", res.StatusCode, err)
+		return nil, err
+	}
+	if looksLikeWechatError(body) {
+		var apiErr struct {
+			ErrCode int    `json:"errcode"`
+			ErrMsg  string `json:"errmsg"`
+		}
+		if err := json.Unmarshal(body, &apiErr); err != nil {
+			c.logRequestFailure("get_qrcode", res.StatusCode, err)
+			return nil, err
+		}
+		err := fmt.Errorf("%w: wechat getwxacode error %d: %s", domain.ErrExternalServiceFailed, apiErr.ErrCode, apiErr.ErrMsg)
+		c.logRequestFailure("get_qrcode", res.StatusCode, err, zap.Int("wechat_errcode", apiErr.ErrCode), zap.String("wechat_errmsg", apiErr.ErrMsg))
 		return nil, err
 	}
 	return body, nil

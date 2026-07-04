@@ -1,6 +1,6 @@
-<view class="page detail-page">
+<view class="page detail-page {{isPublicShare ? 'public-share-page' : ''}}">
   <!-- Topbar -->
-  <view class="detail-topbar">
+  <view wx:if="{{!isPublicShare}}" class="detail-topbar">
     <view style="width: 76rpx;"></view>
     <view class="detail-title">
       <view>{{game.name}}</view>
@@ -75,40 +75,74 @@
 
   <!-- SETTLED MODE UI -->
   <block wx:else>
-    <view class="section-row">
-      <view class="section-label" style="color: #ba1a1a;">已结算 (只读)</view>
-      <view class="settled-badge" style="background: rgba(186, 26, 26, 0.1); color: #ba1a1a; font-size: 22rpx; font-weight: bold; padding: 4rpx 16rpx; border-radius: 8rpx;">零和已冻结</view>
-    </view>
+    <block wx:if="{{isPublicShare}}">
+      <view class="public-share-hero">
+        <view class="public-brand">一局一分</view>
+        <view class="public-title">{{game.name}}</view>
+        <view class="public-meta">{{game.createdAtText}} 已结算</view>
+      </view>
 
-    <!-- All Historical Participants Section -->
-    <view class="participant-list card" style="border-top: 4rpx solid #ba1a1a;">
-      <view wx:for="{{participants}}" wx:key="id" class="participant-row">
-        <view class="person">
-          <view class="avatar-wrap">
-            <view class="avatar" style="background: #efeeeb; color: #6f7976;">{{item.initial}}</view>
-          </view>
+      <view class="public-scoreboard card">
+        <view class="public-card-head">
           <view>
-            <view class="person-name">{{item.name}}</view>
-            <view class="person-role" style="color: #6f7976;">最终分值</view>
+            <view class="public-card-kicker">公开结算</view>
+            <view class="public-card-title">最终分值</view>
+          </view>
+          <view class="public-readonly-badge">只读</view>
+        </view>
+
+        <view class="public-player-list">
+          <view wx:for="{{participants}}" wx:key="id" class="public-player-row">
+            <view class="public-player-left">
+              <view class="public-rank">{{index + 1}}</view>
+              <view class="public-player-name">{{item.name}}</view>
+            </view>
+            <view class="public-score {{item.scoreTone}}">{{item.score}}</view>
           </view>
         </view>
-        <view class="score {{item.scoreTone}}">{{item.score}}</view>
       </view>
-    </view>
 
-    <!-- Share settlement result card -->
-    <button class="button-primary score-entry" open-type="share" style="background: #1f695d; box-shadow: 0 12rpx 34rpx rgba(31, 105, 93, 0.16);">
-      分享结算卡片
-    </button>
+      <button class="button-primary public-entry-button" bindtap="enterMiniProgram" hover-class="tap-feedback">
+        进入一局一分
+      </button>
+    </block>
+
+    <block wx:else>
+      <view class="section-row">
+      <view class="section-label" style="color: #ba1a1a;">已结算 (只读)</view>
+      <view class="settled-badge" style="background: rgba(186, 26, 26, 0.1); color: #ba1a1a; font-size: 22rpx; font-weight: bold; padding: 4rpx 16rpx; border-radius: 8rpx;">零和已冻结</view>
+      </view>
+
+      <!-- All Historical Participants Section -->
+      <view class="participant-list card" style="border-top: 4rpx solid #ba1a1a;">
+        <view wx:for="{{participants}}" wx:key="id" class="participant-row">
+          <view class="person">
+            <view class="avatar-wrap">
+              <view class="avatar" style="background: #efeeeb; color: #6f7976;">{{item.initial}}</view>
+            </view>
+            <view>
+              <view class="person-name">{{item.name}}</view>
+              <view class="person-role" style="color: #6f7976;">最终分值</view>
+            </view>
+          </view>
+          <view class="score {{item.scoreTone}}">{{item.score}}</view>
+        </view>
+      </view>
+
+      <!-- Save settlement poster with Mini Program code -->
+      <button class="button-primary score-entry" bindtap="saveSettlementPoster" disabled="{{isSavingPoster}}" style="background: #1f695d; box-shadow: 0 12rpx 34rpx rgba(31, 105, 93, 0.16);">
+        {{isSavingPoster ? '正在生成图片...' : '保存结算图片'}}
+      </button>
+    </block>
   </block>
 
   <!-- Score Transfers List Section -->
-  <view class="history-head">
+  <view wx:if="{{!isPublicShare}}" class="history-head">
     <view class="section-label">计分明细</view>
     <text class="iconfont history-header-icon">{{icons.history}}</text>
   </view>
 
-  <view class="transfer-list">
+  <view wx:if="{{!isPublicShare}}" class="transfer-list">
     <view wx:for="{{transfers}}" wx:key="id" class="transfer-card">
       <text class="iconfont transfer-icon">{{item.iconCode}}</text>
       <view class="transfer-main">
@@ -137,7 +171,7 @@
   </view>
 
   <!-- Bottom Actions Fixed Block -->
-  <view class="bottom-actions">
+  <view wx:if="{{!isPublicShare}}" class="bottom-actions">
     <!-- Active only finish button -->
     <button wx:if="{{game.status === 'active'}}" class="finish-button" bindtap="finish" hover-class="tap-feedback">
       <text class="iconfont button-icon">{{icons.flag}}</text>
@@ -173,4 +207,6 @@
       <button class="invite-close-btn" bindtap="hideInvite" hover-class="tap-feedback">关闭</button>
     </view>
   </view>
+
+  <canvas canvas-id="settlementPoster" class="poster-canvas"></canvas>
 </view>

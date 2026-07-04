@@ -81,7 +81,6 @@ export type PublicSettlement = {
   name: string;
   settledAt: string;
   participants: SettlementParticipant[];
-  scoreTransfers: ScoreTransfer[];
 };
 
 export type HistoryItem = {

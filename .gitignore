@@ -3,6 +3,8 @@ node_modules/
 dist/
 coverage/
 *.log
+.superpowers/
+.pnpm-store/
 
 apps/server/data/
 apps/server/.cache/

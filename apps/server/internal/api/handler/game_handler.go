@@ -104,6 +104,18 @@ func (h *GameHandler) JoinMiniProgramCode(w http.ResponseWriter, r *http.Request
 	_, _ = w.Write(image)
 }
 
+func (h *GameHandler) SettlementMiniProgramCode(w http.ResponseWriter, r *http.Request) {
+	image, err := h.game.SettlementMiniProgramCode(r.Context(), middleware.UserID(r.Context()), chi.URLParam(r, "id"))
+	if err != nil {
+		response.Error(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Cache-Control", "no-store")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(image)
+}
+
 func (h *GameHandler) Get(w http.ResponseWriter, r *http.Request) {
 	result, err := h.game.GetForMember(r.Context(), middleware.UserID(r.Context()), chi.URLParam(r, "id"))
 	if err != nil {

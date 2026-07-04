@@ -303,6 +303,13 @@ Page({
         await this.loadPublicSettlement();
         return;
       }
+      if (!this.data.id) {
+        wx.showToast({ title: '结算链接无效', icon: 'none' });
+        setTimeout(() => {
+          wx.redirectTo({ url: '/pages/home/index' });
+        }, 1500);
+        return;
+      }
 
       await requireLogin();
       await this.loadGameData();
@@ -582,47 +589,50 @@ Page({
   drawSettlementPoster(codePath: string): Promise<string> {
     return new Promise((resolve, reject) => {
       const width = 926;
-      const height = 1698;
+      const height = 1800;
       const ctx = wx.createCanvasContext('settlementPoster', this);
-      const rankingParticipants = this.data.participants.slice(0, 3);
-      const topParticipant = rankingParticipants[0];
+      const topParticipant = this.data.participants[0];
+      const rankingParticipants = this.data.participants.slice(1, 4);
 
       ctx.setFillStyle('#F8F4EC');
       ctx.fillRect(0, 0, width, height);
 
-      fillRoundRect(ctx, 48, 56, 830, 1588, 34, '#FFFCF6');
-      fillRoundRect(ctx, 48, 56, 830, 650, 34, '#00604F');
-      fillRoundRect(ctx, 48, 56, 830, 156, 34, '#0D564B');
+      fillRoundRect(ctx, 58, 70, 810, 1670, 30, 'rgba(72, 48, 18, 0.08)');
+      fillRoundRect(ctx, 48, 56, 830, 1688, 34, '#FFFCF6');
 
-      ctx.setFillStyle('rgba(255, 255, 255, 0.10)');
-      ctx.setFontSize(390);
+      fillRoundRect(ctx, 48, 56, 830, 650, 34, '#00604F');
+      fillRoundRect(ctx, 48, 56, 830, 158, 34, '#0B594D');
+
+      ctx.setFillStyle('rgba(255, 255, 255, 0.08)');
+      ctx.setFontSize(410);
       ctx.setTextAlign('right');
-      ctx.fillText('1', 860, 572);
+      ctx.fillText('1', 850, 580);
       ctx.setTextAlign('left');
 
       ctx.setFillStyle('#FFFCF6');
       ctx.beginPath();
-      ctx.moveTo(48, 634);
-      ctx.quadraticCurveTo(464, 760, 878, 606);
+      ctx.moveTo(48, 636);
+      ctx.quadraticCurveTo(464, 746, 878, 608);
       ctx.lineTo(878, 706);
       ctx.lineTo(48, 706);
       ctx.closePath();
       ctx.fill();
-      ctx.setStrokeStyle('#D89C48');
+
+      ctx.setStrokeStyle('#D99A3D');
       ctx.setLineWidth(5);
       ctx.beginPath();
-      ctx.moveTo(48, 634);
-      ctx.quadraticCurveTo(464, 760, 878, 606);
+      ctx.moveTo(48, 636);
+      ctx.quadraticCurveTo(464, 746, 878, 608);
       ctx.stroke();
 
       drawPosterLogo(ctx, 146, 148);
-      drawBoldText(ctx, '一局一分', 198, 168, '#FFFFFF', 42);
+      drawBoldText(ctx, '一局一分', 198, 164, '#FFFFFF', 44);
 
       fillRoundRect(ctx, 632, 118, 196, 62, 31, '#B8742C');
       drawGlobeIcon(ctx, 665, 149);
-      drawBoldText(ctx, '公开结算', 700, 161, '#FFFFFF', 30);
+      drawBoldText(ctx, '公开结算', 700, 160, '#FFFFFF', 30);
 
-      ctx.setStrokeStyle('rgba(255, 255, 255, 0.35)');
+      ctx.setStrokeStyle('rgba(255, 255, 255, 0.36)');
       ctx.setLineWidth(2);
       drawDashedLine(ctx, 104, 232, 824, 12, 8);
 
@@ -632,12 +642,12 @@ Page({
       ctx.fillText(`${this.data.game.createdAtText} 已结算`, 104, 410);
 
       if (topParticipant) {
-        fillRoundRect(ctx, 104, 448, 512, 106, 16, 'rgba(0, 0, 0, 0.12)');
-        strokeRoundRect(ctx, 104, 448, 512, 106, 16, 'rgba(255, 210, 148, 0.5)', 2);
+        fillRoundRect(ctx, 104, 448, 512, 106, 16, 'rgba(0, 0, 0, 0.10)');
+        strokeRoundRect(ctx, 104, 448, 512, 106, 16, 'rgba(255, 210, 148, 0.54)', 2);
         fillCircle(ctx, 168, 501, 36, '#F4B968');
         ctx.setFillStyle('#00604F');
         ctx.setFontSize(34);
-        ctx.fillText('★', 153, 513);
+        ctx.fillText('★', 152, 513);
         ctx.setFillStyle('#F4B968');
         ctx.setFontSize(30);
         ctx.fillText('本局最高', 230, 490);
@@ -655,21 +665,22 @@ Page({
         ctx.fillText(topParticipant.score, 430, 526);
       }
 
-      fillRoundRect(ctx, 92, 714, 740, 492, 24, '#FFFFFF');
-      strokeRoundRect(ctx, 92, 714, 740, 492, 24, '#E7DAC8', 2);
+      fillRoundRect(ctx, 92, 714, 740, 560, 24, 'rgba(86, 55, 22, 0.08)');
+      fillRoundRect(ctx, 92, 706, 740, 560, 24, '#FFFFFF');
+      strokeRoundRect(ctx, 92, 706, 740, 560, 24, '#E7DAC8', 2);
       ctx.setFillStyle('#1F695D');
       ctx.setFontSize(28);
-      ctx.fillText('最终排名', 134, 778);
-      drawBoldText(ctx, '结算分值', 134, 830, '#1A1C1A', 48);
+      ctx.fillText('最终排名', 134, 780);
+      drawBoldText(ctx, '结算分值', 134, 834, '#1A1C1A', 48);
 
-      let y = 902;
+      let y = 918;
       rankingParticipants.forEach((p, index) => {
-        const rank = index + 1;
-        drawMedalBadge(ctx, rank, 172, y - 10);
+        const rank = index + 2;
+        drawMedalBadge(ctx, rank, 172, y - 8);
         ctx.setStrokeStyle('#D8D8D8');
         ctx.setLineWidth(2);
         ctx.beginPath();
-        ctx.moveTo(256, y - 36);
+        ctx.moveTo(256, y - 42);
         ctx.lineTo(256, y + 28);
         ctx.stroke();
         drawBoldText(ctx, truncatePosterText(p.name, 6), 296, y + 10, '#1A1C1A', 46);
@@ -681,41 +692,44 @@ Page({
         if (index < rankingParticipants.length - 1) {
           ctx.setStrokeStyle('#EDE3D4');
           ctx.setLineWidth(2);
-          drawDashedLine(ctx, 134, y + 70, 790, 10, 8);
+          drawDashedLine(ctx, 134, y + 76, 790, 10, 8);
         }
-        y += 130;
+        y += 132;
       });
 
-      fillRoundRect(ctx, 132, 1280, 270, 270, 14, '#FFFFFF');
-      strokeRoundRect(ctx, 132, 1280, 270, 270, 14, '#D8CDBA', 2);
+      fillRoundRect(ctx, 132, 1360, 270, 270, 14, '#FFFFFF');
+      strokeRoundRect(ctx, 132, 1360, 270, 270, 14, '#D8CDBA', 2);
       ctx.setStrokeStyle('#00604F');
       ctx.setLineWidth(2);
-      drawDashedLine(ctx, 154, 1304, 380, 8, 6);
-      ctx.drawImage(codePath, 170, 1330, 194, 194);
+      drawDashedLine(ctx, 154, 1384, 380, 8, 6);
+      drawVerticalDashedLine(ctx, 154, 1384, 1610, 8, 6);
+      drawVerticalDashedLine(ctx, 380, 1384, 1610, 8, 6);
+      drawDashedLine(ctx, 154, 1610, 380, 8, 6);
+      ctx.drawImage(codePath, 170, 1408, 194, 194);
 
       ctx.setStrokeStyle('#E9DDCA');
       ctx.setLineWidth(2);
-      drawVerticalDashedLine(ctx, 444, 1288, 1544, 8, 8);
+      drawVerticalDashedLine(ctx, 444, 1368, 1624, 8, 8);
 
-      drawBoldText(ctx, '扫码查看公开结算页', 494, 1378, '#1A1C1A', 34);
-      fillRoundRect(ctx, 494, 1420, 54, 7, 4, '#C9832B');
+      drawBoldText(ctx, '扫码查看公开结算页', 494, 1458, '#1A1C1A', 34);
+      fillRoundRect(ctx, 494, 1500, 54, 7, 4, '#C9832B');
       ctx.setFillStyle('#6F7976');
       ctx.setFontSize(28);
-      ctx.fillText('不含头像和计分明细', 494, 1492);
+      ctx.fillText('不含头像和计分明细', 494, 1572);
 
       ctx.setStrokeStyle('#E6D8C2');
       ctx.setLineWidth(2);
       ctx.beginPath();
-      ctx.moveTo(100, 1588);
-      ctx.lineTo(420, 1588);
-      ctx.moveTo(506, 1588);
-      ctx.lineTo(826, 1588);
+      ctx.moveTo(100, 1688);
+      ctx.lineTo(420, 1688);
+      ctx.moveTo(506, 1688);
+      ctx.lineTo(826, 1688);
       ctx.stroke();
-      fillCircle(ctx, 464, 1588, 22, '#E9DDCA');
+      fillCircle(ctx, 464, 1688, 22, '#E9DDCA');
       ctx.setFillStyle('#FFFFFF');
       ctx.setFontSize(34);
       ctx.setTextAlign('center');
-      ctx.fillText('1', 464, 1600);
+      ctx.fillText('1', 464, 1700);
       ctx.setTextAlign('left');
 
       ctx.draw(false, () => {

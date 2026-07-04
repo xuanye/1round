@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
-	"net/url"
 	"strings"
 	"time"
 
@@ -442,8 +441,7 @@ func (s *Service) SettlementMiniProgramCode(ctx context.Context, userID, gameSes
 	if s.wechat == nil {
 		return nil, domain.ErrExternalServiceFailed
 	}
-	path := settlementSharePagePath + "?shareToken=" + url.QueryEscape(*gameSession.PublicShareToken)
-	return s.wechat.GetQRCode(ctx, path)
+	return s.wechat.GetUnlimitedQRCode(ctx, settlementSharePagePath, "shareToken="+*gameSession.PublicShareToken)
 }
 
 func (s *Service) requireMember(ctx context.Context, userID, gameSessionID string) error {

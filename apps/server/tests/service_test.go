@@ -348,6 +348,38 @@ func TestJoinMiniProgramCodeRequiresActiveMemberGame(t *testing.T) {
 	}
 }
 
+func TestSettlementMiniProgramCodeRequiresFinishedMemberGame(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	owner := login(t, app, "owner-code")
+	game := createGame(t, app, owner, nil)
+
+	if _, err := app.game.SettlementMiniProgramCode(ctx, owner, game.ID); err != domain.ErrPublicShareUnavailable {
+		t.Fatalf("expected public share unavailable for active game, got %v", err)
+	}
+
+	finished, err := app.settlement.FinishDirect(ctx, owner, game.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if finished.PublicShareToken == nil || *finished.PublicShareToken == "" {
+		t.Fatal("expected public share token")
+	}
+
+	image, err := app.game.SettlementMiniProgramCode(ctx, owner, game.ID)
+	if err != nil {
+		t.Fatalf("SettlementMiniProgramCode returned error: %v", err)
+	}
+	if len(image) == 0 {
+		t.Fatal("expected mini program code image bytes")
+	}
+
+	outsider := login(t, app, "outsider-code")
+	if _, err := app.game.SettlementMiniProgramCode(ctx, outsider, game.ID); err != domain.ErrGameMemberRequired {
+		t.Fatalf("expected member required error, got %v", err)
+	}
+}
+
 func TestJoinEnforcesCapacityAndDisplayNameUniqueness(t *testing.T) {
 	app := newTestApp(t)
 	ctx := context.Background()

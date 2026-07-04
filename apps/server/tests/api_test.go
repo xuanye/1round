@@ -186,6 +186,28 @@ func TestJoinMiniProgramCodeAPI(t *testing.T) {
 	}
 }
 
+func TestSettlementMiniProgramCodeAPI(t *testing.T) {
+	app := newTestApp(t)
+	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
+	router := api.NewRouter(logger.NewConsole(), api.Services{
+		Auth: app.auth, Game: app.game, Player: app.player, ScoreTransfer: app.scoreTransfer, Settlement: app.settlement, Query: app.query,
+		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
+	})
+
+	ownerToken := loginHTTP(t, router, "owner-code")
+	game := postJSON[map[string]any](t, router, ownerToken, "/api/game-sessions", map[string]any{"name": "家庭聚会"})
+	gameID := game["id"].(string)
+	_ = postJSON[map[string]any](t, router, ownerToken, "/api/game-sessions/"+gameID+"/finish", nil)
+
+	body, contentType := getBinary(t, router, ownerToken, "/api/game-sessions/"+gameID+"/settlement-mini-program-code")
+	if len(body) == 0 {
+		t.Fatal("expected mini program code bytes")
+	}
+	if contentType != "image/png" {
+		t.Fatalf("unexpected content-type %q", contentType)
+	}
+}
+
 func TestCurrentGameReturnsNullWhenUserHasNoActiveGame(t *testing.T) {
 	app := newTestApp(t)
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)

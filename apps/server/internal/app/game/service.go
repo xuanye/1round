@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -16,13 +17,14 @@ import (
 
 const inviteAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 const joinPagePath = "pages/game-join/index"
+const settlementSharePagePath = "pages/game-detail/index"
 
 type Service struct {
-	store *sqlite.Store
-	q     *sqlite.Queries
-	hub   realtime.Hub
+	store  *sqlite.Store
+	q      *sqlite.Queries
+	hub    realtime.Hub
 	wechat wechat.Client
-	now   func() time.Time
+	now    func() time.Time
 }
 
 func NewService(store *sqlite.Store, q *sqlite.Queries, hub realtime.Hub, wechatClient wechat.Client, now func() time.Time) *Service {
@@ -421,6 +423,27 @@ func (s *Service) JoinMiniProgramCode(ctx context.Context, userID, gameSessionID
 		return nil, domain.ErrExternalServiceFailed
 	}
 	return s.wechat.GetUnlimitedQRCode(ctx, joinPagePath, "code="+gameSession.InviteCode)
+}
+
+func (s *Service) SettlementMiniProgramCode(ctx context.Context, userID, gameSessionID string) ([]byte, error) {
+	if err := s.requireMember(ctx, userID, gameSessionID); err != nil {
+		return nil, err
+	}
+	gameSession, err := s.q.GetGameSession(ctx, gameSessionID)
+	if err != nil {
+		return nil, err
+	}
+	if gameSession.Status != domain.GameSessionStatusFinished {
+		return nil, domain.ErrPublicShareUnavailable
+	}
+	if gameSession.PublicShareToken == nil || strings.TrimSpace(*gameSession.PublicShareToken) == "" {
+		return nil, domain.ErrPublicShareUnavailable
+	}
+	if s.wechat == nil {
+		return nil, domain.ErrExternalServiceFailed
+	}
+	path := settlementSharePagePath + "?shareToken=" + url.QueryEscape(*gameSession.PublicShareToken)
+	return s.wechat.GetQRCode(ctx, path)
 }
 
 func (s *Service) requireMember(ctx context.Context, userID, gameSessionID string) error {

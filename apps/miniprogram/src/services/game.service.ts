@@ -100,3 +100,12 @@ export async function getJoinMiniProgramCode(gameSessionId: string): Promise<str
   fileSystemManager.writeFileSync(filePath, base64, 'base64');
   return filePath;
 }
+
+export async function getSettlementMiniProgramCode(gameSessionId: string): Promise<string> {
+  const imageData = await requestBinary({ url: `/api/game-sessions/${gameSessionId}/settlement-mini-program-code` });
+  const fileSystemManager = wx.getFileSystemManager();
+  const filePath = `${wx.env.USER_DATA_PATH}/oneround-settlement-${gameSessionId}.png`;
+  const base64 = wx.arrayBufferToBase64(imageData);
+  fileSystemManager.writeFileSync(filePath, base64, 'base64');
+  return filePath;
+}

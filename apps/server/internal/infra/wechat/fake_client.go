@@ -28,3 +28,12 @@ func (FakeClient) GetUnlimitedQRCode(_ context.Context, page string, scene strin
 	// 1x1 PNG for tests and fake-auth local mode.
 	return base64.StdEncoding.DecodeString("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jXioAAAAASUVORK5CYII=")
 }
+
+func (FakeClient) GetQRCode(_ context.Context, path string) ([]byte, error) {
+	if strings.TrimSpace(path) == "" {
+		return nil, domain.ErrInvalidArgument
+	}
+
+	// 1x1 PNG for tests and fake-auth local mode.
+	return base64.StdEncoding.DecodeString("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jXioAAAAASUVORK5CYII=")
+}

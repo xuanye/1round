@@ -21,17 +21,27 @@ type capturedWechatLogger struct {
 	entries []capturedWechatLog
 }
 
-func (l *capturedWechatLogger) Info(message string, fields ...zap.Field)  { l.entries = append(l.entries, newCapturedWechatLog("info", message, fields...)) }
-func (l *capturedWechatLogger) Debug(message string, fields ...zap.Field) { l.entries = append(l.entries, newCapturedWechatLog("debug", message, fields...)) }
-func (l *capturedWechatLogger) Error(message string, fields ...zap.Field) { l.entries = append(l.entries, newCapturedWechatLog("error", message, fields...)) }
-func (l *capturedWechatLogger) Warn(message string, fields ...zap.Field)  { l.entries = append(l.entries, newCapturedWechatLog("warn", message, fields...)) }
-func (l *capturedWechatLogger) Fatal(message string, fields ...zap.Field) { l.entries = append(l.entries, newCapturedWechatLog("fatal", message, fields...)) }
-func (l *capturedWechatLogger) InfoF(string, ...any)                       {}
-func (l *capturedWechatLogger) DebugF(string, ...any)                      {}
-func (l *capturedWechatLogger) ErrorF(string, ...any)                      {}
-func (l *capturedWechatLogger) WarnF(string, ...any)                       {}
-func (l *capturedWechatLogger) FatalF(string, ...any)                      {}
-func (l *capturedWechatLogger) Sync() error                                { return nil }
+func (l *capturedWechatLogger) Info(message string, fields ...zap.Field) {
+	l.entries = append(l.entries, newCapturedWechatLog("info", message, fields...))
+}
+func (l *capturedWechatLogger) Debug(message string, fields ...zap.Field) {
+	l.entries = append(l.entries, newCapturedWechatLog("debug", message, fields...))
+}
+func (l *capturedWechatLogger) Error(message string, fields ...zap.Field) {
+	l.entries = append(l.entries, newCapturedWechatLog("error", message, fields...))
+}
+func (l *capturedWechatLogger) Warn(message string, fields ...zap.Field) {
+	l.entries = append(l.entries, newCapturedWechatLog("warn", message, fields...))
+}
+func (l *capturedWechatLogger) Fatal(message string, fields ...zap.Field) {
+	l.entries = append(l.entries, newCapturedWechatLog("fatal", message, fields...))
+}
+func (l *capturedWechatLogger) InfoF(string, ...any)  {}
+func (l *capturedWechatLogger) DebugF(string, ...any) {}
+func (l *capturedWechatLogger) ErrorF(string, ...any) {}
+func (l *capturedWechatLogger) WarnF(string, ...any)  {}
+func (l *capturedWechatLogger) FatalF(string, ...any) {}
+func (l *capturedWechatLogger) Sync() error           { return nil }
 
 func newCapturedWechatLog(level, message string, fields ...zap.Field) capturedWechatLog {
 	entry := capturedWechatLog{
@@ -195,6 +205,46 @@ func TestHTTPClientGetUnlimitedQRCodeCallsWechatEndpoints(t *testing.T) {
 		t.Fatalf("GetUnlimitedQRCode returned error: %v", err)
 	}
 	if string(image) != "png-bytes" {
+		t.Fatalf("unexpected image bytes %q", string(image))
+	}
+}
+
+func TestHTTPClientGetQRCodeCallsWechatEndpoints(t *testing.T) {
+	client := &http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
+		switch r.URL.Path {
+		case "/cgi-bin/token":
+			query := r.URL.Query()
+			if query.Get("appid") != "wx-test-app" {
+				t.Fatalf("unexpected appid %q", query.Get("appid"))
+			}
+			if query.Get("secret") != "test-secret" {
+				t.Fatalf("unexpected secret %q", query.Get("secret"))
+			}
+			return jsonResponse(http.StatusOK, map[string]string{"access_token": "access-token-123"}), nil
+		case "/wxa/getwxacode":
+			if r.URL.Query().Get("access_token") != "access-token-123" {
+				t.Fatalf("unexpected access token %q", r.URL.Query().Get("access_token"))
+			}
+			var payload map[string]any
+			if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+				t.Fatal(err)
+			}
+			if payload["path"] != "pages/game-detail/index?shareToken=share-token-123" {
+				t.Fatalf("unexpected path %#v", payload["path"])
+			}
+			return byteResponse(http.StatusOK, []byte("poster-code-bytes")), nil
+		default:
+			t.Fatalf("unexpected path %s", r.URL.Path)
+		}
+		return nil, nil
+	})}
+
+	wechatClient := NewHTTPClient("wx-test-app", "test-secret", "https://wechat.test", client, nil)
+	image, err := wechatClient.GetQRCode(context.Background(), "pages/game-detail/index?shareToken=share-token-123")
+	if err != nil {
+		t.Fatalf("GetQRCode returned error: %v", err)
+	}
+	if string(image) != "poster-code-bytes" {
 		t.Fatalf("unexpected image bytes %q", string(image))
 	}
 }

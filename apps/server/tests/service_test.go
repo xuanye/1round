@@ -249,6 +249,97 @@ func TestSubmitScoreTransferAccumulatesScoresAndRanking(t *testing.T) {
 	}
 }
 
+func TestScoreTransferHistoryShowsBalancesAndReversalInitiator(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	owner := login(t, app, "owner-code")
+	li := login(t, app, "li-code")
+	wang := login(t, app, "wang-code")
+	game := createGame(t, app, owner, nil)
+	_, err := app.game.Join(ctx, li, game.InviteCode, "李四")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = app.game.Join(ctx, wang, game.InviteCode, "王五")
+	if err != nil {
+		t.Fatal(err)
+	}
+	liPlayer, err := app.query.MyParticipant(ctx, li, game.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wangPlayer, err := app.query.MyParticipant(ctx, wang, game.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	first, err := app.scoreTransfer.Submit(ctx, owner, game.ID, scoretransfersvc.SubmitInput{
+		ReceiverPlayerIDs: []string{liPlayer.ID}, Amount: 10, IdempotencyKey: "first",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := app.scoreTransfer.Submit(ctx, owner, game.ID, scoretransfersvc.SubmitInput{
+		ReceiverPlayerIDs: []string{liPlayer.ID, wangPlayer.ID}, Amount: 20, IdempotencyKey: "second",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := app.scoreTransfer.Reverse(ctx, li, game.ID, second.ID, scoretransfersvc.ReverseInput{
+		IdempotencyKey: "reverse-second", Reason: "user_reversal",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	check := func(transfers []querysvc.ScoreTransferView) {
+		t.Helper()
+		if len(transfers) != 3 {
+			t.Fatalf("expected 3 records, got %d", len(transfers))
+		}
+		reversal := transfers[0]
+		if reversal.InitiatedByName != "李四" || reversal.ReversalOfTransferID == nil || *reversal.ReversalOfTransferID != second.ID {
+			t.Fatalf("unexpected reversal attribution: %+v", reversal)
+		}
+		if len(reversal.ScoreChanges) != 3 || reversal.ScoreChanges[0].Before != -50 || reversal.ScoreChanges[0].After != -10 ||
+			reversal.ScoreChanges[1].Before != 30 || reversal.ScoreChanges[1].After != 10 ||
+			reversal.ScoreChanges[2].Before != 20 || reversal.ScoreChanges[2].After != 0 {
+			t.Fatalf("unexpected reversal balances: %+v", reversal.ScoreChanges)
+		}
+		if transfers[1].ID != second.ID || transfers[1].ReversedAt == nil ||
+			transfers[1].ScoreChanges[0].Before != -10 || transfers[1].ScoreChanges[0].After != -50 {
+			t.Fatalf("original record lost its historical balance: %+v", transfers[1])
+		}
+		if transfers[2].ID != first.ID || transfers[2].ScoreChanges[0].Before != 0 || transfers[2].ScoreChanges[0].After != -10 {
+			t.Fatalf("unexpected first transfer balance: %+v", transfers[2])
+		}
+	}
+
+	transfers, err := app.query.ListScoreTransfers(ctx, owner, game.ID, nil, 20)
+	if err != nil {
+		t.Fatal(err)
+	}
+	check(transfers)
+
+	before := transfers[1].SequenceNo
+	page, err := app.query.ListScoreTransfers(ctx, owner, game.ID, &before, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(page) != 1 || page[0].ID != first.ID || page[0].ScoreChanges[0].After != -10 {
+		t.Fatalf("pagination changed historical balances: %+v", page)
+	}
+	if _, err := app.settlement.FinishDirect(ctx, owner, game.ID); err != nil {
+		t.Fatal(err)
+	}
+	settlement, err := app.query.SettlementDetail(ctx, li, game.ID, nil, 20)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(settlement.ScoreTransfers) != 3 || settlement.ScoreTransfers[0].InitiatedByName != "李四" ||
+		settlement.ScoreTransfers[0].ScoreChanges[0].After != -10 {
+		t.Fatalf("settlement lost reversal history: %+v", settlement.ScoreTransfers)
+	}
+}
+
 func TestFinishedGameRejectsScoreTransfer(t *testing.T) {
 	app := newTestApp(t)
 	ctx := context.Background()
@@ -886,7 +977,7 @@ func newTestApp(t *testing.T) *testApp {
 	q := sqlite.NewQueries(db)
 	store := sqlite.NewStore(db)
 	hub := realtime.NewMemoryHub()
-	initial := time.Date(2026, 6, 19, 0, 0, 0, 0, time.UTC)
+	initial := time.Now().UTC()
 	nowRef := &initial
 	now := func() time.Time { return *nowRef }
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)

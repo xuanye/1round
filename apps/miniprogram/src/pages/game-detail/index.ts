@@ -15,6 +15,7 @@ import {
 import { formatScore, formatTimeOnly } from '../../utils/format';
 import { getUser, saveRecentSession } from '../../utils/storage';
 import { RealtimeService } from '../../services/realtime.service';
+import type { ScoreTransfer, ScoreChange } from '../../models/score-transfer';
 
 type ParsedTransferPart = {
   text: string;
@@ -69,8 +70,8 @@ type DetailParticipant = {
 
 type DetailTransfer = {
   id: string;
-  iconCode: string;
   text: string;
+  parsedParts: ParsedTransferPart[];
   time: string;
   sequenceNo: number;
   receiverPlayerIds: string[];
@@ -78,7 +79,80 @@ type DetailTransfer = {
   reversalOfTransferId?: string;
   reversedAt?: string;
   canReverse: boolean;
+  isReversal: boolean;
+  originalText: string;
+  initiatedByName: string;
+  initiatorInitial: string;
+  senderChange: DetailScoreChange | null;
+  scoreChanges: DetailScoreChange[];
+  changeLabel: string;
 };
+
+type DetailScoreChange = {
+  playerId: string;
+  playerName: string;
+  initial: string;
+  beforeText: string;
+  afterText: string;
+  deltaText: string;
+  effectText: string;
+  effectTone: 'returned' | 'deducted';
+  afterTone: 'positive' | 'negative' | 'muted';
+};
+
+function formatTransferTime(createdAt: string): string {
+  const date = new Date(createdAt);
+  if (isNaN(date.getTime())) return '';
+  const now = new Date();
+  const time = formatTimeOnly(date);
+  if (date.toDateString() === now.toDateString()) return `今天 ${time}`;
+  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return `昨天 ${time}`;
+  const dateText = date.getFullYear() === now.getFullYear()
+    ? `${date.getMonth() + 1}月${date.getDate()}日`
+    : `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+  return `${dateText} ${time}`;
+}
+
+function mapScoreChange(change: ScoreChange): DetailScoreChange {
+  return {
+    playerId: change.playerId,
+    playerName: change.playerName,
+    initial: change.playerName.slice(0, 1),
+    beforeText: formatScore(change.before),
+    afterText: formatScore(change.after),
+    deltaText: formatScore(change.delta),
+    effectText: change.delta > 0 ? `返还 ${formatScore(change.delta)}` : `扣回 ${Math.abs(change.delta)}`,
+    effectTone: change.delta > 0 ? 'returned' : 'deducted',
+    afterTone: change.after > 0 ? 'positive' : change.after < 0 ? 'negative' : 'muted',
+  };
+}
+
+function mapDetailTransfer(transfer: ScoreTransfer, canReverse: boolean): DetailTransfer {
+  const isReversal = transfer.transferKind === 'reversal';
+  const originalText = transfer.text.replace(/^撤销：/, '').replace(/ \(已撤销\)$/, '');
+  const scoreChanges = (transfer.scoreChanges || []).map(mapScoreChange);
+  const initiatedByName = transfer.initiatedByName || scoreChanges[0]?.playerName || '';
+  return {
+    id: transfer.id,
+    text: transfer.text,
+    parsedParts: parseTransferText(originalText),
+    originalText,
+    time: formatTransferTime(transfer.createdAt),
+    sequenceNo: transfer.sequenceNo,
+    receiverPlayerIds: transfer.receiverPlayerIds || [],
+    transferKind: transfer.transferKind,
+    reversalOfTransferId: transfer.reversalOfTransferId,
+    reversedAt: transfer.reversedAt,
+    canReverse,
+    isReversal,
+    initiatedByName,
+    initiatorInitial: initiatedByName.slice(0, 1),
+    senderChange: scoreChanges[0] || null,
+    scoreChanges,
+    changeLabel: isReversal ? '撤销后的积分变化' : transfer.reversedAt ? '原计分时的发起方积分' : '发起方积分',
+  };
+}
 
 function parseShareToken(query: Record<string, string>): string {
   if (query.shareToken) return query.shareToken;
@@ -425,26 +499,12 @@ Page({
     try {
       const list = await getScoreTransfers(this.data.id, beforeSeq, 20);
       const mapped = list.map(t => {
-        const timeText = formatTimeOnly(t.createdAt);
         const canReverse =
           this.data.game.status === 'active' &&
           !t.reversedAt &&
           t.transferKind !== 'reversal' &&
           t.receiverPlayerIds.includes(myPlayerId);
-
-        return {
-          id: t.id,
-          iconCode: t.receiverPlayerIds.length > 1 ? '\uf0c0' : '\uf362',
-          text: t.text,
-          parsedParts: parseTransferText(t.text),
-          time: timeText,
-          sequenceNo: t.sequenceNo,
-          receiverPlayerIds: t.receiverPlayerIds,
-          transferKind: t.transferKind,
-          reversalOfTransferId: t.reversalOfTransferId,
-          reversedAt: t.reversedAt,
-          canReverse: canReverse,
-        };
+        return mapDetailTransfer(t, canReverse);
       });
 
       const nextTransfers = reload ? mapped : [...this.data.transfers, ...mapped];
@@ -478,22 +538,7 @@ Page({
       const myPlayer = mappedParticipants.find(p => p.isMe);
       const myPlayerId = myPlayer ? myPlayer.id : '';
 
-      const mappedTransfers = detail.scoreTransfers.map(t => {
-        const timeText = formatTimeOnly(t.createdAt);
-        return {
-          id: t.id,
-          iconCode: '\uf362',
-          text: t.text,
-          parsedParts: parseTransferText(t.text),
-          time: timeText,
-          sequenceNo: t.sequenceNo,
-          receiverPlayerIds: t.receiverPlayerIds || [],
-          transferKind: t.transferKind,
-          reversalOfTransferId: t.reversalOfTransferId,
-          reversedAt: t.reversedAt,
-          canReverse: false,
-        };
-      });
+      const mappedTransfers = detail.scoreTransfers.map(t => mapDetailTransfer(t, false));
 
       this.setData({
         game: {

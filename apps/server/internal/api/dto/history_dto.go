@@ -37,14 +37,24 @@ type SettlementParticipant struct {
 }
 
 type ScoreTransferSummary struct {
-	ID                   string     `json:"id"`
-	SequenceNo           int        `json:"sequenceNo"`
-	Amount               int        `json:"amount"`
-	CreatedAt            string     `json:"createdAt"`
-	Text                 string     `json:"text"`
-	TransferKind         string     `json:"transferKind,omitempty"`
-	ReversalOfTransferID *string    `json:"reversalOfTransferId,omitempty"`
-	ReversedAt           *time.Time `json:"reversedAt,omitempty"`
+	ID                   string        `json:"id"`
+	SequenceNo           int           `json:"sequenceNo"`
+	Amount               int           `json:"amount"`
+	CreatedAt            string        `json:"createdAt"`
+	Text                 string        `json:"text"`
+	TransferKind         string        `json:"transferKind,omitempty"`
+	ReversalOfTransferID *string       `json:"reversalOfTransferId,omitempty"`
+	ReversedAt           *time.Time    `json:"reversedAt,omitempty"`
+	InitiatedByName      string        `json:"initiatedByName"`
+	ScoreChanges         []ScoreChange `json:"scoreChanges"`
+}
+
+type ScoreChange struct {
+	PlayerID   string `json:"playerId"`
+	PlayerName string `json:"playerName"`
+	Before     int    `json:"before"`
+	After      int    `json:"after"`
+	Delta      int    `json:"delta"`
 }
 
 type PublicSettlement struct {
@@ -59,4 +69,3 @@ type UserStatsResponse struct {
 	TotalGames int `json:"totalGames"`
 	MaxScore   int `json:"maxScore"`
 }
-

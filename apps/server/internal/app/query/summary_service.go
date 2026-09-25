@@ -66,16 +66,18 @@ type RankingItem struct {
 }
 
 type ScoreTransferView struct {
-	ID                   string     `json:"id"`
-	SequenceNo           int        `json:"sequenceNo"`
-	FromPlayerID         string     `json:"fromPlayerId"`
-	ReceiverIDs          []string   `json:"receiverPlayerIds"`
-	Amount               int        `json:"amount"`
-	CreatedAt            time.Time  `json:"createdAt"`
-	Text                 string     `json:"text"`
-	TransferKind         string     `json:"transferKind"`
-	ReversalOfTransferID *string    `json:"reversalOfTransferId,omitempty"`
-	ReversedAt           *time.Time `json:"reversedAt,omitempty"`
+	ID                   string            `json:"id"`
+	SequenceNo           int               `json:"sequenceNo"`
+	FromPlayerID         string            `json:"fromPlayerId"`
+	ReceiverIDs          []string          `json:"receiverPlayerIds"`
+	Amount               int               `json:"amount"`
+	CreatedAt            time.Time         `json:"createdAt"`
+	Text                 string            `json:"text"`
+	TransferKind         string            `json:"transferKind"`
+	ReversalOfTransferID *string           `json:"reversalOfTransferId,omitempty"`
+	ReversedAt           *time.Time        `json:"reversedAt,omitempty"`
+	InitiatedByName      string            `json:"initiatedByName"`
+	ScoreChanges         []dto.ScoreChange `json:"scoreChanges"`
 }
 
 func NewService(q *sqlite.Queries, game *gamesvc.Service) *Service {
@@ -238,6 +240,10 @@ func (s *Service) ListScoreTransfers(ctx context.Context, userID, gameSessionID 
 	for _, p := range players {
 		nameMap[p.ID] = p.DisplayName
 	}
+	projected, err := s.projectTransferHistory(ctx, gameSessionID, players)
+	if err != nil {
+		return nil, err
+	}
 
 	views := make([]ScoreTransferView, 0, len(transfers))
 	for _, t := range transfers {
@@ -275,6 +281,8 @@ func (s *Service) ListScoreTransfers(ctx context.Context, userID, gameSessionID 
 			TransferKind:         string(t.Kind),
 			ReversalOfTransferID: t.ReversalOfTransferID,
 			ReversedAt:           t.ReversedAt,
+			InitiatedByName:      projected[t.ID].initiatedByName,
+			ScoreChanges:         projected[t.ID].changes,
 		})
 	}
 	return views, nil
@@ -411,6 +419,10 @@ func (s *Service) SettlementDetail(ctx context.Context, userID, gameSessionID st
 	for _, p := range players {
 		nameMap[p.ID] = p.DisplayName
 	}
+	projected, err := s.projectTransferHistory(ctx, gameSessionID, players)
+	if err != nil {
+		return dto.SettlementDetail{}, err
+	}
 
 	transferSummaries := make([]dto.ScoreTransferSummary, 0, len(transfers))
 	for _, t := range transfers {
@@ -446,6 +458,8 @@ func (s *Service) SettlementDetail(ctx context.Context, userID, gameSessionID st
 			TransferKind:         string(t.Kind),
 			ReversalOfTransferID: t.ReversalOfTransferID,
 			ReversedAt:           t.ReversedAt,
+			InitiatedByName:      projected[t.ID].initiatedByName,
+			ScoreChanges:         projected[t.ID].changes,
 		})
 	}
 

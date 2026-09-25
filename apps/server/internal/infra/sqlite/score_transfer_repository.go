@@ -187,6 +187,45 @@ func (q *Queries) ListScoreTransfersPaginated(ctx context.Context, gameSessionID
 	return transfers, nil
 }
 
+type ScoreTransferLedgerEntry struct {
+	ID              string
+	FromPlayerID    string
+	CreatedByUserID string
+	Amount          int
+	Kind            domain.ScoreTransferKind
+	ReceiverIDs     []string
+}
+
+// ListScoreTransferLedger returns transfers in sequence order for historical balance projection.
+func (q *Queries) ListScoreTransferLedger(ctx context.Context, gameSessionID string) ([]ScoreTransferLedgerEntry, error) {
+	rows, err := q.db.QueryContext(ctx, `
+		SELECT t.id, t.from_player_id, t.created_by_user_id, t.amount, t.transfer_kind, r.player_id
+		FROM score_transfers t
+		JOIN score_transfer_receivers r ON r.score_transfer_id = t.id
+		WHERE t.game_session_id = ?
+		ORDER BY t.sequence_no ASC, r.receiver_order ASC`, gameSessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = rows.Close() }()
+
+	var entries []ScoreTransferLedgerEntry
+	for rows.Next() {
+		var entry ScoreTransferLedgerEntry
+		var kind string
+		var receiverID string
+		if err := rows.Scan(&entry.ID, &entry.FromPlayerID, &entry.CreatedByUserID, &entry.Amount, &kind, &receiverID); err != nil {
+			return nil, err
+		}
+		if len(entries) == 0 || entries[len(entries)-1].ID != entry.ID {
+			entry.Kind = domain.ScoreTransferKind(kind)
+			entries = append(entries, entry)
+		}
+		entries[len(entries)-1].ReceiverIDs = append(entries[len(entries)-1].ReceiverIDs, receiverID)
+	}
+	return entries, rows.Err()
+}
+
 func (q *Queries) GetScoreTransferByIdempotencyKey(ctx context.Context, gameSessionID, userID, key string) (domain.ScoreTransfer, error) {
 	var t domain.ScoreTransfer
 	var createdAt string

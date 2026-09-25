@@ -8,8 +8,15 @@ function extractInviteCode(scanResult: WechatMiniprogram.ScanCodeSuccessCallback
     const inviteCodeMatch = candidate.match(/inviteCode=([A-Za-z0-9]+)/);
     if (inviteCodeMatch) return inviteCodeMatch[1];
 
-    const sceneMatch = candidate.match(/(?:scene=|code=)([A-Za-z0-9]+)/);
-    if (sceneMatch) return decodeURIComponent(sceneMatch[1]);
+    const sceneMatch = candidate.match(/(?:^|[?&])scene=([^&#]+)/);
+    if (sceneMatch) {
+      const scene = decodeURIComponent(sceneMatch[1]);
+      const codeMatch = scene.match(/^(?:code=)?([A-Za-z0-9]+)$/);
+      if (codeMatch) return codeMatch[1];
+    }
+
+    const codeMatch = candidate.match(/(?:^|[?&])code=([A-Za-z0-9]+)/);
+    if (codeMatch) return codeMatch[1];
 
     const rawCodeMatch = candidate.match(/^[A-Za-z0-9]{4,}$/);
     if (rawCodeMatch) return rawCodeMatch[0];

@@ -20,8 +20,7 @@
 .section-row,
 .participant-row,
 .person,
-.history-head,
-.bottom-nav {
+.history-head {
   display: flex;
 }
 
@@ -586,45 +585,6 @@ button.finish-button:active {
   font-size: 36rpx !important;
 }
 
-.bottom-nav {
-  justify-content: space-around;
-  padding: 14rpx 36rpx 34rpx;
-  border-radius: 32rpx 32rpx 0 0;
-  background: #efeeeb;
-  box-shadow: 0 -8rpx 28rpx rgba(31, 105, 93, 0.08);
-}
-
-.bottom-nav button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-width: 132rpx;
-  width: auto;
-  height: 82rpx;
-  color: #3f4946;
-  background: transparent;
-  font-size: 34rpx;
-  line-height: 1;
-}
-
-.bottom-nav .nav-label {
-  display: block;
-  margin-top: 6rpx;
-  font-size: 22rpx;
-  line-height: 1.15;
-}
-
-.bottom-nav .active {
-  color: #1f695d;
-  background: transparent;
-  font-weight: bold;
-}
-
-.bottom-nav button .iconfont {
-  font-size: 44rpx !important;
-  line-height: 44rpx;
-}
 
 /* Glassmorphism Invite Overlay */
 .invite-overlay {
@@ -770,3 +730,6 @@ button.finish-banner-btn {
   display: flex;
   align-items: center;
 }
+
+.bottom-actions { background: #FAF9F6; padding-bottom: env(safe-area-inset-bottom); }
+button.leave-button { background: transparent; color: #6f7976; font-size: 24rpx; margin: 12rpx 40rpx; }

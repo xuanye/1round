@@ -58,7 +58,7 @@ Page({
     const id = query.id || '';
     if (!id) {
       wx.showToast({ title: '牌局链接无效', icon: 'none' });
-      setTimeout(() => wx.redirectTo({ url: '/pages/home/index' }), 1500);
+      setTimeout(() => wx.switchTab({ url: '/pages/home/index' }), 1500);
       return;
     }
     this.setData({ id });
@@ -89,7 +89,7 @@ Page({
   },
 
   goBack() {
-    wx.navigateBack({ fail: () => wx.redirectTo({ url: `/pages/game-detail/index?id=${this.data.id}` }) });
+    wx.navigateBack({ fail: () => wx.switchTab({ url: '/pages/home/index' }) });
   },
 
   toggleReceiver(event: WechatMiniprogram.TouchEvent) {

@@ -1,0 +1,37 @@
+/* Logical sizes follow DESIGN.md; safe-area space is added by each fixed region. */
+page, .theme {
+  --color-bg: #F8F7F3;
+  --color-surface: #FFFFFF;
+  --color-text: #202925;
+  --color-text-secondary: #68716D;
+  --color-text-disabled: #A3AAA6;
+  --color-primary: #175D50;
+  --color-primary-pressed: #124B40;
+  --color-primary-subtle: #EAF0EC;
+  --color-border: #DDE3DE;
+  --color-score-positive: #B95740;
+  --color-score-negative: #526D65;
+  --color-danger: #B33E38;
+  --page-inset: 20px;
+  --control-radius: 12px;
+  --tab-height: 56px;
+  --font-heading: 28px;
+  --font-section: 20px;
+  --font-body: 16px;
+  --font-supporting: 14px;
+  --font-score: 28px;
+  --font-tab: 12px;
+}
+
+.font-system {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "HarmonyOS Sans SC", "HarmonyOS Sans", "Noto Sans CJK SC", "Noto Sans SC", Roboto, sans-serif;
+}
+.font-ios {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+}
+.font-android {
+  font-family: "Noto Sans CJK SC", "Noto Sans SC", Roboto, sans-serif;
+}
+.font-harmony {
+  font-family: "HarmonyOS Sans SC", "HarmonyOS Sans", sans-serif;
+}

@@ -79,6 +79,13 @@ You are an AI coding agent working inside a small production-oriented monorepo. 
 - Use `slog` for structured server logs; avoid ad hoc `fmt.Println` diagnostics.
 - Validate request ownership and game membership before mutating shared game state.
 
+## UI Design Guidelines
+
+- Before modifying or adding any UI, read DESIGN.md at the repository root.
+- All pages must follow its design tokens, component specifications, and visual principles.
+- Visual changes must not alter business rules or feature scope without explicit authorization.
+- After implementation, verify the rendered UI against the acceptance criteria in DESIGN.md.
+
 ## Mini Program Principles
 
 - Treat `.ts` files as source of truth for client logic.

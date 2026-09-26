@@ -7,15 +7,43 @@
     "pages/player-manage/index",
     "pages/score-input/index",
     "pages/ranking/index",
-    "pages/history/index"
+    "pages/history/index",
+    "pages/mine/index"
   ],
   "window": {
     "navigationBarTitleText": "一局一分",
-    "navigationBarBackgroundColor": "#FAF9F6",
+    "navigationBarBackgroundColor": "#F8F7F3",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#FAF9F6"
+    "backgroundColor": "#F8F7F3"
   },
   "style": "v2",
   "lazyCodeLoading": "requiredComponents",
-  "sitemapLocation": "sitemap.json"
+  "sitemapLocation": "sitemap.json",
+  "tabBar": {
+    "color": "#68716D",
+    "selectedColor": "#175D50",
+    "backgroundColor": "#F8F7F3",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "牌局",
+        "iconPath": "images/tabbar/game.png",
+        "selectedIconPath": "images/tabbar/game-active.png"
+      },
+      {
+        "pagePath": "pages/ranking/index",
+        "text": "战绩",
+        "iconPath": "images/tabbar/records.png",
+        "selectedIconPath": "images/tabbar/records-active.png"
+      },
+      {
+        "pagePath": "pages/mine/index",
+        "text": "我的",
+        "iconPath": "images/tabbar/mine.png",
+        "selectedIconPath": "images/tabbar/mine-active.png"
+      }
+    ],
+    "custom": true
+  }
 }

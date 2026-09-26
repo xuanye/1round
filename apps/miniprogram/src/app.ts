@@ -9,7 +9,7 @@ App({
   },
   onPageNotFound(res: any) {
     console.error('Page not found:', res.path);
-    wx.redirectTo({ url: '/pages/home/index' }); // use redirectTo since home is not a tabbar page in app.json
+    wx.switchTab({ url: '/pages/home/index' });
   },
   globalData: {
     baseUrl: getBaseUrl(),

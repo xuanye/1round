@@ -13,6 +13,7 @@ const protectedPages = [
   "pages/score-input/index.ts",
   "pages/ranking/index.ts",
   "pages/history/index.ts",
+  "pages/mine/index.ts",
 ];
 
 for (const page of protectedPages) {
@@ -26,7 +27,7 @@ for (const page of protectedPages) {
   );
 }
 
-const gameDetail = fs.readFileSync(path.join(srcRoot, "pages/game-detail/index.ts"), "utf8");
+const gameDetail = fs.readFileSync(path.join(srcRoot, "pages/game-detail/page.ts"), "utf8");
 assert.match(gameDetail, /requireLogin/, "game-detail protected mode must call requireLogin()");
 assert.match(gameDetail, /this\.data\.shareToken/, "game-detail must preserve shareToken public mode");
 assert(

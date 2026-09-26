@@ -1,0 +1,15 @@
+.tab-bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: space-around;
+  height: var(--tab-height); padding-bottom: env(safe-area-inset-bottom);
+  background: var(--color-bg); border-top: 1px solid var(--color-border);
+}
+.tab-item {
+  display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center;
+  min-width: 44px; height: var(--tab-height); color: var(--color-text-secondary);
+}
+.tab-item.selected { color: var(--color-primary); }
+.tab-icon { width: 22px; height: 22px; margin-bottom: 4px; }
+.tab-label { font-size: var(--font-tab); font-weight: 500; line-height: 15px; text-align: center; }
+.tab-indicator { width: 18px; height: 2px; margin-top: 3px; border-radius: 1px; background: transparent; }
+.tab-indicator.visible { background: var(--color-primary); }

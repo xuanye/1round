@@ -5,7 +5,7 @@
   "scripts": {
     "build": "node scripts/build.js",
     "check": "tsc -p tsconfig.json --noEmit",
-    "test": "node scripts/build.test.js && node scripts/auth-guard.test.js && node scripts/qrcode.test.js && node scripts/scan-to-join.test.js && node scripts/log-regressions.test.js",
+    "test": "node scripts/build.test.js && node scripts/auth-guard.test.js && node scripts/qrcode.test.js && node scripts/scan-to-join.test.js && node scripts/log-regressions.test.js && node scripts/navigation.test.js",
     "watch": "node scripts/build.js --watch"
   },
   "devDependencies": {

@@ -14,7 +14,7 @@ Page({
       await requireLogin();
     } catch (err) {
       wx.showToast({ title: (err as any).message || '登录失败', icon: 'none' });
-      wx.redirectTo({ url: '/pages/home/index' });
+      wx.switchTab({ url: '/pages/home/index' });
     }
   },
   onNameInput(event: WechatMiniprogram.Input) {
@@ -37,7 +37,7 @@ Page({
 
       const game = await createGame(name, maxParticipants);
       saveRecentSession(game.id);
-      wx.redirectTo({ url: `/pages/game-detail/index?id=${game.id}&inviteCode=${game.inviteCode}` });
+      wx.switchTab({ url: '/pages/home/index' });
     } catch (err) {
       wx.showToast({ title: (err as any).message || '创建失败', icon: 'none' });
     }

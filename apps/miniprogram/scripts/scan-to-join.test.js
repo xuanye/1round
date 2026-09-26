@@ -1,14 +1,6 @@
 const assert = require("assert");
-const fs = require("fs");
-const path = require("path");
-const vm = require("vm");
-const ts = require("typescript");
 
-const projectRoot = path.resolve(__dirname, "..");
-const source = fs.readFileSync(path.join(projectRoot, "src/pages/home/index.ts"), "utf8");
-const compiled = ts.transpileModule(source, {
-  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2019 },
-}).outputText;
+const { loadSource } = require('./page-test-utils');
 
 let page;
 let scanResult;
@@ -19,12 +11,7 @@ const wx = {
   navigateTo({ url }) { navigatedTo = url; },
   showToast({ title }) { toast = title; },
 };
-vm.runInNewContext(compiled, {
-  Page(value) { page = value; },
-  wx,
-  exports: {},
-  require() { return {}; },
-});
+page = loadSource('pages/home/index.ts', { wx }).page;
 
 for (const [label, result] of [
   ["unescaped scene", { path: "pages/game-join/index?scene=code=ABC123" }],

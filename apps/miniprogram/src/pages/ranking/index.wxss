@@ -167,3 +167,7 @@
 
 .running { color: #16a34a; background: #dcfce7; }
 .ended { color: #6b7280; background: #f3f4f6; }
+
+.stats-card { padding: 32rpx; margin-bottom: 28rpx; }
+.stats-row { display: flex; justify-content: space-between; padding-top: 20rpx; }
+.stats-value { color: #1f695d; font-size: 40rpx; font-weight: 800; margin-top: 12rpx; }

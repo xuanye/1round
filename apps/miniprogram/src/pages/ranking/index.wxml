@@ -1,16 +1,19 @@
-<view class="page">
-  <view class="tabs">
-    <view class="tab active">排行榜</view>
-    <view class="tab">历史牌局</view>
+<view class="page tab-page">
+  <view class="stats-card card">
+    <view class="rank-title">我的战绩</view>
+    <view class="stats-row">
+      <view><view class="muted">已结束牌局</view><view class="stats-value">{{stats.totalGames}} 场</view></view>
+      <view><view class="muted">单场最高分</view><view class="stats-value">{{maxScoreLabel}}</view></view>
+    </view>
   </view>
 
   <view class="rank-card card">
-    <view class="rank-title">总分排行榜</view>
+    <view class="rank-title">全站总分榜</view>
     <view class="rank-head">
       <text>排名</text>
       <text>玩家</text>
       <text>总分</text>
-      <text>平均分/局</text>
+      <text>平均分/场</text>
     </view>
     <view wx:for="{{players}}" wx:key="playerId" class="rank-row">
       <view class="medal medal-{{index}}">{{index + 1}}</view>

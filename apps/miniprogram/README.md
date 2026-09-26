@@ -58,6 +58,19 @@ The `src/` directory contains source files. Build output is written to `dist/`, 
 
 WeChat DevTools should open this folder directly. The project config points `miniprogramRoot` at `dist/`, and the pnpm scripts provide deterministic local checks.
 
+## UI theme and system fonts
+
+Read the repository-root `DESIGN.md` before changing UI. Shared tokens are in `src/theme.wxss`.
+The homepage and custom tab bar select fonts from `wx.getDeviceInfo()`:
+
+- iOS: Apple system sans-serif and PingFang SC.
+- Android: Noto Sans Chinese and Roboto, falling back to the device sans-serif.
+- HarmonyOS (`ohos` or HarmonyOS system text): HarmonyOS Sans SC / HarmonyOS Sans.
+- Unknown or unavailable device info: a system-font fallback stack.
+
+No font download is required; unavailable named fonts fall back to the system sans-serif.
+Transparent homepage and navigation PNG assets are reproducible with `scripts/generate-ui-assets.py` (Pillow is needed only to regenerate assets).
+
 ## Authentication
 
 All Mini Program pages require a OneRound login identity except the public settlement share view.

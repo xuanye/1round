@@ -76,7 +76,7 @@ func TestCreateGameStoresCapacityAndOwnerParticipant(t *testing.T) {
 	user := login(t, app, "owner-code")
 	max := 4
 
-	game, err := app.game.Create(ctx, user, "家庭聚会", &max)
+	game, err := app.game.Create(ctx, user, "家庭聚会", &max, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -383,7 +383,7 @@ func TestUserCanHaveOnlyOneCurrentGame(t *testing.T) {
 	user := login(t, app, "owner-code")
 	_ = createGame(t, app, user, nil)
 
-	_, err := app.game.Create(ctx, user, "第二局", nil)
+	_, err := app.game.Create(ctx, user, "第二局", nil, nil)
 	if err != domain.ErrActiveGameExists {
 		t.Fatalf("expected active game conflict, got %v", err)
 	}
@@ -1017,7 +1017,7 @@ func login(t *testing.T, app *testApp, code string) string {
 
 func createGame(t *testing.T, app *testApp, userID string, maxParticipants *int) domain.GameSession {
 	t.Helper()
-	game, err := app.game.Create(context.Background(), userID, "家庭聚会", maxParticipants)
+	game, err := app.game.Create(context.Background(), userID, "家庭聚会", maxParticipants, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

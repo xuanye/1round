@@ -1,23 +1,6 @@
 const assert = require('assert');
-const fs = require('fs');
-const path = require('path');
-const vm = require('vm');
-const ts = require('typescript');
 
-function loadSource(file, globals) {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'src', file), 'utf8');
-  const compiled = ts.transpileModule(source, {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2019 },
-  }).outputText;
-  const exports = {};
-  let page;
-  vm.runInNewContext(compiled, {
-    exports,
-    Page(value) { page = value; },
-    ...globals,
-  });
-  return { exports, page };
-}
+const { loadSource } = require('./page-test-utils');
 
 async function testReconnectRetainsNotifications() {
   const sockets = [];
@@ -81,7 +64,7 @@ async function testScorePageRejectsMissingGameID() {
       showToast() {},
       showLoading() {},
       hideLoading() {},
-      redirectTo({ url }) { redirectedTo = url; },
+      switchTab({ url }) { redirectedTo = url; },
     },
     setTimeout: (callback) => callback(),
     require(name) {

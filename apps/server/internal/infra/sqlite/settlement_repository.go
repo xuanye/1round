@@ -111,7 +111,7 @@ func (q *Queries) ListSettledGamesForUser(ctx context.Context, userID string, be
 	rows, err := q.db.QueryContext(ctx,
 		`SELECT gs.id, gs.name, gs.invite_code, gs.owner_user_id, gs.status, gs.max_participants,
 		        gs.round_count, gs.version, gs.public_share_token, gs.last_scored_at,
-		        gs.settled_at, gs.voided_at, gs.created_at, gs.updated_at
+		        gs.settled_at, gs.voided_at, gs.created_at, gs.updated_at, gs.preset_scores
 		 FROM game_sessions gs
 		 JOIN players p ON p.game_session_id = gs.id
 		 WHERE p.user_id = ?
@@ -140,7 +140,7 @@ func (q *Queries) GetGameSessionByPublicShareToken(ctx context.Context, shareTok
 	row := q.db.QueryRowContext(ctx,
 		`SELECT id, name, invite_code, owner_user_id, status, max_participants,
 		        round_count, version, public_share_token, last_scored_at,
-		        settled_at, voided_at, created_at, updated_at
+		        settled_at, voided_at, created_at, updated_at, preset_scores
 		 FROM game_sessions
 		 WHERE public_share_token = ? AND status = 'finished'`, shareToken)
 	g, err := scanGame(row)
@@ -192,7 +192,7 @@ func (q *Queries) ListInactiveActiveSessions(ctx context.Context, thresholdCutof
 	rows, err := q.db.QueryContext(ctx,
 		`SELECT id, name, invite_code, owner_user_id, status, max_participants,
 		        round_count, version, public_share_token, last_scored_at,
-		        settled_at, voided_at, created_at, updated_at
+		        settled_at, voided_at, created_at, updated_at, preset_scores
 		 FROM game_sessions
 		 WHERE status = 'active'
 		   AND (
@@ -231,4 +231,3 @@ func (q *Queries) GetUserStats(ctx context.Context, userID string) (int, int, er
 	err := row.Scan(&count, &maxScore)
 	return count, maxScore, err
 }
-

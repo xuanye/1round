@@ -1,5 +1,5 @@
-.form-page { display: flex; flex-direction: column; gap: 24rpx; }
-input { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12rpx; padding: 24rpx; }
+.form-page { display: flex; flex-direction: column; gap: var(--space-responsive-md); }
+input { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12rpx; padding: var(--space-responsive-md); }
 
 button.save-btn {
   display: flex;
@@ -7,5 +7,5 @@ button.save-btn {
   justify-content: center;
   height: 88rpx;
   line-height: 1;
-  margin: 56rpx 0 24rpx;
+  margin: var(--space-legacy-56rpx) 0 var(--space-responsive-md);
 }

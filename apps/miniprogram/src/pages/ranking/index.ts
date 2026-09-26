@@ -1,5 +1,5 @@
 import { requireLogin } from '../../services/auth.service';
-import { getHistory, getRanking } from '../../services/game.service';
+import { getHistory, getRanking, getHistoryStats } from '../../services/game.service';
 import type { HistoryItem, RankingItem } from '../../models/game-session';
 import { formatFriendlyTime, formatScore } from '../../utils/format';
 
@@ -19,28 +19,35 @@ Page({
   data: {
     players: [] as RankedPlayer[],
     historyItems: [] as HistoryPreviewItem[],
+    stats: { totalGames: 0, maxScore: 0 },
+    maxScoreLabel: '0',
   },
 
   async onShow() {
+    this.getTabBar?.()?.setData({ selected: 1 });
     wx.showLoading({ title: '加载中...' });
     try {
       await requireLogin();
-      const [list, historyPage] = await Promise.all([
+      const results = await Promise.all([
         getRanking(),
         getHistory('', 5),
+        getHistoryStats(),
       ]);
 
+      const list = results[0];
+      const historyPage = results[1];
+      const stats = results[2];
       this.setData({
-        players: list.map((item) => ({
-          ...item,
+        stats,
+        maxScoreLabel: formatScore(stats.maxScore),
+        players: list.map((item) => Object.assign({}, item, {
           initial: item.displayName.slice(0, 1),
           scoreLabel: formatScore(item.totalScore),
           scoreTone: item.totalScore > 0 ? 'positive' as const : item.totalScore < 0 ? 'negative' as const : 'muted' as const,
           averageLabel: String(item.averageScore || 0),
         })),
-        historyItems: historyPage.items.map((item, index) => ({
-          ...item,
-          accentTone: index % 2 === 0 ? 'green' : 'yellow',
+        historyItems: historyPage.items.map((item, index) => Object.assign({}, item, {
+          accentTone: index % 2 === 0 ? 'green' as const : 'yellow' as const,
           meta: this.buildHistoryMeta(item),
         })),
       });

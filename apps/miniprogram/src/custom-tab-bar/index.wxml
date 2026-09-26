@@ -1,0 +1,7 @@
+<view class="tab-bar theme {{fontClass}}">
+  <view wx:for="{{tabs}}" wx:key="path" class="tab-item {{selected === index ? 'selected' : ''}}" data-index="{{index}}" bindtap="selectTab" role="button" aria-label="{{item.text}}{{selected === index ? '，当前页面' : ''}}">
+    <image class="tab-icon" src="{{selected === index ? item.activeIcon : item.icon}}" aria-hidden="true" />
+    <text class="tab-label">{{item.text}}</text>
+    <view class="tab-indicator {{selected === index ? 'visible' : ''}}" />
+  </view>
+</view>

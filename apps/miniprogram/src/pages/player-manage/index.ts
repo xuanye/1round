@@ -8,7 +8,7 @@ Page({
       await requireLogin();
     } catch (err) {
       wx.showToast({ title: (err as any).message || '登录失败', icon: 'none' });
-      wx.redirectTo({ url: '/pages/home/index' });
+      wx.switchTab({ url: '/pages/home/index' });
       return;
     }
 

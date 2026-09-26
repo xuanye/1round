@@ -1,5 +1,5 @@
 export function formatScore(score: number): string {
-  return score > 0 ? `+${score}` : `${score}`;
+  return score > 0 ? `+${score}` : score < 0 ? `−${Math.abs(score)}` : `${score}`;
 }
 
 export function toInteger(value: string): number | null {

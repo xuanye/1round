@@ -2,6 +2,7 @@ import { requireLogin } from '../../services/auth.service';
 import { getSummary } from '../../services/game.service';
 import { submitScoreTransfer } from '../../services/score.service';
 import { getUser } from '../../utils/storage';
+import { DEFAULT_PRESET_SCORES } from '../../utils/preset-scores';
 
 type Receiver = {
   id: string;
@@ -40,6 +41,7 @@ Page({
       transfer: '\uf362',
     },
     id: '',
+    presetScores: [...DEFAULT_PRESET_SCORES],
     receivers: [] as Receiver[],
     scoreText: '0',
     selectedCount: 0,
@@ -58,7 +60,7 @@ Page({
     const id = query.id || '';
     if (!id) {
       wx.showToast({ title: '牌局链接无效', icon: 'none' });
-      setTimeout(() => wx.redirectTo({ url: '/pages/home/index' }), 1500);
+      setTimeout(() => wx.switchTab({ url: '/pages/home/index' }), 1500);
       return;
     }
     this.setData({ id });
@@ -79,8 +81,9 @@ Page({
           selected: false,
         }));
 
-      this.setData({ receivers });
-      this.applyState(receivers, '10');
+      const presetScores = summary.presetScores?.length ? summary.presetScores : [...DEFAULT_PRESET_SCORES];
+      this.setData({ receivers, presetScores });
+      this.applyState(receivers, String(presetScores[0]));
     } catch (err) {
       wx.showToast({ title: (err as any).message || '获取成员失败', icon: 'none' });
     } finally {
@@ -89,7 +92,7 @@ Page({
   },
 
   goBack() {
-    wx.navigateBack({ fail: () => wx.redirectTo({ url: `/pages/game-detail/index?id=${this.data.id}` }) });
+    wx.navigateBack({ fail: () => wx.switchTab({ url: '/pages/home/index' }) });
   },
 
   toggleReceiver(event: WechatMiniprogram.TouchEvent) {

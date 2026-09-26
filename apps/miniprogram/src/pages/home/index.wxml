@@ -1,121 +1,29 @@
-<view class="page home-page">
-  <view class="topbar">
-    <view class="brand">
-      <text class="iconfont brand-icon">{{icons.dice}}</text>
-      <view class="brand-name">一局一分</view>
-    </view>
+<view wx:if="{{homeState === 'loading'}}" class="page home-status {{fontClass}}">正在加载牌局…</view>
+<view wx:elif="{{homeState === 'error'}}" class="page home-status {{fontClass}}">
+  <view>{{homeError}}</view>
+  <button class="home-button primary" hover-class="primary-pressed" bindtap="refreshHome">重新加载</button>
+</view>
+<block wx:elif="{{id}}"><include src="../game-detail/content.wxml" /></block>
+<view wx:else class="page home-page tab-page {{fontClass}}">
+  <view class="brand"><image class="brand-mark" src="/images/home/suits.png" aria-hidden="true" /><text class="brand-name">一局一分</text></view>
+  <view class="home-hero">
+    <view class="hero-copy"><view class="hero-title">来一局，记下好时光</view><view class="hero-description">和朋友一起，轻松记分。</view></view>
+    <image class="hero-art" src="/images/home/playing-cards.png" mode="aspectFit" aria-hidden="true" />
   </view>
-
-  <view class="greeting">
-    <view>
-      <view class="hello">你好，{{userName}}</view>
-      <view class="hello-copy">{{currentGame ? '先回到当前牌局，继续记分或查看局势。' : '先扫码加入，或者新建一局开始记分。'}}</view>
-    </view>
-    <view class="greeting-art-img">
-      <image class="greeting-img" src="/images/greeting-art.jpg" mode="aspectFit"></image>
-    </view>
+  <view class="game-status"><view class="status-dot" /><text>尚无进行中的牌局</text></view>
+  <view class="home-actions">
+    <button class="home-button primary" hover-class="primary-pressed" bindtap="scanToJoin"><image class="action-icon" src="/images/home/scan.png" aria-hidden="true" /><text>扫码加入牌局</text></button>
+    <button class="home-button secondary" hover-class="secondary-pressed" bindtap="createGame"><image class="action-icon" src="/images/home/plus.png" aria-hidden="true" /><text>创建牌局</text></button>
   </view>
-
-  <view wx:if="{{currentGame}}" class="current-card card">
-    <view class="current-head">
-      <view>
-        <view class="game-title-row">
-          <view class="live-dot animate-pulse"></view>
-          <view class="game-title">{{currentGame.name}}</view>
-        </view>
-        <view class="game-meta">进行中 · {{currentGame.participantCount}}人参与</view>
-      </view>
-      <view class="my-score">
-        <view class="score-label">当前个人分值</view>
-        <view class="score-value">{{currentGame.myScore >= 0 ? '+' : ''}}{{currentGame.myScore}}</view>
-      </view>
-    </view>
-    <button class="button-primary enter-button" hover-class="tap-feedback" bindtap="enterGame">
-      <text class="iconfont button-icon">{{icons.enter}}</text>
-      进入牌局
-    </button>
-    <button wx:if="{{currentGame.canExit}}" class="exit-button" hover-class="tap-feedback" bindtap="exitGame">
-      <text class="iconfont button-icon">{{icons.exit}}</text>
-      退出牌局
-    </button>
-    <block wx:else>
-      <button class="exit-button disabled" hover-class="tap-feedback" bindtap="showExitTip">
-        <text class="iconfont button-icon">{{icons.exit}}</text>
-        退出牌局
-      </button>
-      <view class="exit-tip">当前分值不为 0，暂时不能退出</view>
-    </block>
-  </view>
-  <view wx:else class="current-card card empty-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40rpx; min-height: 200rpx;">
-    <view class="empty-text" style="color: var(--text-muted); font-size: 28rpx; margin-bottom: 12rpx;">当前没有进行中的牌局</view>
-    <view class="empty-subtext">下一步先扫码加入，或自己创建一局。</view>
-  </view>
-
-  <view class="actions">
-    <button wx:if="{{currentGame}}" class="create-disabled" disabled>
-      <text class="iconfont button-icon">{{icons.plusCircle}}</text>
-      你已有进行中的牌局
-    </button>
-    <view wx:else class="action-stack">
-      <button class="button-primary scan-button" hover-class="tap-feedback" bindtap="scanToJoin">
-        <text class="iconfont button-icon">{{icons.scan}}</text>
-        扫码加入
-      </button>
-      <button class="create-button secondary-action" hover-class="tap-feedback" bindtap="createGame">
-        <text class="iconfont button-icon">{{icons.plusCircle}}</text>
-        创建牌局
-      </button>
-    </view>
-  </view>
-
-  <view class="overview">
-    <view class="section-title">半年概览</view>
-    <view class="stat-grid">
-      <view wx:for="{{stats}}" wx:key="label" class="stat-card card {{item.tone}}">
-        <view class="stat-top">
-          <view>{{item.label}}</view>
-          <text class="iconfont stat-icon">{{item.iconCode}}</text>
-        </view>
-        <view class="stat-number">{{item.value}}<text>{{item.unit}}</text></view>
-      </view>
-    </view>
-  </view>
-
   <view class="recent-section">
-    <view class="section-head">
-      <view class="section-title">最近牌局</view>
-      <view class="more-btn" bindtap="history" hover-class="tap-feedback">查看全部</view>
-    </view>
-    <view class="recent-list">
-      <view wx:for="{{recentGames}}" wx:key="title" class="recent-card card" hover-class="tap-feedback">
-        <text class="iconfont recent-icon">{{item.iconCode}}</text>
-        <view class="recent-main">
-          <view class="recent-row">
-            <view class="recent-title">{{item.title}}</view>
-            <view class="recent-status">{{item.status}}</view>
-          </view>
-          <view class="recent-meta">{{item.meta}}</view>
-        </view>
-        <view class="recent-score">
-          <view style="font-size: 20rpx; color: #6f7976; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140rpx;">胜者: {{item.winnerName}}</view>
-          <text style="color: #1f695d; font-size: 28rpx; font-weight: 900; display: block; margin-top: 6rpx;">{{item.winnerScoreText}}</text>
-        </view>
+    <view class="section-head"><view class="section-title">最近牌局</view><button class="history-link" hover-class="tap-feedback" bindtap="history">全部记录<view class="chevron" /></button></view>
+    <button wx:if="{{recentError}}" class="recent-empty retry-link" bindtap="loadRecentGames">{{recentError}}</button>
+    <view wx:elif="{{recentGames.length === 0}}" class="recent-empty">暂无历史牌局</view>
+    <view wx:else class="recent-list">
+      <view wx:for="{{recentGames}}" wx:key="id" class="recent-row {{item.score.length > 7 ? 'large-score' : ''}}" data-id="{{item.id}}" bindtap="openRecent" hover-class="row-pressed" role="button" aria-label="{{item.title}}，我的分值{{item.score}}">
+        <view class="recent-main"><view class="recent-title">{{item.title}}</view><view class="recent-meta">{{item.meta}}</view></view>
+        <text class="recent-score {{item.scoreTone}}">{{item.score}}</text>
       </view>
     </view>
-  </view>
-
-  <view class="bottom-nav">
-    <button class="nav-item active">
-      <text class="iconfont">{{icons.home}}</text>
-      <text class="nav-label">首页</text>
-    </button>
-    <button class="nav-item" bindtap="goToRanking">
-      <text class="iconfont">{{icons.ranking}}</text>
-      <text class="nav-label">数据</text>
-    </button>
-    <button class="nav-item" bindtap="history">
-      <text class="iconfont">{{icons.history}}</text>
-      <text class="nav-label">历史</text>
-    </button>
   </view>
 </view>

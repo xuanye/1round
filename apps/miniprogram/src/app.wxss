@@ -1,14 +1,15 @@
 @import "./iconfont.wxss";
+@import "./theme.wxss";
 
 page {
-  background: #faf9f6;
-  color: #1a1c1a;
-  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "HarmonyOS Sans SC", "HarmonyOS Sans", "Noto Sans CJK SC", "Noto Sans SC", Roboto, sans-serif;
 }
 
 .page {
   min-height: 100vh;
-  padding: 32rpx 40rpx 56rpx;
+  padding: var(--space-responsive-lg) var(--space-legacy-40rpx) var(--space-legacy-56rpx);
   box-sizing: border-box;
 }
 
@@ -26,6 +27,7 @@ page {
 }
 
 button {
+  font-family: inherit;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -95,3 +97,6 @@ button::after {
 .bg-tertiary-container-light {
   background: rgba(142, 78, 20, 0.1);
 }
+
+/* Reserve space for the custom tab bar and the device safe area. */
+.tab-page { padding-bottom: calc(var(--layout-reserve-160rpx) + env(safe-area-inset-bottom)); }

@@ -1,7 +1,7 @@
 .join-page {
   position: relative;
   overflow: hidden;
-  padding-bottom: 80rpx;
+  padding-bottom: var(--space-legacy-80rpx);
 }
 
 .join-ambient {
@@ -61,7 +61,7 @@
 .join-brand-icon {
   width: 48rpx;
   height: 48rpx;
-  margin-right: 14rpx;
+  margin-right: var(--space-legacy-14rpx);
   font-size: 44rpx !important;
   line-height: 48rpx;
   color: #1f695d;
@@ -83,7 +83,7 @@
 
 .join-title {
   display: block;
-  margin-top: 64rpx;
+  margin-top: var(--space-responsive-2xl);
   text-align: center;
 }
 
@@ -95,14 +95,14 @@
 
 .join-title text {
   display: block;
-  margin-top: 14rpx;
+  margin-top: var(--space-legacy-14rpx);
   color: #3f4946;
   font-size: 28rpx;
 }
 
 .join-card {
-  margin-top: 46rpx;
-  padding: 40rpx;
+  margin-top: var(--space-legacy-46rpx);
+  padding: var(--space-legacy-40rpx);
   background: rgba(255, 255, 255, 0.84);
 }
 
@@ -114,7 +114,7 @@
 .game-info > view:first-child {
   flex: 1;
   min-width: 0;
-  margin-right: 24rpx;
+  margin-right: var(--space-responsive-md);
 }
 
 .field-label {
@@ -125,7 +125,7 @@
 }
 
 .game-name {
-  margin-top: 10rpx;
+  margin-top: var(--space-legacy-10rpx);
   color: #1a1c1a;
   font-size: 36rpx;
   font-weight: 900;
@@ -140,7 +140,7 @@
 .game-submeta,
 .participant-summary,
 .creator-note {
-  margin-top: 10rpx;
+  margin-top: var(--space-legacy-10rpx);
   color: #3f4946;
   font-size: 24rpx;
   line-height: 1.5;
@@ -160,7 +160,7 @@
 
 .divider {
   height: 1rpx;
-  margin: 34rpx 0;
+  margin: var(--space-legacy-34rpx) 0;
   background: rgba(190, 201, 197, 0.45);
 }
 
@@ -173,22 +173,22 @@
 }
 
 .participant-head text {
-  padding: 4rpx 16rpx;
+  padding: var(--space-legacy-4rpx) var(--space-responsive-sm);
   border-radius: 999rpx;
   color: #1f695d;
   background: rgba(31, 105, 93, 0.1);
 }
 
 .name-block {
-  margin-top: 32rpx;
+  margin-top: var(--space-responsive-lg);
 }
 
 .input-shell {
   display: flex;
   align-items: center;
   height: 108rpx;
-  margin-top: 14rpx;
-  padding: 0 28rpx;
+  margin-top: var(--space-legacy-14rpx);
+  padding: 0 var(--space-legacy-28rpx);
   border: 2rpx solid transparent;
   border-radius: 24rpx;
   background: rgba(250, 249, 246, 0.8);
@@ -210,7 +210,7 @@
 }
 
 .name-tip {
-  margin-top: 12rpx;
+  margin-top: var(--space-legacy-12rpx);
   color: #3f4946;
   font-size: 22rpx;
   display: flex;
@@ -219,13 +219,13 @@
 }
 
 .name-tip .info-icon {
-  margin-right: 8rpx;
+  margin-right: var(--space-responsive-xs);
   font-size: 26rpx !important;
   color: #3f4946;
 }
 
 .join-actions {
-  margin-top: 40rpx;
+  margin-top: var(--space-legacy-40rpx);
 }
 
 .join-submit {
@@ -236,7 +236,7 @@
   height: 104rpx;
   font-size: 30rpx;
   line-height: 1;
-  gap: 12rpx;
+  gap: var(--space-legacy-12rpx);
 }
 
 .join-submit .button-icon {
@@ -253,7 +253,7 @@
   justify-content: center;
   width: 100%;
   height: 72rpx;
-  margin-top: 20rpx;
+  margin-top: var(--space-legacy-20rpx);
   color: #3f4946;
   background: transparent;
   font-size: 28rpx;

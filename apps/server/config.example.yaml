@@ -1,7 +1,7 @@
 server:
   env: development
-  http_addr: ":8080"
-  public_base_url: "http://localhost:8080"
+  http_addr: ":19090"
+  public_base_url: "http://localhost:19090"
 
 database:
   path: "./data/oneround.db"
@@ -28,4 +28,3 @@ settlement:
 log:
   level: info
   output_path: ./logs/oneround.log
-

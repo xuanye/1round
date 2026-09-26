@@ -33,7 +33,7 @@ export async function request<T>(options: {
       success(res) {
         if (res.statusCode === 401) {
           clearToken();
-          wx.redirectTo({ url: '/pages/home/index' });
+          wx.switchTab({ url: '/pages/home/index' });
           reject(new Error('unauthorized'));
           return;
         }
@@ -70,7 +70,7 @@ export async function requestBinary(options: {
       success(res) {
         if (res.statusCode === 401) {
           clearToken();
-          wx.redirectTo({ url: '/pages/home/index' });
+          wx.switchTab({ url: '/pages/home/index' });
           reject(new Error('unauthorized'));
           return;
         }

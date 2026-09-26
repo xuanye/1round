@@ -12,8 +12,8 @@ import type { Player } from '../models/player';
 import type { ScoreTransfer } from '../models/score-transfer';
 import { request, requestBinary } from './http';
 
-export function createGame(name: string, maxParticipants: number | null): Promise<GameSession> {
-  return request({ url: '/api/game-sessions', method: 'POST', data: { name, maxParticipants } });
+export function createGame(name: string, maxParticipants: number | null, presetScores?: number[]): Promise<GameSession> {
+  return request({ url: '/api/game-sessions', method: 'POST', data: { name, maxParticipants, presetScores } });
 }
 
 export function getCurrentGame(): Promise<GameSession | null> {

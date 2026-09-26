@@ -12,6 +12,7 @@ import (
 	playersvc "github.com/xuanye/one-round/apps/server/internal/app/player"
 	querysvc "github.com/xuanye/one-round/apps/server/internal/app/query"
 	settlementsvc "github.com/xuanye/one-round/apps/server/internal/app/settlement"
+	"github.com/xuanye/one-round/apps/server/internal/domain"
 )
 
 type GameHandler struct {
@@ -28,10 +29,10 @@ func NewGameHandler(game *gamesvc.Service, query *querysvc.Service, player *play
 func (h *GameHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateGameRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.Error(w, err)
+		response.Error(w, domain.ErrInvalidArgument)
 		return
 	}
-	result, err := h.game.Create(r.Context(), middleware.UserID(r.Context()), req.Name, req.MaxParticipants)
+	result, err := h.game.Create(r.Context(), middleware.UserID(r.Context()), req.Name, req.MaxParticipants, req.PresetScores)
 	if err != nil {
 		response.Error(w, err)
 		return
@@ -70,6 +71,7 @@ func (h *GameHandler) Current(w http.ResponseWriter, r *http.Request) {
 		OwnerUserID:      result.OwnerUserID,
 		Status:           string(result.Status),
 		MaxParticipants:  result.MaxParticipants,
+		PresetScores:     result.PresetScores,
 		ScoreTransferCnt: result.ScoreTransferCnt,
 		Version:          result.Version,
 		CreatedAt:        result.CreatedAt,

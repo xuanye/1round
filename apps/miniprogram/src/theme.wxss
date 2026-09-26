@@ -1,0 +1,89 @@
+/* Logical sizes follow DESIGN.md; safe-area space is added by each fixed region. */
+page, .theme {
+  --color-bg: #F8F7F3;
+  --color-surface: #FFFFFF;
+  --color-text: #202925;
+  --color-text-secondary: #68716D;
+  --color-text-disabled: #A3AAA6;
+  --color-primary: #175D50;
+  --color-primary-pressed: #124B40;
+  --color-primary-subtle: #EAF0EC;
+  --color-border: #DDE3DE;
+  --color-score-positive: #B95740;
+  --color-score-negative: #526D65;
+  --color-danger: #B33E38;
+  /* DESIGN.md spacing scale; density affects spacing, never touch targets. */
+  --spacing-density: 1;
+  --space-xs: calc(4px * var(--spacing-density));
+  --space-sm: calc(8px * var(--spacing-density));
+  --space-md: calc(12px * var(--spacing-density));
+  --space-lg: calc(16px * var(--spacing-density));
+  --space-xl: calc(24px * var(--spacing-density));
+  --space-2xl: calc(32px * var(--spacing-density));
+
+  /* Preserve the older responsive layout: 750rpx equals the screen width. */
+  --space-responsive-xs: calc(8rpx * var(--spacing-density));
+  --space-responsive-sm: calc(16rpx * var(--spacing-density));
+  --space-responsive-md: calc(24rpx * var(--spacing-density));
+  --space-responsive-lg: calc(32rpx * var(--spacing-density));
+  --space-responsive-xl: calc(48rpx * var(--spacing-density));
+  --space-responsive-2xl: calc(64rpx * var(--spacing-density));
+
+  /* Compatibility values outside the scale; use standard tokens for new UI. */
+  --space-legacy-2px: calc(2px * var(--spacing-density));
+  --space-legacy-3px: calc(3px * var(--spacing-density));
+  --space-legacy-64px: calc(64px * var(--spacing-density));
+  --space-legacy-4rpx: calc(4rpx * var(--spacing-density));
+  --space-legacy-5rpx: calc(5rpx * var(--spacing-density));
+  --space-legacy-6rpx: calc(6rpx * var(--spacing-density));
+  --space-legacy-7rpx: calc(7rpx * var(--spacing-density));
+  --space-legacy-10rpx: calc(10rpx * var(--spacing-density));
+  --space-legacy-12rpx: calc(12rpx * var(--spacing-density));
+  --space-legacy-14rpx: calc(14rpx * var(--spacing-density));
+  --space-legacy-18rpx: calc(18rpx * var(--spacing-density));
+  --space-legacy-20rpx: calc(20rpx * var(--spacing-density));
+  --space-legacy-22rpx: calc(22rpx * var(--spacing-density));
+  --space-legacy-26rpx: calc(26rpx * var(--spacing-density));
+  --space-legacy-28rpx: calc(28rpx * var(--spacing-density));
+  --space-legacy-30rpx: calc(30rpx * var(--spacing-density));
+  --space-legacy-34rpx: calc(34rpx * var(--spacing-density));
+  --space-legacy-36rpx: calc(36rpx * var(--spacing-density));
+  --space-legacy-40rpx: calc(40rpx * var(--spacing-density));
+  --space-legacy-42rpx: calc(42rpx * var(--spacing-density));
+  --space-legacy-44rpx: calc(44rpx * var(--spacing-density));
+  --space-legacy-46rpx: calc(46rpx * var(--spacing-density));
+  --space-legacy-50rpx: calc(50rpx * var(--spacing-density));
+  --space-legacy-56rpx: calc(56rpx * var(--spacing-density));
+  --space-legacy-72rpx: calc(72rpx * var(--spacing-density));
+  --space-legacy-80rpx: calc(80rpx * var(--spacing-density));
+
+  /* Clearance for fixed controls is independent of content density. */
+  --layout-reserve-80px: 80px;
+  --layout-reserve-252px: 252px;
+  --layout-reserve-160rpx: 160rpx;
+  --layout-reserve-176rpx: 176rpx;
+  --layout-reserve-260rpx: 260rpx;
+
+  --page-inset: 20px;
+  --control-radius: 12px;
+  --tab-height: 56px;
+  --font-heading: 28px;
+  --font-section: 20px;
+  --font-body: 16px;
+  --font-supporting: 14px;
+  --font-score: 28px;
+  --font-tab: 12px;
+}
+
+.font-system {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "HarmonyOS Sans SC", "HarmonyOS Sans", "Noto Sans CJK SC", "Noto Sans SC", Roboto, sans-serif;
+}
+.font-ios {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+}
+.font-android {
+  font-family: "Noto Sans CJK SC", "Noto Sans SC", Roboto, sans-serif;
+}
+.font-harmony {
+  font-family: "HarmonyOS Sans SC", "HarmonyOS Sans", sans-serif;
+}

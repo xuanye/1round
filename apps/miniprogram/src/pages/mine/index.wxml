@@ -1,0 +1,9 @@
+<view class="page tab-page mine-page">
+  <view wx:if="{{error}}" class="card profile-card"><view>{{error}}</view><button bindtap="onShow">重试</button></view>
+  <view wx:else class="card profile-card"><view class="profile-avatar">{{initial}}</view><view class="profile-name">{{displayName}}</view></view>
+  <view class="card menu-card">
+    <button bindtap="openGame">当前牌局 <text>›</text></button>
+    <button bindtap="openHistory">历史牌局 <text>›</text></button>
+    <button bindtap="showHelp">使用帮助 <text>›</text></button>
+  </view>
+</view>

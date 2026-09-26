@@ -48,7 +48,7 @@ Page({
     }
     if (!inviteCode) {
       wx.showToast({ title: '邀请码缺失', icon: 'none' });
-      setTimeout(() => wx.redirectTo({ url: '/pages/home/index' }), 1500);
+      setTimeout(() => wx.switchTab({ url: '/pages/home/index' }), 1500);
       return;
     }
     this.setData({ inviteCode });
@@ -61,7 +61,7 @@ Page({
       const preview = await joinPreview(inviteCode);
       if (preview.alreadyJoined) {
         // Redirection for users already joined
-        wx.redirectTo({ url: `/pages/game-detail/index?id=${preview.gameSessionId}&inviteCode=${inviteCode}` });
+        wx.switchTab({ url: '/pages/home/index' });
         return;
       }
 
@@ -107,7 +107,7 @@ Page({
         title: '加入失败',
         content: (err as any).message || '获取牌局预览失败',
         showCancel: false,
-        success: () => wx.redirectTo({ url: '/pages/home/index' }),
+        success: () => wx.switchTab({ url: '/pages/home/index' }),
       });
     } finally {
       wx.hideLoading();
@@ -119,7 +119,7 @@ Page({
   },
 
   cancel() {
-    wx.redirectTo({ url: '/pages/home/index' });
+    wx.switchTab({ url: '/pages/home/index' });
   },
 
   async submit() {
@@ -149,7 +149,7 @@ Page({
       saveRecentSession(res.gameSessionId); // Save recent session!
       this.setData({ joining: false, joined: true });
       wx.showToast({ title: '已加入牌局', icon: 'success', duration: 500 });
-      wx.redirectTo({ url: `/pages/game-detail/index?id=${res.gameSessionId}&inviteCode=${this.data.inviteCode}` });
+      wx.switchTab({ url: '/pages/home/index' });
     } catch (err) {
       this.setData({ joining: false });
       wx.showToast({ title: (err as any).message || '加入失败', icon: 'none' });

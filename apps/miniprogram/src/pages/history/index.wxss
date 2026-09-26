@@ -1,13 +1,13 @@
 .tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  margin: 6rpx 0 24rpx;
+  margin: var(--space-legacy-6rpx) 0 var(--space-responsive-md);
   border-bottom: 1rpx solid #e5e7eb;
 }
 
 .tab {
   position: relative;
-  padding: 18rpx 0;
+  padding: var(--space-legacy-18rpx) 0;
   color: #6b7280;
   font-size: 28rpx;
   font-weight: 800;
@@ -32,9 +32,9 @@
 .history-row {
   display: flex;
   align-items: center;
-  gap: 18rpx;
-  padding: 20rpx;
-  margin-bottom: 18rpx;
+  gap: var(--space-legacy-18rpx);
+  padding: var(--space-legacy-20rpx);
+  margin-bottom: var(--space-legacy-18rpx);
 }
 
 .calendar {
@@ -60,7 +60,7 @@
 }
 
 .history-meta {
-  margin-top: 6rpx;
+  margin-top: var(--space-legacy-6rpx);
   overflow: hidden;
   color: #6b7280;
   font-size: 21rpx;
@@ -74,7 +74,7 @@
 
 .status {
   display: inline-block;
-  padding: 5rpx 12rpx;
+  padding: var(--space-legacy-5rpx) var(--space-legacy-12rpx);
   border-radius: 999rpx;
   font-size: 20rpx;
   font-weight: 900;
@@ -84,7 +84,7 @@
 .ended { color: #6b7280; background: #f3f4f6; }
 
 .chevron {
-  margin-top: 8rpx;
+  margin-top: var(--space-responsive-xs);
   color: #9ca3af;
   font-size: 30rpx;
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/xuanye/one-round/apps/server/internal/api/middleware"
 	"github.com/xuanye/one-round/apps/server/internal/api/response"
 	querysvc "github.com/xuanye/one-round/apps/server/internal/app/query"
+	"github.com/xuanye/one-round/apps/server/internal/domain"
 )
 
 type HistoryHandler struct {
@@ -85,7 +86,6 @@ func (h *HistoryHandler) Stats(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusOK, result)
 }
 
-
 func parseLimit(raw string, defaultLimit int) int {
 	if raw == "" {
 		return defaultLimit
@@ -98,4 +98,19 @@ func parseLimit(raw string, defaultLimit int) int {
 		n = 100
 	}
 	return n
+}
+
+func (h *HistoryHandler) Performance(w http.ResponseWriter, r *http.Request) {
+	start, startErr := time.Parse(time.RFC3339, r.URL.Query().Get("start"))
+	end, endErr := time.Parse(time.RFC3339, r.URL.Query().Get("end"))
+	if startErr != nil || endErr != nil {
+		response.Error(w, domain.ErrInvalidArgument)
+		return
+	}
+	result, err := h.query.Performance(r.Context(), middleware.UserID(r.Context()), start, end)
+	if err != nil {
+		response.Error(w, err)
+		return
+	}
+	response.JSON(w, http.StatusOK, result)
 }

@@ -110,3 +110,7 @@ export async function getSettlementMiniProgramCode(gameSessionId: string): Promi
   fileSystemManager.writeFileSync(filePath, base64, 'base64');
   return filePath;
 }
+
+export function getPerformance(start: string, end: string): Promise<import('../models/game-session').Performance> {
+  return request({ url: `/api/history/performance?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}` });
+}

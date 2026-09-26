@@ -1,44 +1,46 @@
-<view class="page tab-page">
-  <view class="stats-card card">
-    <view class="rank-title">我的战绩</view>
-    <view class="stats-row">
-      <view><view class="muted">已结束牌局</view><view class="stats-value">{{stats.totalGames}} 场</view></view>
-      <view><view class="muted">单场最高分</view><view class="stats-value">{{maxScoreLabel}}</view></view>
-    </view>
+<view class="page performance-page tab-page {{fontClass}}">
+  <view class="overview-heading">
+    <text class="page-title">我的战绩</text>
+    <picker mode="selector" range="{{periodLabels}}" value="{{periodIndex}}" disabled="{{loading}}" bindchange="changePeriod" aria-label="选择战绩时间范围">
+      <view class="period-control" hover-class="row-pressed"><text>{{periodLabels[periodIndex]}}</text><text class="iconfont dropdown-icon"></text></view>
+    </picker>
   </view>
-
-  <view class="rank-card card">
-    <view class="rank-title">全站总分榜</view>
-    <view class="rank-head">
-      <text>排名</text>
-      <text>玩家</text>
-      <text>总分</text>
-      <text>平均分/场</text>
+  <view class="date-range">{{rangeLabel}}</view>
+  <view wx:if="{{loading}}" class="page-state" role="status">正在加载战绩…</view>
+  <view wx:elif="{{error}}" class="page-state">
+    <view>{{error}}</view><button class="retry-button" bindtap="loadPerformance" hover-class="row-pressed">重新加载</button>
+  </view>
+  <block wx:else>
+    <view class="metrics">
+      <view class="metric metric-main"><text class="metric-value {{totalScoreTone}} {{totalScoreLabel.length > 6 ? 'compact-score' : ''}}"><text wx:if="{{totalScore !== 0}}" class="score-sign">{{totalScore > 0 ? '+' : '−'}}</text><text>{{totalScore < 0 ? -totalScore : totalScore}}</text></text><text class="metric-label">累计积分</text></view>
+      <view class="metric"><text class="metric-value">{{totalGames}}</text><text class="metric-label">总场次</text></view>
+      <view class="metric"><text class="metric-value">{{wins}}</text><text class="metric-label">胜场</text></view>
+      <view class="metric"><text class="metric-value {{maxScoreTone}} {{maxScoreLabel.length > 5 ? 'compact-score' : ''}}"><text wx:if="{{maxScore !== 0}}" class="score-sign">{{maxScore > 0 ? '+' : '−'}}</text><text>{{maxScore < 0 ? -maxScore : maxScore}}</text></text><text class="metric-label">最高单局</text></view>
     </view>
-    <view wx:for="{{players}}" wx:key="playerId" class="rank-row">
-      <view class="medal medal-{{index}}">{{index + 1}}</view>
-      <view class="player-cell">
-        <view class="avatar">{{item.initial}}</view>
-        <text>{{item.displayName}}</text>
+    <view class="performance-section trend-section">
+      <view class="section-title">累计积分趋势</view>
+      <canvas wx:if="{{totalGames}}" class="trend-canvas" id="performance-trend" type="2d" style="width: 100%; height: {{chartHeight}}px;" width="{{chartWidth}}" height="{{chartHeight}}" aria-label="所选期间累计积分趋势，当前{{totalScoreLabel}}分" />
+      <view wx:else class="section-empty">这段时间还没有战绩，去和牌友来一局吧</view>
+    </view>
+    <view class="performance-section friends-section">
+      <view class="section-head"><text class="section-title">牌友榜</text><button wx:if="{{players.length > 3}}" class="section-link" bindtap="togglePlayers" hover-class="row-pressed">{{expanded ? '收起' : '全部'}}<text class="iconfont chevron"></text></button></view>
+      <view wx:if="{{!players.length}}" class="section-empty">暂无牌友战绩</view>
+      <view wx:for="{{visiblePlayers}}" wx:key="id" class="friend-row {{item.isMe ? 'friend-me' : ''}}">
+        <text class="rank-number rank-{{index}}">{{index + 1}}</text>
+        <image wx:if="{{item.avatarUrl}}" class="friend-avatar" src="{{item.avatarUrl}}" mode="aspectFill" />
+        <view wx:else class="friend-avatar avatar-fallback">{{item.initial}}</view>
+        <text class="friend-name">{{item.isMe ? '我' : item.displayName}}</text>
+        <text class="list-score {{item.scoreTone}} {{item.scoreLabel.length > 7 ? 'compact-score' : ''}}"><text wx:if="{{item.totalScore !== 0}}" class="score-sign">{{item.totalScore > 0 ? '+' : '−'}}</text><text>{{item.totalScore < 0 ? -item.totalScore : item.totalScore}}</text></text>
       </view>
-      <text class="{{item.scoreTone}}">{{item.scoreLabel}}</text>
-      <text>{{item.averageLabel}}</text>
     </view>
-  </view>
-
-  <view class="history-card card">
-    <view class="history-head">
-      <text>历史牌局</text>
-      <text class="muted history-link" bindtap="openHistory">查看全部 ›</text>
-    </view>
-    <view wx:if="{{historyItems.length === 0}}" class="history-empty">暂无历史牌局</view>
-    <view wx:for="{{historyItems}}" wx:key="id" class="history-row" data-id="{{item.id}}" bindtap="openDetail">
-      <view class="calendar {{item.accentTone}}"></view>
-      <view class="history-main">
-        <view class="history-name">{{item.name}}</view>
-        <view class="history-meta">{{item.meta}}</view>
+    <view class="performance-section recent-section">
+      <view class="section-head"><text class="section-title">最近牌局</text><button class="section-link" bindtap="openHistory" hover-class="row-pressed">全部记录<text class="iconfont chevron"></text></button></view>
+      <view wx:if="{{historyItems.length}}" class="recent-description">我的得分（最近{{historyItems.length}}场）</view>
+      <view wx:else class="section-empty">暂无历史牌局</view>
+      <view wx:for="{{historyItems}}" wx:key="id" class="history-row" data-id="{{item.id}}" bindtap="openDetail" hover-class="row-pressed" role="button" aria-label="{{item.name}}，我的得分{{item.scoreLabel}}">
+        <view class="history-main"><view class="history-name">{{item.name}}</view><view class="history-meta">{{item.meta}}</view></view>
+        <text class="list-score {{item.scoreTone}} {{item.scoreLabel.length > 7 ? 'compact-score' : ''}}"><text wx:if="{{item.myFinalScore !== 0}}" class="score-sign">{{item.myFinalScore > 0 ? '+' : '−'}}</text><text>{{item.myFinalScore < 0 ? -item.myFinalScore : item.myFinalScore}}</text></text><text class="iconfont chevron"></text>
       </view>
-      <text class="status ended">已结束</text>
     </view>
-  </view>
+  </block>
 </view>

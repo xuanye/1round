@@ -1,1 +1,1 @@
-{ "navigationBarTitleText": "战绩" }
+{ "navigationBarTitleText": "战绩", "enablePullDownRefresh": true }

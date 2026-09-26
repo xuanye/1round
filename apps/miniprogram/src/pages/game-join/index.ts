@@ -1,6 +1,7 @@
 import { requireLogin } from '../../services/auth.service';
 import { joinPreview, joinGame, getCurrentGame, getSummary, leaveGame } from '../../services/game.service';
 import { getUser, saveRecentSession } from '../../utils/storage';
+import { getSystemFontClass } from '../../utils/system-font';
 import { isSystemDisplayName } from '../../utils/user-profile';
 
 type ParticipantPreview = {
@@ -10,15 +11,7 @@ type ParticipantPreview = {
 
 Page({
   data: {
-    icons: {
-      dice: '\uf522',
-      close: '\uf00d',
-      users: '\uf0c0',
-      edit: '\uf304',
-      info: '\uf05a',
-      check: '\uf058',
-      arrowRight: '\uf061',
-    },
+    fontClass: getSystemFontClass(),
     inviteCode: '',
     game: null as {
       id: string;
@@ -30,6 +23,8 @@ Page({
     participants: [] as ParticipantPreview[],
     participantSummary: '',
     displayName: '',
+    nameLength: 0,
+    nameFocused: false,
     joining: false,
     joined: false,
 
@@ -101,6 +96,7 @@ Page({
         })),
         participantSummary: preview.participants.map((p) => p.displayName).slice(0, 4).join('、'),
         displayName: preferredDisplayName,
+        nameLength: preferredDisplayName.length,
       });
     } catch (err) {
       wx.showModal({
@@ -115,7 +111,21 @@ Page({
   },
 
   onNameInput(event: WechatMiniprogram.Input) {
-    this.setData({ displayName: String(event.detail.value) });
+    const displayName = String(event.detail.value);
+    this.setData({ displayName, nameLength: displayName.length });
+  },
+
+  onNameFocus() {
+    this.setData({ nameFocused: true });
+  },
+
+  onNameBlur() {
+    this.setData({ nameFocused: false });
+  },
+
+  clearName() {
+    if (this.data.joining || this.data.joined) return;
+    this.setData({ displayName: '', nameLength: 0, nameFocused: true });
   },
 
   cancel() {

@@ -54,3 +54,18 @@ export function formatTimeOnly(dateInput: Date | string | number): string {
   const minutes = String(d.getMinutes()).padStart(2, '0');
   return `${hours}:${minutes}`;
 }
+
+/** Formats elapsed game time as "36分" / "1小时24分" / "2天3小时". */
+export function formatElapsed(dateInput: Date | string | number): string {
+  const start = new Date(dateInput);
+  if (isNaN(start.getTime())) return '';
+  const diffMs = Date.now() - start.getTime();
+  if (diffMs < 0) return '';
+  const totalMinutes = Math.floor(diffMs / 60000);
+  const days = Math.floor(totalMinutes / (24 * 60));
+  const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+  const minutes = totalMinutes % 60;
+  if (days > 0) return `${days}天${hours}小时`;
+  if (hours > 0) return `${hours}小时${minutes}分`;
+  return `${minutes}分`;
+}

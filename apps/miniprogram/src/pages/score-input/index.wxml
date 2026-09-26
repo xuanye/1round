@@ -1,21 +1,17 @@
 <view class="page score-page">
-  <view class="score-topbar">
-    <view class="score-title-row">
-      <button class="back-button" bindtap="goBack" hover-class="tap-feedback">
-        <text class="iconfont">{{icons.back}}</text>
-      </button>
-      <view class="score-title">给他人记分</view>
-    </view>
-    <button class="info-button" hover-class="tap-feedback">
-      <text class="iconfont">{{icons.info}}</text>
-    </button>
-  </view>
+  <view class="score-game-name">{{gameName}}</view>
 
-  <view class="receiver-head">
-    <view class="section-label">选择接收方</view>
-    <button class="select-all" bindtap="toggleAll" hover-class="tap-feedback">
-      {{allSelected ? '取消全选' : '全选其余人'}}
-    </button>
+  <!-- Receiver selection -->
+  <view class="score-section-head score-receiver-head">
+    <view class="score-section-title-row">
+      <view class="score-section-title">我给谁记分?</view>
+      <view class="score-section-hint">可多选</view>
+    </view>
+    <view class="score-select-actions">
+      <text class="score-selected-count">已选{{selectedCount}}人</text>
+      <text class="score-select-divider">|</text>
+      <button class="score-select-all" bindtap="toggleAll" hover-class="tap-feedback">{{allSelected ? '取消全选' : '全选'}}</button>
+    </view>
   </view>
 
   <view class="receiver-grid">
@@ -23,50 +19,48 @@
       wx:for="{{receivers}}"
       wx:key="id"
       data-id="{{item.id}}"
-      class="receiver-card {{item.selected ? 'selected' : ''}}"
+      class="receiver-card {{item.selected ? 'is-selected' : ''}}"
       bindtap="toggleReceiver"
       hover-class="tap-feedback"
     >
-      <view class="receiver-avatar text-avatar">{{item.initial}}</view>
-      <view class="receiver-main">
+      <view class="receiver-content">
+        <view class="receiver-avatar">{{item.initial}}</view>
         <view class="receiver-name">{{item.displayName}}</view>
-        <view class="receiver-score">当前: {{item.currentScore}}</view>
       </view>
-      <text wx:if="{{item.selected}}" class="iconfont check-mark">{{icons.check}}</text>
     </view>
   </view>
 
-  <view class="score-input-section">
-    <view class="section-label">输入每人分值</view>
-    <view class="score-display">
-      <view class="score-glow"></view>
-      <view class="score-number">{{scoreText}}</view>
-      <view class="score-unit">分 / 每人</view>
+  <!-- Per-person amount -->
+  <view class="score-divider" />
+  <view class="score-section-head">
+    <view class="score-section-title-row">
+      <view class="score-section-title">每人分数</view>
     </view>
-    <view class="score-helper">{{helperText}}</view>
+  </view>
+  <view class="score-display">
+    <text class="score-number">{{scoreText}}</text>
+    <text class="score-unit">分</text>
   </view>
 
   <view class="quick-scores-row">
-    <button wx:for="{{presetScores}}" wx:key="*this" class="quick-score-btn" data-value="{{item}}" bindtap="quickScore" hover-class="tap-feedback">+{{item}}</button>
+    <button
+      wx:for="{{presetScores}}"
+      wx:key="*this"
+      class="quick-score-btn {{scoreText == item ? 'is-active' : ''}}"
+      data-value="{{item}}"
+      bindtap="quickScore"
+      hover-class="tap-feedback"
+    >{{item}}</button>
   </view>
 
+  <!-- Numeric keypad -->
   <view class="num-pad">
-    <button wx:for="{{numKeys}}" wx:key="*this" data-value="{{item}}" bindtap="pressKey" hover-class="tap-feedback">{{item}}</button>
-    <button class="clear-key" data-value="clear" bindtap="pressKey" hover-class="tap-feedback">
-      <text class="iconfont">{{icons.deleteLeft}}</text>
+    <button wx:for="{{numKeys}}" wx:key="*this" class="pad-key" data-value="{{item}}" bindtap="pressKey" hover-class="tap-feedback">{{item}}</button>
+    <button class="pad-key pad-key-text" data-value="clear" bindtap="pressKey" hover-class="tap-feedback">清空</button>
+    <button class="pad-key" data-value="0" bindtap="pressKey" hover-class="tap-feedback">0</button>
+    <button class="pad-key" data-value="backspace" bindtap="pressKey" hover-class="tap-feedback" aria-label="删除一位">
+      <text class="iconfont pad-backspace">{{icons.deleteLeft}}</text>
     </button>
-    <button data-value="0" bindtap="pressKey" hover-class="tap-feedback">0</button>
-    <view class="done-key">
-      <text class="iconfont">{{icons.doneAll}}</text>
-    </view>
-  </view>
-
-  <view wx:if="{{selectedCount > 0 && scoreText !== '0'}}" class="preview-card">
-    <text class="iconfont preview-icon">{{icons.transfer}}</text>
-    <view>
-      <view class="preview-title">分发给 {{selectedCount}} 位好友</view>
-      <view class="preview-deduction">{{deductionText}}</view>
-    </view>
   </view>
 
   <view wx:if="{{feedbackMessage}}" class="feedback-banner {{feedbackTone}}">
@@ -74,9 +68,10 @@
   </view>
 
   <view class="submit-dock">
+    <view wx:if="{{summaryText}}" class="submit-summary">{{summaryText}}</view>
     <button
-      class="submit-button {{canSubmit ? 'active' : ''}}"
-      disabled="{{!canSubmit}}"
+      class="submit-button"
+      disabled="{{!canSubmit || submitting}}"
       bindtap="submit"
       hover-class="tap-feedback"
     >

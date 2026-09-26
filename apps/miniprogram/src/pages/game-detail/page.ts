@@ -12,7 +12,7 @@ import {
   getJoinMiniProgramCode,
   getSettlementMiniProgramCode,
 } from '../../services/game.service';
-import { formatScore, formatTimeOnly } from '../../utils/format';
+import { formatElapsed, formatScore, formatTimeOnly } from '../../utils/format';
 import { getUser, saveRecentSession } from '../../utils/storage';
 import { RealtimeService } from '../../services/realtime.service';
 import type { ScoreTransfer, ScoreChange } from '../../models/score-transfer';
@@ -21,6 +21,10 @@ type ParsedTransferPart = {
   text: string;
   type: 'name' | 'normal' | 'value';
 };
+
+// Swipe-to-reveal geometry: full open offset (px), settle animation duration (ms).
+const SWIPE_OPEN_X = -88;
+const SWIPE_SETTLE_MS = 250;
 
 function parseTransferText(text: string): ParsedTransferPart[] {
   const parts: ParsedTransferPart[] = [];
@@ -64,28 +68,26 @@ type DetailParticipant = {
   role: string;
   score: string;
   scoreTone: 'positive' | 'negative' | 'muted';
+  totalScore: number;
   isCreator: boolean;
   isMe: boolean;
 };
 
 type DetailTransfer = {
   id: string;
-  text: string;
-  parsedParts: ParsedTransferPart[];
-  time: string;
+  shortTime: string;
+  headline: string;
+  changeLine: string;
+  subLabel: string;
+  amountLabel: string;
+  deltaLabel: string;
   sequenceNo: number;
-  receiverPlayerIds: string[];
-  transferKind?: string;
-  reversalOfTransferId?: string;
   reversedAt?: string;
   canReverse: boolean;
   isReversal: boolean;
   originalText: string;
-  initiatedByName: string;
-  initiatorInitial: string;
   senderChange: DetailScoreChange | null;
   scoreChanges: DetailScoreChange[];
-  changeLabel: string;
 };
 
 type DetailScoreChange = {
@@ -94,6 +96,7 @@ type DetailScoreChange = {
   initial: string;
   beforeText: string;
   afterText: string;
+  delta: number;
   deltaText: string;
   effectText: string;
   effectTone: 'returned' | 'deducted';
@@ -121,6 +124,7 @@ function mapScoreChange(change: ScoreChange): DetailScoreChange {
     initial: change.playerName.slice(0, 1),
     beforeText: formatScore(change.before),
     afterText: formatScore(change.after),
+    delta: change.delta,
     deltaText: formatScore(change.delta),
     effectText: change.delta > 0 ? `返还 ${formatScore(change.delta)}` : `扣回 ${Math.abs(change.delta)}`,
     effectTone: change.delta > 0 ? 'returned' : 'deducted',
@@ -133,24 +137,58 @@ function mapDetailTransfer(transfer: ScoreTransfer, canReverse: boolean): Detail
   const originalText = transfer.text.replace(/^撤销：/, '').replace(/ \(已撤销\)$/, '');
   const scoreChanges = (transfer.scoreChanges || []).map(mapScoreChange);
   const initiatedByName = transfer.initiatedByName || scoreChanges[0]?.playerName || '';
+  const receiverIds = transfer.receiverPlayerIds || [];
+  const receiverNames = receiverIds
+    .map((id) => scoreChanges.find((change) => change.playerId === id)?.playerName || '')
+    .filter(Boolean);
+  const sender = scoreChanges[0] || null;
+
+  let headline: string;
+  let amountLabel: string;
+  if (isReversal) {
+    headline = `${initiatedByName}发起撤销`;
+    amountLabel = '';
+  } else if (receiverNames.length > 1) {
+    headline = `${initiatedByName} → ${receiverNames.join('、')}`;
+    amountLabel = `每人${transfer.amount}分`;
+  } else if (receiverNames.length === 1) {
+    headline = `${initiatedByName} → ${receiverNames[0]}`;
+    amountLabel = `${transfer.amount}分`;
+  } else {
+    // Fallback when receiver names are missing from scoreChanges.
+    const parts = parseTransferText(originalText);
+    headline = parts.map((part) => part.text).join('');
+    amountLabel = `${transfer.amount}分`;
+  }
+
+  const subLabel = isReversal
+    ? ''
+    : sender
+      ? `${sender.playerName}: ${sender.beforeText} → `
+      : '';
+  const changeLine = sender && !isReversal ? sender.afterText : '';
+  const deltaLabel = sender && !isReversal && sender.delta < 0
+    ? `本次 ${formatScore(sender.delta)}`
+    : '';
+
+  const createdAtDate = new Date(transfer.createdAt);
+  const isToday = !isNaN(createdAtDate.getTime()) && createdAtDate.toDateString() === new Date().toDateString();
+
   return {
     id: transfer.id,
-    text: transfer.text,
-    parsedParts: parseTransferText(originalText),
     originalText,
-    time: formatTransferTime(transfer.createdAt),
+    shortTime: isToday ? formatTimeOnly(transfer.createdAt) : formatTransferTime(transfer.createdAt),
+    headline,
+    changeLine,
+    subLabel,
+    amountLabel,
+    deltaLabel,
     sequenceNo: transfer.sequenceNo,
-    receiverPlayerIds: transfer.receiverPlayerIds || [],
-    transferKind: transfer.transferKind,
-    reversalOfTransferId: transfer.reversalOfTransferId,
     reversedAt: transfer.reversedAt,
     canReverse,
     isReversal,
-    initiatedByName,
-    initiatorInitial: initiatedByName.slice(0, 1),
-    senderChange: scoreChanges[0] || null,
+    senderChange: sender,
     scoreChanges,
-    changeLabel: isReversal ? '撤销后的积分变化' : transfer.reversedAt ? '原计分时的发起方积分' : '发起方积分',
   };
 }
 
@@ -309,17 +347,13 @@ export function createGameDetailPage() {
   return {
   data: {
     icons: {
-      back: '\uf060',
       qrCode: '\uf029',
-      ranking: '\ue561',
-      star: '\uf005',
-      plusCircle: '\uf055',
       history: '\uf1da',
-      flag: '\uf024',
-      home: '\uf015',
-      chart: '\uf201',
       info: '\uf05a',
-      undo: '\uf0e2',
+      edit: '\uf304',
+      checkSquare: '\uf14a',
+      chevronRight: '\uf054',
+      chevronUp: '\uf077',
     },
     id: '',
     inviteCode: '',
@@ -334,8 +368,18 @@ export function createGameDetailPage() {
       status: 'active' as 'active' | 'finished',
       publicShareToken: '',
     },
+    gameCreatedAt: '',
+    elapsedText: '',
+    scoreTransferCount: 0,
+    participantCount: 0,
+    showAllTransfers: false,
+    swipedTransferId: '',
+    swipeDragId: '',
+    swipeDragX: 0,
+    swipeDragging: false,
     participants: [] as DetailParticipant[],
     transfers: [] as DetailTransfer[],
+    visibleTransfers: [] as DetailTransfer[],
     pendingFinishRequest: null as {
       id: string;
       requestedByPlayerId: string;
@@ -364,6 +408,120 @@ export function createGameDetailPage() {
   },
 
   realtime: null as RealtimeService | null,
+
+  // Swipe-to-reveal state for the undo action (WeChat chat-style).
+  swipeTouch: null as { id: string; x: number; y: number; base: number; engaged: boolean } | null,
+  swipeSettleTimer: null as ReturnType<typeof setTimeout> | null,
+
+  refreshVisibleTransfers() {
+    const { transfers, showAllTransfers, game } = this.data;
+    const active = game.status === 'active';
+    const visible = active && !showAllTransfers ? transfers.slice(0, 3) : transfers;
+    this.setData({ visibleTransfers: visible });
+  },
+
+  toggleTransfers() {
+    this.setData({ showAllTransfers: !this.data.showAllTransfers });
+    this.refreshVisibleTransfers();
+  },
+
+  // Horizontal drag distance is clamped to [SWIPE_MIN, 0]; the row follows
+  // the finger while engaged, then settles open or springs back on release.
+  onTransferRowTouchStart(event: WechatMiniprogram.TouchEvent) {
+    const touch = event.touches[0];
+    if (!touch) return;
+    const id = String(event.currentTarget.dataset.id || '');
+    if (!id) return;
+    this.swipeTouch = {
+      id,
+      x: touch.clientX,
+      y: touch.clientY,
+      base: this.data.swipedTransferId === id ? SWIPE_OPEN_X : 0,
+      engaged: false,
+    };
+  },
+
+  onTransferRowTouchMove(event: WechatMiniprogram.TouchEvent) {
+    const start = this.swipeTouch;
+    if (!start) return;
+    const touch = event.touches[0];
+    if (!touch) return;
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (!start.engaged) {
+      // Only take over the gesture when horizontal movement clearly dominates,
+      // so vertical list scrolling keeps working.
+      if (Math.abs(dx) < 8 || Math.abs(dx) <= Math.abs(dy)) return;
+      start.engaged = true;
+    }
+    const nextX = Math.round(Math.max(SWIPE_OPEN_X, Math.min(0, start.base + dx)));
+    if (nextX !== this.data.swipeDragX || this.data.swipeDragId !== start.id) {
+      this.setData({ swipeDragId: start.id, swipeDragX: nextX, swipeDragging: true });
+    }
+  },
+
+  onTransferRowTouchEnd(event: WechatMiniprogram.TouchEvent) {
+    const start = this.swipeTouch;
+    this.swipeTouch = null;
+    if (!start || start.id !== String(event.currentTarget.dataset.id || '')) return;
+    if (!start.engaged) return;
+    this.settleSwipe(start.id, this.data.swipeDragX);
+  },
+
+  onTransferRowTouchCancel() {
+    const start = this.swipeTouch;
+    this.swipeTouch = null;
+    if (!start || !start.engaged) return;
+    // Gesture cancelled: animate back to the pre-drag position.
+    this.setData({
+      swipeDragId: start.id,
+      swipeDragX: start.base,
+      swipeDragging: false,
+      swipedTransferId: start.base === SWIPE_OPEN_X ? start.id : '',
+    });
+    this.scheduleSwipeCleanup(start.id);
+  },
+
+  // Decide the final open/closed state from the dragged offset and animate there.
+  settleSwipe(id: string, dragX: number) {
+    const target = this.data.transfers.find((item) => item.id === id);
+    const canReverse = !!target?.canReverse;
+    // Reversible rows snap open past the midpoint; anything else springs back.
+    const finalOpen = canReverse && dragX <= SWIPE_OPEN_X / 2;
+    this.setData({
+      swipedTransferId: finalOpen ? id : '',
+      swipeDragId: id,
+      swipeDragX: finalOpen ? SWIPE_OPEN_X : 0,
+      swipeDragging: false,
+    });
+    this.scheduleSwipeCleanup(id);
+  },
+
+  scheduleSwipeCleanup(id: string) {
+    this.clearSwipeSettleTimer();
+    this.swipeSettleTimer = setTimeout(() => {
+      // Hand the transform back to the .is-swiped class at the same offset,
+      // so clearing the inline style causes no visual jump.
+      if (this.data.swipeDragId === id && !this.data.swipeDragging) {
+        this.setData({ swipeDragId: '', swipeDragX: 0 });
+      }
+      this.swipeSettleTimer = null;
+    }, SWIPE_SETTLE_MS);
+  },
+
+  clearSwipeSettleTimer() {
+    if (this.swipeSettleTimer) {
+      clearTimeout(this.swipeSettleTimer);
+      this.swipeSettleTimer = null;
+    }
+  },
+
+  onTransferRowTap() {
+    // Tapping the row closes an open swipe instead of acting on it.
+    if (this.data.swipedTransferId) {
+      this.setData({ swipedTransferId: '', swipeDragId: '', swipeDragX: 0, swipeDragging: false });
+    }
+  },
 
   async onLoad(query: Record<string, string>) {
     const id = query.id || '';
@@ -413,12 +571,14 @@ export function createGameDetailPage() {
     if (this.realtime) {
       this.realtime.disconnect();
     }
+    this.clearSwipeSettleTimer();
   },
 
   onUnload() {
     if (this.realtime) {
       this.realtime.disconnect();
     }
+    this.clearSwipeSettleTimer();
   },
 
   async loadGameData() {
@@ -448,10 +608,13 @@ export function createGameDetailPage() {
           role: isPlayerCreator ? '创建者' : '已加入',
           score: formatScore(p.totalScore),
           scoreTone: p.totalScore > 0 ? 'positive' as const : p.totalScore < 0 ? 'negative' as const : 'muted' as const,
+          totalScore: p.totalScore,
           isCreator: isPlayerCreator,
           isMe: isMe,
         };
       });
+      // Scoreboard shows players ranked by score (ties keep join order).
+      participants.sort((a, b) => b.totalScore - a.totalScore);
 
       const roundStatus = summary.roundStatus || null;
       const uninvolvedNamesText = roundStatus && roundStatus.pendingPlayerNames
@@ -470,11 +633,21 @@ export function createGameDetailPage() {
           status: 'active',
           publicShareToken: summary.publicShareToken || '',
         },
+        gameCreatedAt: this.data.gameCreatedAt,
+        elapsedText: this.data.gameCreatedAt ? formatElapsed(this.data.gameCreatedAt) : '',
+        scoreTransferCount: summary.scoreTransferCount,
+        participantCount: summary.players.length,
         participants,
         pendingFinishRequest: summary.pendingFinishRequest || null,
         roundStatus,
         uninvolvedNamesText,
         hasMoreTransfers: true,
+        showAllTransfers: false,
+        swipedTransferId: '',
+        swipeDragId: '',
+        swipeDragX: 0,
+        swipeDragging: false,
+        visibleTransfers: [],
         myPlayerId,
       });
 
@@ -512,8 +685,10 @@ export function createGameDetailPage() {
       });
 
       const nextTransfers = reload ? mapped : [...this.data.transfers, ...mapped];
+      const active = this.data.game.status === 'active';
       this.setData({
         transfers: nextTransfers,
+        visibleTransfers: active && !this.data.showAllTransfers ? nextTransfers.slice(0, 3) : nextTransfers,
         hasMoreTransfers: list.length === 20,
         isLoadingTransfers: false,
       });
@@ -535,6 +710,7 @@ export function createGameDetailPage() {
         role: '已结算',
         score: formatScore(p.finalScore),
         scoreTone: p.finalScore > 0 ? 'positive' as const : p.finalScore < 0 ? 'negative' as const : 'muted' as const,
+        totalScore: p.finalScore,
         isCreator: false,
         isMe: p.displayName === user?.displayName,
       }));
@@ -555,6 +731,8 @@ export function createGameDetailPage() {
         },
         participants: mappedParticipants,
         transfers: mappedTransfers,
+        visibleTransfers: mappedTransfers,
+        showAllTransfers: true,
         pendingFinishRequest: null,
         hasMoreTransfers: false,
         myPlayerId,
@@ -574,6 +752,7 @@ export function createGameDetailPage() {
         role: '公开结算',
         score: formatScore(p.finalScore),
         scoreTone: p.finalScore > 0 ? 'positive' as const : p.finalScore < 0 ? 'negative' as const : 'muted' as const,
+        totalScore: p.finalScore,
         isCreator: false,
         isMe: false,
       }));
@@ -589,6 +768,8 @@ export function createGameDetailPage() {
         },
         participants: mappedParticipants,
         transfers: [],
+        visibleTransfers: [],
+        showAllTransfers: true,
         pendingFinishRequest: null,
         hasMoreTransfers: false,
         myPlayerId: '',
@@ -855,6 +1036,9 @@ export function createGameDetailPage() {
     const transferId = e.currentTarget.dataset.transferId;
     if (!transferId) return;
 
+    // Close the swipe reveal before confirming.
+    this.setData({ swipedTransferId: '', swipeDragId: '', swipeDragX: 0, swipeDragging: false });
+
     const self = this;
     wx.showModal({
       title: '确认撤销计分',
@@ -879,10 +1063,6 @@ export function createGameDetailPage() {
         }
       }
     });
-  },
-
-  ranking() {
-    wx.switchTab({ url: '/pages/ranking/index' });
   },
 
   renameSelf() {

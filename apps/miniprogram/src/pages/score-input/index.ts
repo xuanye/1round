@@ -16,8 +16,8 @@ function buildSubmitText(receivers: Receiver[], score: number): string {
   const selected = receivers.filter((receiver) => receiver.selected);
   if (selected.length === 0) return '请选择接收方';
   if (!Number.isInteger(score) || score <= 0) return '请输入分值';
-  if (selected.length === 1) return `给 ${selected[0].displayName} +${score}`;
-  return `给 ${selected.length} 人各 +${score}`;
+  if (selected.length === 1) return `给${selected[0].displayName}计${score}分`;
+  return `给每人计${score}分`;
 }
 
 function resolveSubmitErrorMessage(message: string): { feedback: string; navigateBack: boolean } {
@@ -33,22 +33,17 @@ function resolveSubmitErrorMessage(message: string): { feedback: string; navigat
 Page({
   data: {
     icons: {
-      back: '\uf060',
-      info: '\uf05a',
-      check: '\uf058',
-      deleteLeft: '\uf55a',
-      doneAll: '\uf560',
-      transfer: '\uf362',
+      deleteLeft: '',
     },
     id: '',
+    gameName: '',
     presetScores: [...DEFAULT_PRESET_SCORES],
     receivers: [] as Receiver[],
     scoreText: '0',
     selectedCount: 0,
     canSubmit: false,
     submitText: '请选择接收方',
-    deductionText: '你将扣除 0 分',
-    helperText: '先选接收方，再输入每人分值',
+    summaryText: '',
     allSelected: false,
     numKeys: ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
     submitting: false,
@@ -82,7 +77,11 @@ Page({
         }));
 
       const presetScores = summary.presetScores?.length ? summary.presetScores : [...DEFAULT_PRESET_SCORES];
-      this.setData({ receivers, presetScores });
+      this.setData({
+        receivers,
+        presetScores,
+        gameName: summary.name,
+      });
       this.applyState(receivers, String(presetScores[0]));
     } catch (err) {
       wx.showToast({ title: (err as any).message || '获取成员失败', icon: 'none' });
@@ -113,6 +112,8 @@ Page({
     const value = String(event.currentTarget.dataset.value);
     let scoreText = this.data.scoreText;
     if (value === 'clear') {
+      scoreText = '0';
+    } else if (value === 'backspace') {
       scoreText = scoreText.length > 1 ? scoreText.slice(0, -1) : '0';
     } else if (scoreText === '0') {
       scoreText = value === '0' ? '0' : value;
@@ -128,23 +129,20 @@ Page({
   },
 
   applyState(receivers: Receiver[], scoreText: string, options?: { preserveFeedback?: boolean }) {
-    const selectedCount = receivers.filter((receiver) => receiver.selected).length;
+    const selected = receivers.filter((receiver) => receiver.selected);
+    const selectedCount = selected.length;
     const score = Number(scoreText);
     const canSubmit = selectedCount > 0 && Number.isInteger(score) && score > 0;
     const submitText = buildSubmitText(receivers, score);
-    const helperText = canSubmit
-      ? `本次你将扣除 ${score * selectedCount} 分`
-      : selectedCount === 0
-        ? '先选接收方，再输入每人分值'
-        : '分值必须是大于 0 的整数';
     this.setData({
       receivers,
       scoreText,
       selectedCount,
       canSubmit,
       submitText,
-      deductionText: `你将扣除 ${score * selectedCount} 分`,
-      helperText,
+      summaryText: canSubmit
+        ? `已选${selectedCount}人，每人${score}分，我共扣${selectedCount * score}分。`
+        : '',
       allSelected: receivers.length > 0 && selectedCount === receivers.length,
       feedbackMessage: options?.preserveFeedback ? this.data.feedbackMessage : '',
       feedbackTone: options?.preserveFeedback ? this.data.feedbackTone : 'info',

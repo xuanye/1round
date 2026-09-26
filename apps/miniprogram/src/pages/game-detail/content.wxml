@@ -1,21 +1,35 @@
 <view class="page detail-page {{isPublicShare ? 'public-share-page' : ''}} {{isHome ? 'home-detail ' + fontClass : ''}}">
   <view wx:if="{{isHome}}" class="brand"><image class="brand-mark" src="/images/home/suits.png" aria-hidden="true" /><text class="brand-name">一局一分</text></view>
-  <!-- Topbar -->
-  <view wx:if="{{!isPublicShare}}" class="detail-topbar">
+  <!-- Topbar (settled / non-active views only; active view uses the big-title header) -->
+  <view wx:if="{{!isPublicShare && game.status !== 'active'}}" class="detail-topbar">
     <view wx:if="{{!isHome}}" style="width: 76rpx;"></view>
     <view class="detail-title">
       <view>{{game.name}}</view>
       <text>{{game.createdAtText}}</text>
     </view>
-    <button wx:if="{{game.status === 'active'}}" class="round-button" bindtap="showInvite" hover-class="tap-feedback" aria-label="邀请加入牌局">
-      <image wx:if="{{isHome}}" class="action-icon" src="/images/home/qr.png" aria-hidden="true" />
-      <text wx:else class="iconfont">{{icons.qrCode}}</text>
-    </button>
-    <view wx:else style="width: 76rpx;"></view>
+    <view style="width: 76rpx;"></view>
   </view>
 
   <!-- ACTIVE MODE UI -->
   <block wx:if="{{game.status === 'active'}}">
+    <!-- Game identity: big title + single QR action -->
+    <view class="game-identity">
+      <view class="game-name">{{game.name}}</view>
+      <button class="game-qr-button" bindtap="showInvite" hover-class="tap-feedback" aria-label="邀请加入牌局">
+        <image wx:if="{{isHome}}" class="game-qr-icon" src="/images/home/qr.png" aria-hidden="true" />
+        <text wx:else class="iconfont game-qr-icon">{{icons.qrCode}}</text>
+      </button>
+    </view>
+
+    <!-- Status meta -->
+    <view class="game-meta">
+      <view class="game-meta-line">
+        <view class="status-dot" />
+        <text>进行中 · {{participantCount}}人 · {{scoreTransferCount}}笔计分</text>
+      </view>
+      <view wx:if="{{elapsedText}}" class="game-meta-sub">已进行 {{elapsedText}}</view>
+    </view>
+
     <!-- Pending Finish Request Banner -->
     <view wx:if="{{pendingFinishRequest}}" class="finish-request-banner card">
       <block wx:if="{{game.isCreator}}">
@@ -41,38 +55,29 @@
       </view>
     </view>
 
-    <!-- Active Participants Section -->
-    <view class="section-row">
-      <view class="section-label">当前参与者</view>
-      <view class="rank-link" bindtap="ranking" hover-class="tap-feedback">
-        <text class="iconfont inline-icon">{{icons.ranking}}</text>
-        排行榜
-      </view>
+    <!-- Scoreboard -->
+    <view class="section-head">
+      <view class="section-title">当前比分</view>
+      <view class="section-unit">分</view>
     </view>
-
-    <view class="participant-list card">
-      <view wx:for="{{participants}}" wx:key="id" class="participant-row {{isHome && item.score.length > 7 ? 'large-score' : ''}}" bindtap="{{item.isMe ? 'renameSelf' : ''}}">
-        <view class="person">
-          <view class="avatar-wrap {{item.isCreator ? 'creator' : ''}}">
-            <view class="avatar">{{item.initial}}</view>
-            <text wx:if="{{item.isCreator}}" class="iconfont star-icon">{{icons.star}}</text>
-          </view>
-          <view>
-            <view class="person-name">{{item.name}} {{item.isMe ? '(我)' : ''}}</view>
-            <view class="person-role">{{item.role}}</view>
-          </view>
+    <view class="score-list">
+      <view wx:for="{{participants}}" wx:key="id" class="score-row" bindtap="{{item.isMe ? 'renameSelf' : ''}}">
+        <view class="score-rank">{{index + 1}}</view>
+        <view class="score-avatar">{{item.initial}}</view>
+        <view class="score-player">
+          <view class="score-player-name">{{item.name}}</view>
+          <view wx:if="{{item.isMe}}" class="score-player-self">我</view>
         </view>
-        <view class="score {{item.scoreTone}}">{{item.score}}</view>
+        <view class="score-value {{item.scoreTone}}">{{item.score}}</view>
       </view>
     </view>
 
-    <view class="rename-tip">点击自己可修改名字</view>
-
-    <!-- Start Scoring -->
-    <button wx:if="{{!isHome}}" class="button-primary score-entry" bindtap="inputScore" hover-class="tap-feedback" disabled="{{participants.length < 2}}">
-      <text class="iconfont button-icon">{{icons.plusCircle}}</text>
+    <!-- Primary scoring entry -->
+    <button class="button-primary score-entry" bindtap="inputScore" hover-class="tap-feedback" disabled="{{participants.length < 2}}">
+      <text class="iconfont button-icon">{{icons.edit}}</text>
       记一笔
     </button>
+    <view wx:if="{{participants.length < 2}}" class="scoring-hint">至少两位参与者加入后可以计分</view>
   </block>
 
   <!-- SETTLED MODE UI -->
@@ -138,92 +143,89 @@
     </block>
   </block>
 
-  <!-- Score Transfers List Section -->
-  <view wx:if="{{!isPublicShare}}" class="history-head">
-    <view class="section-label">计分明细</view>
-    <text class="iconfont history-header-icon">{{icons.history}}</text>
+  <!-- Recent Score Transfers -->
+  <view wx:if="{{!isPublicShare}}" class="section-head">
+    <view class="section-title">{{game.status === 'active' ? '最近计分' : '计分明细'}}</view>
+    <button wx:if="{{game.status === 'active' && transfers.length > 3}}" class="section-link" bindtap="toggleTransfers" hover-class="tap-feedback">
+      {{showAllTransfers ? '收起' : '全部明细'}}
+      <text class="iconfont section-link-icon">{{showAllTransfers ? icons.chevronUp : icons.chevronRight}}</text>
+    </button>
   </view>
 
   <view wx:if="{{!isPublicShare}}" class="transfer-list">
-    <view wx:for="{{transfers}}" wx:key="id" class="transfer-card {{item.isReversal ? 'transfer-card-reversal' : ''}} {{item.reversedAt ? 'transfer-card-reversed' : ''}}">
-      <view class="transfer-top">
-        <view class="transfer-avatar">{{item.initiatorInitial}}</view>
-        <view class="transfer-main">
-          <view wx:if="{{item.isReversal}}" class="transfer-text">{{item.initiatedByName}}发起撤销</view>
-          <view wx:else class="transfer-text">
-            <block wx:for="{{item.parsedParts}}" wx:key="index" wx:for-item="part">
-              <text wx:if="{{part.type === 'name'}}" class="transfer-name-bold">{{part.text}}</text>
-              <text wx:elif="{{part.type === 'value'}}" class="transfer-value-highlight">{{part.text}}</text>
-              <text wx:else>{{part.text}}</text>
-            </block>
-          </view>
-          <view wx:if="{{item.isReversal}}" class="transfer-original">原计分：{{item.originalText}}</view>
-          <view class="transfer-time">{{item.time}}</view>
-        </view>
-        <view wx:if="{{item.isReversal || item.reversedAt}}" class="transfer-status">已撤销</view>
+    <view wx:for="{{visibleTransfers}}" wx:key="id" class="transfer-row-wrap">
+      <view wx:if="{{item.canReverse && swipedTransferId === item.id}}" class="transfer-row-actions">
+        <button class="transfer-row-action" catchtap="onReverseTransfer" data-transfer-id="{{item.id}}">撤销</button>
       </view>
-
-      <view wx:if="{{item.senderChange}}" class="transfer-change-panel">
-        <view class="transfer-change-label">{{item.changeLabel}}</view>
-        <block wx:if="{{item.isReversal}}">
-          <view wx:for="{{item.scoreChanges}}" wx:key="playerId" wx:for-item="change" class="transfer-change-row">
-            <view class="change-person">
-              <view class="change-avatar">{{change.initial}}</view>
-              <text class="change-name">{{change.playerName}}</text>
-            </view>
-            <view class="change-values">
-              <text class="change-before">{{change.beforeText}}</text>
-              <text class="change-arrow">→</text>
-              <text class="change-after {{change.afterTone}}">{{change.afterText}}</text>
-            </view>
-            <view class="change-effect {{change.effectTone}}">{{change.effectText}}</view>
+      <view
+        class="transfer-row {{item.reversedAt ? 'transfer-row-muted' : ''}} {{swipedTransferId === item.id ? 'is-swiped' : ''}}"
+        style="{{swipeDragId === item.id ? 'transform: translateX(' + swipeDragX + 'px);' + (swipeDragging ? 'transition: none;' : '') : ''}}"
+        data-id="{{item.id}}"
+        bindtap="onTransferRowTap"
+        bindtouchstart="onTransferRowTouchStart"
+        bindtouchmove="onTransferRowTouchMove"
+        bindtouchend="onTransferRowTouchEnd"
+        bindtouchcancel="onTransferRowTouchCancel"
+      >
+        <view class="transfer-row-time">{{item.shortTime}}</view>
+        <view class="transfer-row-main">
+          <view class="transfer-row-headline">{{item.headline}}</view>
+          <view wx:if="{{item.subLabel}}" class="transfer-row-sub">
+            {{item.subLabel}}<text class="transfer-row-after {{item.senderChange.afterTone}}">{{item.changeLine}}</text>
           </view>
-        </block>
-        <view wx:else class="transfer-change-row transfer-sender-row">
-          <view class="change-values">
-            <text class="change-before">{{item.senderChange.beforeText}}</text>
-            <text class="change-arrow">→</text>
-            <text class="change-after {{item.senderChange.afterTone}}">{{item.senderChange.afterText}}</text>
+          <view wx:if="{{item.isReversal}}" class="transfer-row-sub">原计分：{{item.originalText}}</view>
+          <view wx:if="{{item.isReversal}}" class="reversal-changes">
+            <view wx:for="{{item.scoreChanges}}" wx:key="playerId" wx:for-item="change" class="reversal-change-row">
+              <text class="reversal-change-name">{{change.playerName}}</text>
+              <text class="reversal-change-values">{{change.beforeText}} → </text>
+              <text class="reversal-change-after {{change.afterTone}}">{{change.afterText}}</text>
+              <text class="reversal-change-effect {{change.effectTone}}">{{change.effectText}}</text>
+            </view>
           </view>
-          <view class="change-effect deducted">本次 {{item.senderChange.deltaText}}</view>
+          <view wx:if="{{item.reversedAt}}" class="transfer-row-sub">此笔计分已由撤销记录冲回</view>
         </view>
-        <view wx:if="{{!item.isReversal}}" class="transfer-change-note">计分后的累计积分</view>
+        <view class="transfer-row-side">
+          <view wx:if="{{item.amountLabel}}" class="transfer-row-amount">{{item.amountLabel}}</view>
+          <view wx:if="{{item.deltaLabel}}" class="transfer-row-delta">{{item.deltaLabel}}</view>
+          <view wx:if="{{item.isReversal || item.reversedAt}}" class="transfer-row-status">已撤销</view>
+        </view>
       </view>
-      <view wx:if="{{item.reversedAt}}" class="transfer-reversed-note">此笔计分已由撤销记录冲回</view>
-      <button wx:if="{{item.canReverse}}" class="transfer-reverse-button" bindtap="onReverseTransfer" data-transfer-id="{{item.id}}">撤销这笔计分</button>
     </view>
-    <view wx:if="{{transfers.length === 0}}" style="text-align: center; color: var(--text-muted); font-size: 26rpx; padding: var(--space-legacy-40rpx);">
+    <view wx:if="{{transfers.length === 0}}" class="transfer-empty">
       暂无计分记录
     </view>
+    <view wx:if="{{isLoadingTransfers}}" class="transfer-loading">加载中…</view>
   </view>
 
-  <!-- Bottom Actions Fixed Block -->
-  <view wx:if="{{!isPublicShare}}" class="bottom-actions">
-    <view class="management-actions">
-    <button wx:if="{{isHome && game.status === 'active'}}" class="leave-button" bindtap="exitGame">退出牌局</button>
-    <button wx:if="{{isHome && game.status === 'finished'}}" class="leave-button" bindtap="refreshHome">返回牌局</button>
-    <!-- Active only finish button -->
-    <button wx:if="{{game.status === 'active'}}" class="finish-button" bindtap="finish" hover-class="tap-feedback">
-      <text class="iconfont button-icon">{{icons.flag}}</text>
-      结束本局
-    </button>
-    </view>
-    <button wx:if="{{isHome && game.status === 'active'}}" class="home-button primary score-entry" bindtap="inputScore" hover-class="primary-pressed" disabled="{{participants.length < 2}}">
-      <image class="action-icon" src="/images/home/plus-white.png" aria-hidden="true" /><text>记一笔</text>
-    </button>
-    <view wx:if="{{isHome && game.status === 'active' && participants.length < 2}}" class="scoring-hint">至少两位参与者加入后可以计分</view>
+  <!-- Bottom quiet actions -->
+  <view wx:if="{{!isPublicShare}}" class="quiet-actions">
+    <button wx:if="{{isHome && game.status === 'finished'}}" class="quiet-action" bindtap="refreshHome">返回牌局</button>
+    <block wx:if="{{game.status === 'active'}}">
+      <button wx:if="{{game.isCreator}}" class="quiet-action" bindtap="finish" hover-class="tap-feedback">
+        <text class="iconfont quiet-action-icon">{{icons.checkSquare}}</text>
+        结束本局
+      </button>
+      <block wx:else>
+        <button wx:if="{{isHome}}" class="quiet-action" bindtap="exitGame" hover-class="tap-feedback">退出牌局</button>
+        <button class="quiet-action" bindtap="finish" hover-class="tap-feedback">申请结束</button>
+      </block>
+    </block>
   </view>
 
-  <!-- Glassmorphic Invite QR Overlay -->
+  <!-- Invite QR overlay -->
   <view wx:if="{{showInviteOverlay}}" class="invite-overlay" bindtap="hideInvite">
     <view class="invite-popup" catchtap="none">
-      <view class="invite-popup-title">微信扫码加入</view>
-      <view wx:if="{{isLoadingJoinCode}}" style="width: 360rpx; height: 360rpx; display: flex; align-items: center; justify-content: center; color: var(--text-muted);">
-        正在生成小程序码...
+      <view class="invite-popup-header">
+        <view class="invite-popup-title">微信扫码加入</view>
+        <button class="invite-close-btn" bindtap="hideInvite" hover-class="invite-close-pressed" aria-label="关闭">
+          <view class="invite-close-icon" aria-hidden="true"></view>
+        </button>
       </view>
-      <image wx:else class="qr-image" src="{{qrCodeUrl}}" mode="aspectFit"></image>
-      <view class="invite-popup-hint">用微信扫一扫上方小程序码可直接进入加入页</view>
-      <button class="invite-close-btn" bindtap="hideInvite" hover-class="tap-feedback">关闭</button>
+      <view class="invite-qr-area">
+        <view wx:if="{{isLoadingJoinCode}}" class="invite-qr-loading">正在生成小程序码…</view>
+        <image wx:else class="qr-image" src="{{qrCodeUrl}}" mode="aspectFit" aria-label="加入牌局的小程序码"></image>
+      </view>
+      <view class="invite-popup-hint">用微信扫一扫小程序码<text class="invite-hint-line">进入加入页，与朋友一起记分</text></view>
     </view>
   </view>
 

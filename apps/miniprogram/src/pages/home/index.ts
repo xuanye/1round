@@ -63,9 +63,15 @@ const home: WechatMiniprogram.Page.Options<any, any> = {
       this.setData({ userName: user.displayName || '老书记' });
       if (current?.id) {
         if (current.id !== this.data.id) {
-          this.setData({ participants: [], transfers: [], pendingFinishRequest: null, roundStatus: null });
+          this.setData({ participants: [], transfers: [], visibleTransfers: [], pendingFinishRequest: null, roundStatus: null });
         }
-        this.setData({ id: current.id, inviteCode: current.inviteCode, shareToken: '', isPublicShare: false });
+        this.setData({
+          id: current.id,
+          inviteCode: current.inviteCode,
+          shareToken: '',
+          isPublicShare: false,
+          gameCreatedAt: current.createdAt || '',
+        });
         const loaded = await this.loadGameData();
         if (!loaded) throw new Error('牌局加载失败，请重试');
         this.setData({ homeState: 'ready' });
@@ -75,7 +81,7 @@ const home: WechatMiniprogram.Page.Options<any, any> = {
           this.realtime.connect(current.id);
         }
       } else {
-        this.setData({ id: '', participants: [], transfers: [], homeState: 'ready', recentGames: [] });
+        this.setData({ id: '', participants: [], transfers: [], visibleTransfers: [], homeState: 'ready', recentGames: [] });
         await this.loadRecentGames();
       }
     } catch (err) {

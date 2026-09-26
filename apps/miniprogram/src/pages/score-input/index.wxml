@@ -2,7 +2,7 @@
   <view class="score-game-name">{{gameName}}</view>
 
   <!-- Receiver selection -->
-  <view class="score-section-head">
+  <view class="score-section-head score-receiver-head">
     <view class="score-section-title-row">
       <view class="score-section-title">我给谁记分?</view>
       <view class="score-section-hint">可多选</view>
@@ -23,11 +23,10 @@
       bindtap="toggleReceiver"
       hover-class="tap-feedback"
     >
-      <view class="receiver-check {{item.selected ? 'is-on' : ''}}">
-        <text wx:if="{{item.selected}}" class="iconfont">{{icons.check}}</text>
+      <view class="receiver-content">
+        <view class="receiver-avatar">{{item.initial}}</view>
+        <view class="receiver-name">{{item.displayName}}</view>
       </view>
-      <view class="receiver-avatar">{{item.initial}}</view>
-      <view class="receiver-name">{{item.displayName}}</view>
     </view>
   </view>
 
@@ -54,32 +53,6 @@
     >{{item}}</button>
   </view>
 
-  <!-- Preview of this submission -->
-  <view class="score-divider" />
-  <view class="score-section-head">
-    <view class="score-section-title-row">
-      <view class="score-section-title">本次变化</view>
-    </view>
-    <view class="score-preview-summary">{{deductionText}}</view>
-  </view>
-  <view class="change-preview">
-    <view class="change-item">
-      <view class="change-avatar">{{selfInitial}}</view>
-      <view class="change-info">
-        <view class="change-name">我</view>
-        <view class="change-value negative">{{selfDeltaText}}</view>
-      </view>
-    </view>
-    <view class="change-separator" />
-    <view class="change-item" wx:for="{{selectedReceivers}}" wx:key="id">
-      <view class="change-avatar">{{item.initial}}</view>
-      <view class="change-info">
-        <view class="change-name">{{item.displayName}}</view>
-        <view class="change-value positive">+{{scoreText}}</view>
-      </view>
-    </view>
-  </view>
-
   <!-- Numeric keypad -->
   <view class="num-pad">
     <button wx:for="{{numKeys}}" wx:key="*this" class="pad-key" data-value="{{item}}" bindtap="pressKey" hover-class="tap-feedback">{{item}}</button>
@@ -95,13 +68,14 @@
   </view>
 
   <view class="submit-dock">
+    <view wx:if="{{summaryText}}" class="submit-summary">{{summaryText}}</view>
     <button
       class="submit-button"
-      disabled="{{!canSubmit}}"
+      disabled="{{!canSubmit || submitting}}"
       bindtap="submit"
       hover-class="tap-feedback"
     >
-      确认记分
+      {{submitText}}
     </button>
   </view>
 </view>

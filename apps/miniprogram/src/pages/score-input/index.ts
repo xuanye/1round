@@ -2,7 +2,6 @@ import { requireLogin } from '../../services/auth.service';
 import { getSummary } from '../../services/game.service';
 import { submitScoreTransfer } from '../../services/score.service';
 import { getUser } from '../../utils/storage';
-import { formatScore } from '../../utils/format';
 import { DEFAULT_PRESET_SCORES } from '../../utils/preset-scores';
 
 type Receiver = {
@@ -17,8 +16,8 @@ function buildSubmitText(receivers: Receiver[], score: number): string {
   const selected = receivers.filter((receiver) => receiver.selected);
   if (selected.length === 0) return '请选择接收方';
   if (!Number.isInteger(score) || score <= 0) return '请输入分值';
-  if (selected.length === 1) return `给 ${selected[0].displayName} +${score}`;
-  return `给 ${selected.length} 人各 +${score}`;
+  if (selected.length === 1) return `给${selected[0].displayName}计${score}分`;
+  return `给每人计${score}分`;
 }
 
 function resolveSubmitErrorMessage(message: string): { feedback: string; navigateBack: boolean } {
@@ -34,23 +33,18 @@ function resolveSubmitErrorMessage(message: string): { feedback: string; navigat
 Page({
   data: {
     icons: {
-      check: '',
       deleteLeft: '',
     },
     id: '',
     gameName: '',
     presetScores: [...DEFAULT_PRESET_SCORES],
     receivers: [] as Receiver[],
-    selectedReceivers: [] as Receiver[],
     scoreText: '0',
     selectedCount: 0,
     canSubmit: false,
     submitText: '请选择接收方',
-    deductionText: '先选择接收方',
-    helperText: '先选接收方，再输入每人分值',
+    summaryText: '',
     allSelected: false,
-    selfInitial: '',
-    selfDeltaText: '0',
     numKeys: ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
     submitting: false,
     feedbackMessage: '',
@@ -87,7 +81,6 @@ Page({
         receivers,
         presetScores,
         gameName: summary.name,
-        selfInitial: (user?.displayName || '我').slice(0, 1),
       });
       this.applyState(receivers, String(presetScores[0]));
     } catch (err) {
@@ -141,24 +134,15 @@ Page({
     const score = Number(scoreText);
     const canSubmit = selectedCount > 0 && Number.isInteger(score) && score > 0;
     const submitText = buildSubmitText(receivers, score);
-    const helperText = canSubmit
-      ? `本次你将扣除 ${score * selectedCount} 分`
-      : selectedCount === 0
-        ? '先选接收方，再输入每人分值'
-        : '分值必须是大于 0 的整数';
-    const total = score * selectedCount;
     this.setData({
       receivers,
-      selectedReceivers: selected,
       scoreText,
       selectedCount,
       canSubmit,
       submitText,
-      helperText,
-      deductionText: selectedCount > 0 && Number.isInteger(score) && score > 0
-        ? `${selectedCount}人 ×${score}分，我共扣${total}分。`
-        : helperText,
-      selfDeltaText: formatScore(-total),
+      summaryText: canSubmit
+        ? `已选${selectedCount}人，每人${score}分，我共扣${selectedCount * score}分。`
+        : '',
       allSelected: receivers.length > 0 && selectedCount === receivers.length,
       feedbackMessage: options?.preserveFeedback ? this.data.feedbackMessage : '',
       feedbackTone: options?.preserveFeedback ? this.data.feedbackTone : 'info',

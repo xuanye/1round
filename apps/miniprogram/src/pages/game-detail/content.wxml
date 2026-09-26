@@ -212,16 +212,20 @@
     </block>
   </view>
 
-  <!-- Glassmorphic Invite QR Overlay -->
+  <!-- Invite QR overlay -->
   <view wx:if="{{showInviteOverlay}}" class="invite-overlay" bindtap="hideInvite">
     <view class="invite-popup" catchtap="none">
-      <view class="invite-popup-title">微信扫码加入</view>
-      <view wx:if="{{isLoadingJoinCode}}" style="width: 360rpx; height: 360rpx; display: flex; align-items: center; justify-content: center; color: var(--text-muted);">
-        正在生成小程序码...
+      <view class="invite-popup-header">
+        <view class="invite-popup-title">微信扫码加入</view>
+        <button class="invite-close-btn" bindtap="hideInvite" hover-class="invite-close-pressed" aria-label="关闭">
+          <view class="invite-close-icon" aria-hidden="true"></view>
+        </button>
       </view>
-      <image wx:else class="qr-image" src="{{qrCodeUrl}}" mode="aspectFit"></image>
-      <view class="invite-popup-hint">用微信扫一扫上方小程序码可直接进入加入页</view>
-      <button class="invite-close-btn" bindtap="hideInvite" hover-class="tap-feedback">关闭</button>
+      <view class="invite-qr-area">
+        <view wx:if="{{isLoadingJoinCode}}" class="invite-qr-loading">正在生成小程序码…</view>
+        <image wx:else class="qr-image" src="{{qrCodeUrl}}" mode="aspectFit" aria-label="加入牌局的小程序码"></image>
+      </view>
+      <view class="invite-popup-hint">用微信扫一扫小程序码<text class="invite-hint-line">进入加入页，与朋友一起记分</text></view>
     </view>
   </view>
 

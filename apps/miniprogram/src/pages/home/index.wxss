@@ -58,22 +58,19 @@ button.retry-link { width: 100%; background: transparent; border-radius: 0; font
 .home-status button { margin-top: var(--space-xl); }
 
 /* Scope current-game refinements to the homepage; preserve historical details. */
-.home-detail { padding-bottom: calc(var(--layout-reserve-252px) + env(safe-area-inset-bottom)); }
+.home-detail { padding-bottom: calc(var(--layout-reserve-80px) + env(safe-area-inset-bottom)); }
 .home-detail .detail-topbar { margin: var(--space-xl) 0; padding: 0; background: transparent; gap: var(--space-md); }
 .home-detail .detail-title { flex: 1; max-width: none; text-align: left; }
 .home-detail .detail-title view { font-size: var(--font-heading); font-weight: 600; color: var(--color-text); white-space: normal; overflow-wrap: anywhere; }
 .home-detail .detail-title text { margin-top: var(--space-sm); font-size: 13px; color: var(--color-text-secondary); white-space: normal; }
 .home-detail button.round-button { width: 44px; height: 44px; flex-shrink: 0; border: 1px solid var(--color-border); border-radius: var(--control-radius); color: var(--color-primary); background: transparent; }
 .home-detail .section-label { font-size: 18px; font-weight: 600; color: var(--color-text); letter-spacing: 0; }
-.home-detail .rank-link { min-height: 44px; font-size: var(--font-supporting); color: var(--color-text-secondary); }
 .home-detail .card { border: 1px solid var(--color-border); border-radius: 12px; box-shadow: none; }
 .home-detail .participant-row { min-height: 80px; padding: var(--space-lg); border-color: var(--color-border); gap: var(--space-md); box-sizing: border-box; }
 .home-detail .avatar { width: 44px; height: 44px; line-height: 44px; background: var(--color-primary-subtle); color: var(--color-primary); font-size: 18px; font-weight: 500; }
 .home-detail .participant-row .avatar { background: var(--color-primary-subtle); color: var(--color-primary); }
-.home-detail .star-icon, .home-detail .rank-link .inline-icon { display: none; }
 .home-detail .person > view:last-child { min-width: 0; }
 .home-detail .person-name { font-size: var(--font-body); font-weight: 500; color: var(--color-text); white-space: normal; overflow-wrap: anywhere; }
-.home-detail .person-role, .home-detail .transfer-time, .home-detail .rename-tip { color: var(--color-text-secondary); font-size: 13px; line-height: 1.5; }
 .home-detail .score { max-width: 48%; margin-left: 0; font-size: var(--font-score); font-weight: 600; overflow-wrap: anywhere; text-align: right; font-variant-numeric: tabular-nums; }
 .home-detail .score.positive { color: var(--color-score-positive); }
 .home-detail .score.negative { color: var(--color-score-negative); }
@@ -81,16 +78,6 @@ button.retry-link { width: 100%; background: transparent; border-radius: 0; font
 .home-detail .participant-row.large-score { flex-wrap: wrap; gap: var(--space-sm); }
 .home-detail .large-score .person { flex-basis: 100%; }
 .home-detail .large-score .score { width: 100%; max-width: 100%; }
-.home-detail .bottom-actions { bottom: calc(var(--tab-height) + env(safe-area-inset-bottom)); padding: var(--space-md) var(--page-inset); box-sizing: border-box; background: var(--color-bg); border-top: 1px solid var(--color-border); }
-.home-detail .bottom-actions .score-entry { margin: 0; }
 .home-detail .score-entry { min-height: 52px; border-radius: var(--control-radius); background: var(--color-primary); box-shadow: none; font-size: var(--font-body); font-weight: 600; }
 .home-detail .score-entry[disabled] { color: var(--color-text-secondary); background: var(--color-border); }
-.home-detail .transfer-card { border: 1px solid var(--color-border); border-radius: 12px; box-shadow: none; }
-.home-detail .transfer-text { font-size: var(--font-body); color: var(--color-text); }
-.home-detail .transfer-name-bold, .home-detail .strong { font-weight: 600; }
-.home-detail .leave-button { color: var(--color-primary); font-size: var(--font-body); font-weight: 500; }
-.home-detail .management-actions { display: flex; justify-content: center; gap: var(--space-lg); margin-bottom: var(--space-sm); }
-.home-detail .management-actions button { width: auto; min-width: 88px; min-height: 44px; height: auto; padding: var(--space-sm) var(--space-md); margin: 0; border-radius: var(--control-radius); background: transparent; box-shadow: none; font-size: 14px; font-weight: 500; }
-.home-detail .management-actions .finish-button { color: var(--color-danger); }
-.home-detail .finish-button .button-icon { display: none; }
 .home-detail .scoring-hint { margin-top: var(--space-sm); color: var(--color-text-secondary); font-size: 13px; line-height: 1.5; text-align: center; }

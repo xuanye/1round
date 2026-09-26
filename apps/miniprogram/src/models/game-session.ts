@@ -18,6 +18,7 @@ export type GameSession = {
   presetScores?: number[];
   scoreTransferCount: number;
   version: number;
+  createdAt?: string;
 };
 
 export type RoundStatus = {

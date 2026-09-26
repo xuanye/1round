@@ -160,7 +160,12 @@ function parseShareToken(query: Record<string, string>): string {
 
   const scene = decodeURIComponent(query.scene);
   const match = scene.match(/(?:^|&)shareToken=([^&]+)/);
-  return match ? match[1] : '';
+  const token = match ? match[1] : scene;
+  if (/^[0-9a-fA-F]{32}$/.test(token)) {
+    // Restore the UUID form used by existing public share records.
+    return `${token.slice(0, 8)}-${token.slice(8, 12)}-${token.slice(12, 16)}-${token.slice(16, 20)}-${token.slice(20)}`;
+  }
+  return token;
 }
 
 function truncatePosterText(text: string, maxChars: number): string {

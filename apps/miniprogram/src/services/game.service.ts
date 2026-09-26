@@ -29,6 +29,7 @@ export function joinPreview(inviteCode: string): Promise<JoinPreview> {
 }
 
 export function getSummary(gameSessionId: string): Promise<GameSummary> {
+  if (!gameSessionId.trim()) return Promise.reject(new Error('牌局链接无效'));
   return request({ url: `/api/game-sessions/${gameSessionId}/summary` });
 }
 

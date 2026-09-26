@@ -44,6 +44,7 @@ type RecentHomeGame = {
 };
 
 Page({
+  loading: false,
   data: {
     icons: {
       dice: '\uf522',
@@ -65,6 +66,8 @@ Page({
   },
 
   async onShow() {
+    if (this.loading) return;
+    this.loading = true;
     wx.showLoading({ title: '加载中...' });
     try {
       const user = await requireLogin();
@@ -136,6 +139,7 @@ Page({
       wx.showToast({ title: (err as any).message || '加载失败', icon: 'none' });
     } finally {
       wx.hideLoading();
+      this.loading = false;
     }
   },
 

@@ -208,6 +208,23 @@ func TestSettlementMiniProgramCodeAPI(t *testing.T) {
 	}
 }
 
+func TestSummaryRejectsEmptyGameID(t *testing.T) {
+	app := newTestApp(t)
+	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)
+	router := api.NewRouter(logger.NewConsole(), api.Services{
+		Auth: app.auth, Game: app.game, Player: app.player, ScoreTransfer: app.scoreTransfer, Settlement: app.settlement, Query: app.query,
+		Tokens: tokens, WebSocket: wshandler.NewWebSocketHandler(app.game, app.hub, 4, time.Second),
+	})
+	token := loginHTTP(t, router, "owner-code")
+	req := httptest.NewRequest(http.MethodGet, "/api/game-sessions//summary", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for missing game ID, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
 func TestCurrentGameReturnsNullWhenUserHasNoActiveGame(t *testing.T) {
 	app := newTestApp(t)
 	tokens := jwtauth.NewJWTService("test-signing-key", 720*time.Hour)

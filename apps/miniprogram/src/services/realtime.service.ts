@@ -9,7 +9,7 @@ export class RealtimeService {
   private closedByPage = false;
 
   connect(gameSessionId: string): void {
-    this.disconnect();
+    this.closeConnection();
     this.closedByPage = false;
     this.gameSessionId = gameSessionId;
     const app = getApp<{ globalData: { baseUrl: string } }>();
@@ -17,26 +17,37 @@ export class RealtimeService {
     const wsProto = baseUrl.startsWith('https:') ? 'wss:' : 'ws:';
     const cleanUrl = baseUrl.replace(/^https?:\/\//, '');
     const socketUrl = `${wsProto}//${cleanUrl}/ws/game-sessions/${gameSessionId}?token=${encodeURIComponent(getToken())}`;
-    this.socket = wx.connectSocket({ url: socketUrl });
-    this.socket.onMessage((message) => {
+    const socket = wx.connectSocket({ url: socketUrl });
+    this.socket = socket;
+    socket.onMessage((message) => {
+      if (this.socket !== socket) return;
       const event = JSON.parse(String(message.data)) as RealtimeEvent;
       this.handlers.forEach((handler) => handler(event));
     });
-    this.socket.onClose(() => this.scheduleReconnect());
-    this.socket.onError(() => this.scheduleReconnect());
+    socket.onClose(() => {
+      if (this.socket !== socket) return;
+      this.socket = null;
+      this.scheduleReconnect();
+    });
+    socket.onError(() => {
+      if (this.socket === socket) this.scheduleReconnect();
+    });
   }
 
   disconnect(): void {
+    this.closeConnection();
+    this.handlers = [];
+  }
+
+  private closeConnection(): void {
     this.closedByPage = true;
-    if (this.reconnectTimer) {
+    if (this.reconnectTimer !== null) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
-    if (this.socket) {
-      this.socket.close({});
-      this.socket = null;
-    }
-    this.handlers = []; // Fix listener leak by clearing handlers on disconnect
+    const socket = this.socket;
+    this.socket = null;
+    if (socket) socket.close({});
   }
 
   onEvent(handler: (event: RealtimeEvent) => void): void {
@@ -44,7 +55,7 @@ export class RealtimeService {
   }
 
   private scheduleReconnect(): void {
-    if (this.closedByPage || this.reconnectTimer) return;
+    if (this.closedByPage || this.reconnectTimer !== null) return;
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
       if (this.gameSessionId) this.connect(this.gameSessionId);

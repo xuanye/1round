@@ -441,7 +441,22 @@ func (s *Service) SettlementMiniProgramCode(ctx context.Context, userID, gameSes
 	if s.wechat == nil {
 		return nil, domain.ErrExternalServiceFailed
 	}
-	return s.wechat.GetUnlimitedQRCode(ctx, settlementSharePagePath, "shareToken="+*gameSession.PublicShareToken)
+	scene, err := settlementShareScene(*gameSession.PublicShareToken)
+	if err != nil {
+		return nil, err
+	}
+	return s.wechat.GetUnlimitedQRCode(ctx, settlementSharePagePath, scene)
+}
+
+func settlementShareScene(token string) (string, error) {
+	// Existing UUID share tokens fit the scene limit after removing hyphens.
+	if id, err := uuid.Parse(token); err == nil && id.String() == token {
+		token = strings.ReplaceAll(token, "-", "")
+	}
+	if token == "" || len(token) > 32 {
+		return "", domain.ErrInvalidArgument
+	}
+	return token, nil
 }
 
 func (s *Service) requireMember(ctx context.Context, userID, gameSessionID string) error {

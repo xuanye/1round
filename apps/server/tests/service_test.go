@@ -801,6 +801,13 @@ func TestLastScoredParticipantLeaveFinishesGame(t *testing.T) {
 	if g.SettledAt == nil {
 		t.Fatal("expected settled_at to be set")
 	}
+	if g.PublicShareToken == nil || len(*g.PublicShareToken) != 36 {
+		t.Fatalf("expected existing UUID share token after last participant leaves, got %v", g.PublicShareToken)
+	}
+	image, err := app.game.SettlementMiniProgramCode(ctx, owner, game.ID)
+	if err != nil || len(image) == 0 {
+		t.Fatalf("expected settlement code for UUID share token, got %v", err)
+	}
 }
 
 func TestOwnerCanFinishDirectlyAndFreezeGame(t *testing.T) {

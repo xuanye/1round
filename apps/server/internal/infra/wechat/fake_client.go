@@ -21,7 +21,7 @@ func (FakeClient) CodeToSession(_ context.Context, code string) (Session, error)
 }
 
 func (FakeClient) GetUnlimitedQRCode(_ context.Context, page string, scene string) ([]byte, error) {
-	if strings.TrimSpace(page) == "" || strings.TrimSpace(scene) == "" {
+	if strings.TrimSpace(page) == "" || strings.TrimSpace(scene) == "" || len(scene) > 32 {
 		return nil, domain.ErrInvalidArgument
 	}
 

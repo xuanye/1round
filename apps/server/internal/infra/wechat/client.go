@@ -119,7 +119,7 @@ func (c *HTTPClient) CodeToSession(ctx context.Context, code string) (Session, e
 func (c *HTTPClient) GetUnlimitedQRCode(ctx context.Context, page string, scene string) ([]byte, error) {
 	page = strings.TrimSpace(page)
 	scene = strings.TrimSpace(scene)
-	if c.appID == "" || c.appSecret == "" || page == "" || scene == "" {
+	if c.appID == "" || c.appSecret == "" || page == "" || scene == "" || len(scene) > 32 {
 		return nil, domain.ErrInvalidArgument
 	}
 

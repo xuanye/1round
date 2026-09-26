@@ -56,6 +56,11 @@ Page({
 
   async onLoad(query: Record<string, string>) {
     const id = query.id || '';
+    if (!id) {
+      wx.showToast({ title: '牌局链接无效', icon: 'none' });
+      setTimeout(() => wx.redirectTo({ url: '/pages/home/index' }), 1500);
+      return;
+    }
     this.setData({ id });
 
     wx.showLoading({ title: '加载中...' });

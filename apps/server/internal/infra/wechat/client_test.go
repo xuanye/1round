@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"testing"
 
+	"github.com/xuanye/one-round/apps/server/internal/domain"
 	"go.uber.org/zap"
 )
 
@@ -206,6 +208,14 @@ func TestHTTPClientGetUnlimitedQRCodeCallsWechatEndpoints(t *testing.T) {
 	}
 	if string(image) != "png-bytes" {
 		t.Fatalf("unexpected image bytes %q", string(image))
+	}
+}
+
+func TestHTTPClientRejectsOversizedSceneBeforeWechatRequest(t *testing.T) {
+	client := NewHTTPClient("wx-test-app", "test-secret", "https://wechat.test", nil, nil)
+	_, err := client.GetUnlimitedQRCode(context.Background(), "pages/game-detail/index", "shareToken=Abcdef0123456789_-Abcdef")
+	if !errors.Is(err, domain.ErrInvalidArgument) {
+		t.Fatalf("expected invalid argument for oversized scene, got %v", err)
 	}
 }
 

@@ -100,6 +100,9 @@ func (s *Service) MyParticipant(ctx context.Context, userID, gameSessionID strin
 }
 
 func (s *Service) Summary(ctx context.Context, userID, gameSessionID string) (Summary, error) {
+	if strings.TrimSpace(gameSessionID) == "" {
+		return Summary{}, domain.ErrInvalidArgument
+	}
 	if err := s.game.RequireMember(ctx, userID, gameSessionID); err != nil {
 		return Summary{}, err
 	}

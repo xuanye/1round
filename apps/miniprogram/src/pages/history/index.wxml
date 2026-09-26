@@ -1,25 +1,22 @@
-<view class="page" style="padding: var(--space-legacy-30rpx) var(--space-legacy-40rpx);">
-  <empty-state wx:if="{{items.length === 0}}" text="暂无历史牌局" />
-  <view class="history-list">
-    <view wx:for="{{items}}" wx:key="id" class="history-row card" data-id="{{item.id}}" bindtap="open" style="display: flex; align-items: center; padding: var(--space-responsive-md) var(--space-legacy-30rpx); margin-bottom: var(--space-legacy-20rpx); background: #ffffff; border-radius: 28rpx; box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.02);">
-      <view class="calendar {{index % 2 === 0 ? 'green' : 'yellow'}}" style="width: 12rpx; height: 80rpx; border-radius: 6rpx; background: {{index % 2 === 0 ? '#1f695d' : '#eab308'}}; margin-right: var(--space-responsive-md);"></view>
-      <view class="history-main" style="flex: 1; min-width: 0;">
-        <view class="history-name" style="font-size: 30rpx; font-weight: 900; color: #1a1c1a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{item.name}}</view>
-        <view class="history-meta" style="font-size: 22rpx; color: #6f7976; margin-top: var(--space-legacy-6rpx);">{{item.friendlyTime}} · {{item.participantCount}}人 · {{item.scoreTransferCount}}局{{item.winnerName ? ' · 胜者: ' + item.winnerName + ' (' + (item.winnerScore > 0 ? '+' : '') + item.winnerScore + '分)' : ''}}</view>
-      </view>
-      <view class="history-side" style="text-align: right; margin-right: var(--space-responsive-sm);">
-        <view class="score" style="font-size: 34rpx; font-weight: 900; color: {{item.myFinalScore >= 0 ? '#1f695d' : '#ba1a1a'}};">
-          {{item.scoreText}}
-        </view>
-        <view style="font-size: 20rpx; color: #6f7976; margin-top: var(--space-legacy-4rpx);">结算分值</view>
-      </view>
-      <text class="chevron" style="color: #bcbebc; font-size: 36rpx;">›</text>
-    </view>
-    <view wx:if="{{isLoading}}" style="text-align: center; font-size: 24rpx; color: #6f7976; padding: var(--space-legacy-20rpx) 0;">
-      加载中...
-    </view>
-    <view wx:elif="{{!hasMore && items.length > 0}}" style="text-align: center; font-size: 24rpx; color: #6f7976; padding: var(--space-legacy-20rpx) 0;">
-      已显示全部历史牌局
-    </view>
+<view class="page history-page {{fontClass}}">
+  <view wx:if="{{isLoading && items.length === 0}}" class="page-state" role="status">正在加载历史牌局…</view>
+  <view wx:elif="{{error && items.length === 0}}" class="page-state" role="alert">
+    <view>{{error}}</view>
+    <button class="retry-button" hover-class="row-pressed" bindtap="retry">重新加载</button>
   </view>
+  <block wx:else>
+    <empty-state wx:if="{{items.length === 0}}" text="暂无历史牌局" />
+    <view wx:else class="history-list">
+      <view wx:for="{{items}}" wx:key="id" class="history-row" data-id="{{item.id}}" bindtap="open" hover-class="row-pressed" role="button" aria-label="{{item.name}}，我的得分{{item.scoreLabel}}">
+        <view class="history-main">
+          <view class="history-name">{{item.name}}</view>
+          <view class="history-meta">{{item.meta}}</view>
+        </view>
+        <text class="list-score {{item.scoreTone}} {{item.scoreLabel.length > 7 ? 'compact-score' : ''}}"><text wx:if="{{item.myFinalScore !== 0}}" class="score-sign">{{item.myFinalScore > 0 ? '+' : '−'}}</text><text>{{item.myFinalScore < 0 ? -item.myFinalScore : item.myFinalScore}}</text></text>
+        <view class="chevron" aria-hidden="true" />
+      </view>
+    </view>
+    <view wx:if="{{isLoading}}" class="list-status" role="status">加载中…</view>
+    <view wx:elif="{{!hasMore && items.length > 0}}" class="list-status">已显示全部历史牌局</view>
+  </block>
 </view>

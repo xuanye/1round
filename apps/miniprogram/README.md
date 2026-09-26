@@ -20,6 +20,28 @@ Watch during development:
 pnpm run watch
 ```
 
+## Testing
+
+```bash
+pnpm test        # builds dist, then runs the Jest suite
+pnpm run check   # type-checks src/ and tests/
+```
+
+The suite lives in `tests/` and is layered:
+
+- `tests/unit` — page, service, and pure-logic tests. `wx` and service
+  dependencies are mocked per file (`jest.mock` + `tests/helpers/page.ts`).
+- `tests/components` — custom component tests via `miniprogram-simulate`.
+  These load compiled `dist/` output, so the build must run first
+  (`pnpm test` does this). Load each component once per test file.
+- `tests/smoke` — real build checks (`build`, `qrcode`); Jest runs serially
+  (`maxWorkers: 1`) so concurrent suites never race on `dist/`.
+
+Test-side constraints (see `tests/globals.d.ts`): `@types/node` must not be
+added to `tsconfig.test.json` — its global `setTimeout` conflicts with the
+WeChat typings' `setTimeout(): number`. Tests use untyped `require()` for
+Node builtins instead.
+
 ## Environment
 
 The build script reads API base URL config in this order:

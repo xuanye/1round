@@ -1,0 +1,73 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`custom-tab-bar component initializes tabs and font class on attach 1`] = `
+<main>
+  <wx-view
+    class="tab-bar theme font-ios"
+  >
+    <wx-view
+      ariaLabel="牌局，当前页面"
+      class="tab-item selected"
+      data-index="{{0}}"
+      role="button"
+      bind:tap="selectTab"
+    >
+      <wx-image
+        ariaHidden="true"
+        class="tab-icon"
+        src="/images/tabbar/game-active.png"
+      />
+      <wx-text
+        class="tab-label"
+      >
+        牌局
+      </wx-text>
+      <wx-view
+        class="tab-indicator visible"
+      />
+    </wx-view>
+    <wx-view
+      ariaLabel="战绩"
+      class="tab-item "
+      data-index="{{1}}"
+      role="button"
+      bind:tap="selectTab"
+    >
+      <wx-image
+        ariaHidden="true"
+        class="tab-icon"
+        src="/images/tabbar/records.png"
+      />
+      <wx-text
+        class="tab-label"
+      >
+        战绩
+      </wx-text>
+      <wx-view
+        class="tab-indicator "
+      />
+    </wx-view>
+    <wx-view
+      ariaLabel="我的"
+      class="tab-item "
+      data-index="{{2}}"
+      role="button"
+      bind:tap="selectTab"
+    >
+      <wx-image
+        ariaHidden="true"
+        class="tab-icon"
+        src="/images/tabbar/mine.png"
+      />
+      <wx-text
+        class="tab-label"
+      >
+        我的
+      </wx-text>
+      <wx-view
+        class="tab-indicator "
+      />
+    </wx-view>
+  </wx-view>
+</main>
+`;

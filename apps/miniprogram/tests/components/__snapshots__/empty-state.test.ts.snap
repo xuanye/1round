@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`empty-state component renders custom text passed as a property 1`] = `
+<main>
+  <wx-view
+    class="empty"
+  >
+    还没有战绩
+  </wx-view>
+</main>
+`;
+
+exports[`empty-state component renders the default text 1`] = `
+<main>
+  <wx-view
+    class="empty"
+  >
+    暂无数据
+  </wx-view>
+</main>
+`;

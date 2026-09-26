@@ -1,11 +1,115 @@
-.form-page { display: flex; flex-direction: column; gap: var(--space-responsive-md); }
-input { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12rpx; padding: var(--space-responsive-md); }
+.manage-page {
+  padding: var(--space-xl) var(--page-inset) calc(var(--space-xl) + env(safe-area-inset-bottom));
+  color: var(--color-text);
+}
 
-button.save-btn {
+.name-section {
+  padding-top: var(--space-sm);
+}
+
+.field-label {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.name-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.name-control {
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  margin-top: var(--space-sm);
+  padding-left: var(--space-md);
+  border: 1px solid var(--color-text-secondary);
+  border-radius: var(--control-radius);
+  background: var(--color-surface);
+  box-sizing: border-box;
+}
+
+.name-control.is-focused {
+  border-color: var(--color-primary);
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.name-input {
+  flex: 1;
+  min-width: 0;
+  height: 48px;
+  padding-right: var(--space-sm);
+  color: var(--color-text);
+  font-size: var(--font-body);
+  line-height: 1.5;
+}
+
+.name-placeholder {
+  color: var(--color-text-secondary);
+}
+
+button.clear-name {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 88rpx;
-  line-height: 1;
-  margin: var(--space-legacy-56rpx) 0 var(--space-responsive-md);
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  margin: 0 var(--space-xs) 0 0;
+  border-radius: var(--control-radius);
+  background: transparent;
+}
+
+button.clear-name[disabled] {
+  opacity: 0.6;
+}
+
+.name-counter {
+  color: var(--color-text-secondary);
+  font-size: var(--font-supporting);
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+
+.name-tip {
+  margin-top: var(--space-sm);
+  color: var(--color-text-secondary);
+  font-size: var(--font-supporting);
+  line-height: 1.5;
+}
+
+.control-pressed {
+  background: var(--color-border) !important;
+}
+
+.manage-actions {
+  margin-top: var(--space-xl);
+}
+
+button.save-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 52px;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--control-radius);
+  color: var(--color-surface);
+  background: var(--color-primary);
+  box-shadow: none;
+  font-size: var(--font-body);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.save-pressed {
+  background: var(--color-primary-pressed) !important;
+}
+
+button.save-button[disabled] {
+  color: var(--color-text-secondary);
+  background: var(--color-border);
 }

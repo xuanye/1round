@@ -1,7 +1,17 @@
-<view class="page form-page" style="padding: var(--space-legacy-40rpx);">
-  <view class="form-card card" style="background: #ffffff; border-radius: 28rpx; padding: var(--space-legacy-30rpx); margin-bottom: var(--space-legacy-40rpx);">
-    <view class="label" style="font-size: 28rpx; font-weight: bold; color: var(--text-secondary); margin-bottom: var(--space-legacy-20rpx);">我的显示名称</view>
-    <input value="{{displayName}}" bindinput="onInput" placeholder="请输入在当前牌局中的显示名称" maxlength="12" style="height: 80rpx; border-bottom: 1rpx solid var(--border); font-size: 30rpx;" />
+<view class="page manage-page {{fontClass}}">
+  <view class="name-section">
+    <view class="name-label-row">
+      <view class="field-label">我的显示名称</view>
+      <view class="name-counter">{{nameLength}}/12</view>
+    </view>
+    <view class="name-control {{nameFocused ? 'is-focused' : ''}}">
+      <input class="name-input" value="{{displayName}}" bindinput="onInput" bindfocus="onNameFocus" bindblur="onNameBlur" focus="{{nameFocused}}" disabled="{{submitting}}" placeholder="请输入在当前牌局中的显示名称" placeholder-class="name-placeholder" maxlength="12" confirm-type="done" cursor-spacing="24" aria-label="我的显示名称，最多12字" />
+      <button wx:if="{{nameLength > 0}}" class="clear-name" bindtap="clearName" disabled="{{submitting}}" hover-class="control-pressed" aria-label="清空显示名称"><icon type="clear" size="16" color="#68716D" /></button>
+    </view>
+    <view class="name-tip">名称在牌局内必须唯一</view>
   </view>
-  <button class="button-primary save-btn" hover-class="tap-feedback" bindtap="submit">保存修改</button>
+
+  <view class="manage-actions">
+    <button class="save-button" loading="{{submitting}}" disabled="{{submitting}}" hover-class="save-pressed" bindtap="submit">保存修改</button>
+  </view>
 </view>

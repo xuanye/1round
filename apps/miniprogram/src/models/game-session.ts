@@ -110,3 +110,13 @@ export type RankingItem = {
   scoreTransferCount: number;
   averageScore: number;
 };
+
+export type Performance = {
+  totalScore: number;
+  totalGames: number;
+  wins: number;
+  maxScore: number;
+  trend: { settledAt: string; score: number }[];
+  players: { id: string; displayName: string; avatarUrl: string; totalScore: number; isMe: boolean }[];
+  recentGames: { id: string; name: string; settledAt: string; participantCount: number; myFinalScore: number }[];
+};

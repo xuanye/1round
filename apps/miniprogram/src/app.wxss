@@ -9,7 +9,7 @@ page {
 
 .page {
   min-height: 100vh;
-  padding: 32rpx 40rpx 56rpx;
+  padding: var(--space-responsive-lg) var(--space-legacy-40rpx) var(--space-legacy-56rpx);
   box-sizing: border-box;
 }
 
@@ -99,4 +99,4 @@ button::after {
 }
 
 /* Reserve space for the custom tab bar and the device safe area. */
-.tab-page { padding-bottom: calc(160rpx + env(safe-area-inset-bottom)); }
+.tab-page { padding-bottom: calc(var(--layout-reserve-160rpx) + env(safe-area-inset-bottom)); }

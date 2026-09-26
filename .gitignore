@@ -18,3 +18,4 @@ apps/miniprogram/dist/
 apps/miniprogram/typings/
 apps/miniprogram/project.private.config.json
 apps/miniprogram/.env.local
+.devops/

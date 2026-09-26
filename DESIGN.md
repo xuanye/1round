@@ -69,6 +69,26 @@ Use approximately 1.5 line height for body text and 1.25 for headings. Handle lo
 - Do not enlarge cards or create excessive whitespace merely to fill the screen. Do not reduce touch targets to make the layout denser.
 - Use no shadows by default. A subtle shadow is acceptable only for overlays that genuinely float above content.
 
+### Shared spacing tokens
+
+`apps/miniprogram/src/theme.wxss` owns spacing values. Pages, components, and inline WXML styles must reference these tokens instead of repeating numeric margin, padding, or gap values.
+
+| Token | Default logical size | Typical use |
+| --- | --- | --- |
+| `--space-xs` | 4px | Text metadata and icon-label separation |
+| `--space-sm` | 8px | Closely related controls and small groups |
+| `--space-md` | 12px | Labels, descriptions, and control padding |
+| `--space-lg` | 16px | Content padding and related content groups |
+| `--space-xl` | 24px | Separate content groups |
+| `--space-2xl` | 32px | Major sections |
+
+- `--spacing-density` defaults to `1`. It adjusts content margin, padding, and gap across the app without changing font sizes, line heights, minimum control heights, or touch-target sizes. Keep the default for structural token migrations; evaluate a density change visually before adopting it.
+- `--page-inset` remains the default 20px horizontal page inset. Density does not change this token.
+- Older pages use `rpx`, which scales with device width. The `--space-responsive-*` counterparts preserve this behavior (8/16/24/32/48/64rpx respectively); do not substitute a px token for an rpx token during a visual-preserving refactor.
+- `--space-legacy-*` values preserve existing off-scale spacing during migration and follow the same density setting. They are compatibility values, not new approved spacing variants. New or redesigned UI must choose the six standard sizes; gradually retire compatibility values when those screens are visually reviewed.
+- `--layout-reserve-*`, `--tab-height`, and `env(safe-area-inset-bottom)` reserve space for fixed controls or platform safe areas. They do not scale with content density. Positional icon offsets, illustration geometry, borders, and dimensions are not content spacing.
+- Preserve `0`, `auto`, and dynamic safe-area calculations where appropriate. Use a negative token through `calc(0rpx - var(...))` when an existing layout requires a negative margin.
+
 ## 5. Core Components
 
 ### Buttons

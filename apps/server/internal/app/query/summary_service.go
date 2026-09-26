@@ -47,6 +47,7 @@ type Summary struct {
 	InviteCode           string             `json:"inviteCode"`
 	OwnerUserID          string             `json:"ownerUserId"`
 	Status               string             `json:"status"`
+	PresetScores         []int              `json:"presetScores"`
 	ScoreTransferCnt     int                `json:"scoreTransferCount"`
 	Players              []PlayerSummary    `json:"players"`
 	UpdatedAt            time.Time          `json:"updatedAt"`
@@ -121,6 +122,7 @@ func (s *Service) Summary(ctx context.Context, userID, gameSessionID string) (Su
 		OwnerUserID:      g.OwnerUserID,
 		Status:           string(g.Status),
 		ScoreTransferCnt: g.ScoreTransferCnt,
+		PresetScores:     g.PresetScores,
 		UpdatedAt:        g.UpdatedAt,
 		Version:          g.Version,
 		PublicShareToken: g.PublicShareToken,

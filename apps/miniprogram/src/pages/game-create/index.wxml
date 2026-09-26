@@ -1,30 +1,34 @@
-<view class="page form-page">
-  <view class="form-card card">
-    <view class="label">牌局名称</view>
-    <view class="input-wrap">
-      <input value="{{name}}" bindinput="onNameInput" placeholder="家庭聚会" maxlength="12" />
-      <text class="counter">{{nameLength}}/12</text>
+<view class="page create-page {{fontClass}}">
+  <view class="create-intro">
+    <view class="create-brand"><image class="brand-mark" src="/images/home/suits.png" mode="aspectFit" aria-hidden="true" /><text class="brand-name">一局一分</text></view>
+    <view class="create-title">开一局，和朋友一起</view>
+    <view class="create-description">创建后，邀请牌友加入即可开始记分。</view>
+  </view>
+  <view class="name-section">
+    <view class="field-label">牌局名称</view>
+    <view class="name-control {{nameFocused ? 'is-focused' : ''}}">
+      <input class="name-input" value="{{name}}" bindinput="onNameInput" bindfocus="onNameFocus" bindblur="onNameBlur" focus="{{nameFocused}}" disabled="{{submitting}}" placeholder="给这次相聚起个名字" placeholder-class="name-placeholder" maxlength="12" confirm-type="done" cursor-spacing="24" aria-label="牌局名称，最多12字" />
+      <button wx:if="{{nameLength > 0}}" class="clear-name" bindtap="clearName" disabled="{{submitting}}" hover-class="control-pressed" aria-label="清空牌局名称"><icon type="clear" size="16" color="#68716D" /></button>
+    </view>
+    <view class="name-counter">{{nameLength}}/12</view>
+    <view class="suggestion-label">也可以选一个</view>
+    <view class="name-suggestions"><button wx:for="{{suggestedNames}}" wx:key="*this" class="name-suggestion {{name === item ? 'is-selected' : ''}}" data-name="{{item}}" bindtap="selectSuggestedName" disabled="{{submitting}}" hover-class="control-pressed" aria-label="使用名称{{item}}">{{item}}</button></view>
+  </view>
+  <view class="preset-section">
+    <view class="field-label">牌局常用分值</view>
+    <view class="preset-description">记分时可快捷选择，最多选 4 个，牌友共享这组分值。</view>
+    <view class="preset-grid">
+      <button wx:for="{{presetOptions}}" wx:key="value" class="preset-chip {{item.selected ? 'is-selected' : ''}}" data-value="{{item.value}}" bindtap="togglePresetScore" disabled="{{submitting}}" hover-class="control-pressed" aria-label="常用分值{{item.value}}{{item.selected ? '，已选中' : '，未选中'}}">{{item.value}}</button>
     </view>
   </view>
-  <view class="form-card player-card card">
-    <view>
-      <view class="row-title">玩家人数上限</view>
-      <view class="hint-text">支持 2-10 人，默认不限制</view>
-    </view>
-    <picker bindchange="onMaxParticipantsChange" value="{{pickerIndex}}" range="{{pickerRange}}">
-      <view class="player-count" style="color: var(--text-primary); font-weight: 500;">{{pickerRange[pickerIndex]}} ›</view>
-    </picker>
+  <view class="after-create">
+    <view class="section-title">创建后</view>
+    <view class="benefit-row"><image class="benefit-icon" src="/images/tabbar/mine-active.png" mode="aspectFit" aria-hidden="true" /><text>你将自动加入本局</text></view>
+    <view class="benefit-row"><image class="benefit-icon" src="/images/home/qr.png" mode="aspectFit" aria-hidden="true" /><text>通过二维码邀请牌友</text></view>
   </view>
-  <view class="tip-card">
-    <view class="tip-icon"></view>
-    <view>
-      <view class="tip-title">小提示</view>
-      <view class="hint-text">创建后可邀请家人加入，所有人实时同步记分，公平透明又省心。</view>
-    </view>
-  </view>
-  <button class="button-primary create-btn" hover-class="tap-feedback" bindtap="submit">创建并进入</button>
-  <view class="safe-note">
-    <text class="shield"></text>
-    <text>数据云端保存，安全不丢失</text>
+  <view class="create-actions">
+    <view wx:if="{{creationError}}" class="creation-error" role="alert">{{creationError}}</view>
+    <button class="create-button" bindtap="submit" loading="{{submitting}}" disabled="{{submitting}}" hover-class="create-pressed">{{submitting ? '正在创建' : '创建牌局'}}</button>
+    <view class="create-note">创建成功后进入牌局，等待牌友加入。</view>
   </view>
 </view>

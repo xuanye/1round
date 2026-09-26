@@ -61,6 +61,8 @@ WeChat DevTools should open this folder directly. The project config points `min
 ## UI theme and system fonts
 
 Read the repository-root `DESIGN.md` before changing UI. Shared tokens are in `src/theme.wxss`.
+Spacing uses six standard tokens (`--space-xs` through `--space-2xl`). The default `--spacing-density: 1` preserves current layout; it controls content spacing globally while page insets, touch targets, fixed-control clearance, and safe areas remain independent. Older rpx layouts use responsive or compatibility tokens. See DESIGN.md for the token mapping and migration rules.
+
 The homepage and custom tab bar select fonts from `wx.getDeviceInfo()`:
 
 - iOS: Apple system sans-serif and PingFang SC.

@@ -20,6 +20,7 @@ function loadSource(file, globals = {}) {
       if (name === './page' || name === '../game-detail/page') {
         return loadSource('pages/game-detail/page.ts', globals).exports;
       }
+      if (name.endsWith('/preset-scores')) return loadSource('utils/preset-scores.ts', globals).exports;
       if (name.endsWith('/system-font')) return loadSource('utils/system-font.ts', globals).exports;
       return mockRequire(name);
     },

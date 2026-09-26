@@ -53,12 +53,16 @@ func ValidInviteCode(code string) bool {
 	return true
 }
 
-func (s *Service) Create(ctx context.Context, userID, name string, maxParticipants *int) (domain.GameSession, error) {
+func (s *Service) Create(ctx context.Context, userID, name string, maxParticipants *int, presetScores []int) (domain.GameSession, error) {
 	if strings.TrimSpace(name) == "" {
 		return domain.GameSession{}, domain.ErrInvalidArgument
 	}
 	if maxParticipants != nil && (*maxParticipants < 2 || *maxParticipants > 10) {
 		return domain.GameSession{}, domain.ErrInvalidArgument
+	}
+	presetScores, err := normalizePresetScores(presetScores)
+	if err != nil {
+		return domain.GameSession{}, err
 	}
 	current, err := s.q.GetCurrentGameForUser(ctx, userID)
 	if err != nil {
@@ -74,7 +78,7 @@ func (s *Service) Create(ctx context.Context, userID, name string, maxParticipan
 	}
 	session := domain.GameSession{
 		ID: uuid.NewString(), Name: strings.TrimSpace(name), InviteCode: code, OwnerUserID: userID,
-		Status: domain.GameSessionStatusActive, MaxParticipants: maxParticipants, ScoreTransferCnt: 0, Version: 1,
+		Status: domain.GameSessionStatusActive, MaxParticipants: maxParticipants, PresetScores: presetScores, ScoreTransferCnt: 0, Version: 1,
 		CreatedAt: now, UpdatedAt: now,
 	}
 	member := domain.GameMember{ID: uuid.NewString(), GameSessionID: session.ID, UserID: userID, Role: domain.GameMemberRoleOwner, JoinedAt: now}
@@ -468,4 +472,22 @@ func (s *Service) requireMember(ctx context.Context, userID, gameSessionID strin
 		return domain.ErrGameMemberRequired
 	}
 	return nil
+}
+
+// normalizePresetScores preserves the creator's order and rejects unusable shortcuts.
+func normalizePresetScores(scores []int) ([]int, error) {
+	if scores == nil {
+		return []int{20, 30, 40, 60}, nil
+	}
+	if len(scores) < 1 || len(scores) > 8 {
+		return nil, domain.ErrInvalidArgument
+	}
+	seen := make(map[int]bool, len(scores))
+	for _, score := range scores {
+		if score <= 0 || score > 99999 || seen[score] {
+			return nil, domain.ErrInvalidArgument
+		}
+		seen[score] = true
+	}
+	return append([]int(nil), scores...), nil
 }

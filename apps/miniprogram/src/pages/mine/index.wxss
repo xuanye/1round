@@ -1,7 +1,7 @@
-.profile-card { display: flex; align-items: center; padding: 36rpx; gap: 24rpx; }
+.profile-card { display: flex; align-items: center; padding: var(--space-legacy-36rpx); gap: var(--space-responsive-md); }
 .profile-avatar { width: 96rpx; height: 96rpx; border-radius: 50%; line-height: 96rpx; text-align: center; background: #d6ede6; color: #1f695d; font-size: 36rpx; }
 .profile-name { flex: 1; min-width: 0; overflow-wrap: break-word; font-size: 32rpx; font-weight: 700; }
-.menu-card { margin-top: 32rpx; padding: 0 28rpx; }
-.menu-card button { display: flex; justify-content: space-between; padding: 28rpx 0; color: #3f4946; background: transparent; font-size: 28rpx; text-align: left; border-bottom: 1rpx solid #efeeeb; }
+.menu-card { margin-top: var(--space-responsive-lg); padding: 0 var(--space-legacy-28rpx); }
+.menu-card button { display: flex; justify-content: space-between; padding: var(--space-legacy-28rpx) 0; color: #3f4946; background: transparent; font-size: 28rpx; text-align: left; border-bottom: 1rpx solid #efeeeb; }
 .menu-card button:last-child { border-bottom: 0; }
 .menu-card text { color: #6f7976; }

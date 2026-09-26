@@ -16,6 +16,7 @@ type GameSession struct {
 	InviteCode       string            `json:"inviteCode"`
 	OwnerUserID      string            `json:"ownerUserId"`
 	Status           GameSessionStatus `json:"status"`
+	PresetScores     []int             `json:"presetScores"`
 	MaxParticipants  *int              `json:"maxParticipants"`
 	ScoreTransferCnt int               `json:"scoreTransferCount"`
 	Version          int64             `json:"version"`

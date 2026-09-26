@@ -59,9 +59,31 @@ function isTypeScriptFile(filePath) {
   return filePath.endsWith(".ts") || filePath.endsWith(".tsx");
 }
 
-function removeDist() {
-  fs.rmSync(distRoot, { recursive: true, force: true });
-  fs.mkdirSync(distRoot, { recursive: true });
+function hasSourceFor(relativePath) {
+  const srcPath = path.join(srcRoot, relativePath);
+  if (fs.existsSync(srcPath)) return true;
+  if (relativePath.endsWith(".js.map")) {
+    return fs.existsSync(`${srcPath.slice(0, -".js.map".length)}.ts`);
+  }
+  if (relativePath.endsWith(".js")) {
+    return fs.existsSync(`${srcPath.slice(0, -".js".length)}.ts`);
+  }
+  return false;
+}
+
+// Removes dist files whose source is gone, so builds can overwrite in
+// place without ever making dist unloadable (no pre-build wipe).
+function pruneOrphanOutputs(sourceDir = distRoot) {
+  for (const entry of fs.readdirSync(sourceDir, { withFileTypes: true })) {
+    const targetPath = path.join(sourceDir, entry.name);
+    if (entry.isDirectory()) {
+      pruneOrphanOutputs(targetPath);
+      continue;
+    }
+    if (!hasSourceFor(path.relative(distRoot, targetPath))) {
+      fs.rmSync(targetPath, { force: true });
+    }
+  }
 }
 
 function copyStaticAssets(sourceDir = srcRoot) {
@@ -156,14 +178,17 @@ function syncChangedAsset(filename) {
   fs.copyFileSync(sourcePath, targetPath);
 }
 
-removeDist();
+fs.mkdirSync(distRoot, { recursive: true });
 copyStaticAssets();
 
 if (!watchMode) {
   runTypeScriptBuild();
+  pruneOrphanOutputs();
   injectRuntimeConfig();
   process.exit(0);
 }
+
+pruneOrphanOutputs();
 
 const tsc = startTypeScriptWatch();
 

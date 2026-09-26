@@ -1,6 +1,6 @@
 .detail-page {
-  padding-top: 20rpx;
-  padding-bottom: 260rpx;
+  padding-top: var(--space-legacy-20rpx);
+  padding-bottom: var(--layout-reserve-260rpx);
 }
 
 .poster-canvas {
@@ -12,8 +12,8 @@
 }
 
 .public-share-page {
-  padding-top: 42rpx;
-  padding-bottom: 72rpx;
+  padding-top: var(--space-legacy-42rpx);
+  padding-bottom: var(--space-legacy-72rpx);
 }
 
 .detail-topbar,
@@ -30,8 +30,8 @@
   align-items: center;
   justify-content: space-between;
   min-height: 96rpx;
-  margin: -20rpx -40rpx 28rpx;
-  padding: 20rpx 40rpx;
+  margin: calc(0rpx - var(--space-legacy-20rpx)) calc(0rpx - var(--space-legacy-40rpx)) var(--space-legacy-28rpx);
+  padding: var(--space-legacy-20rpx) var(--space-legacy-40rpx);
   background: rgba(250, 249, 246, 0.86);
 }
 
@@ -77,7 +77,7 @@ button.round-button .iconfont {
 .history-head {
   align-items: center;
   justify-content: space-between;
-  margin-top: 26rpx;
+  margin-top: var(--space-legacy-26rpx);
 }
 
 .section-label {
@@ -98,18 +98,18 @@ button.round-button .iconfont {
 
 .rank-link .inline-icon {
   font-size: 30rpx !important;
-  margin-right: 6rpx;
+  margin-right: var(--space-legacy-6rpx);
 }
 
 .participant-list {
-  margin-top: 18rpx;
+  margin-top: var(--space-legacy-18rpx);
   overflow: hidden;
 }
 
 .participant-row {
   align-items: center;
   justify-content: space-between;
-  padding: 30rpx;
+  padding: var(--space-legacy-30rpx);
   border-bottom: 1rpx solid rgba(190, 201, 197, 0.24);
 }
 
@@ -125,7 +125,7 @@ button.round-button .iconfont {
 
 .avatar-wrap {
   position: relative;
-  margin-right: 22rpx;
+  margin-right: var(--space-legacy-22rpx);
 }
 
 .avatar {
@@ -178,14 +178,14 @@ button.round-button .iconfont {
 
 .person-role,
 .transfer-time {
-  margin-top: 6rpx;
+  margin-top: var(--space-legacy-6rpx);
   color: #3f4946;
   font-size: 22rpx;
 }
 
 .score {
   flex-shrink: 0;
-  margin-left: 20rpx;
+  margin-left: var(--space-legacy-20rpx);
   font-size: 38rpx;
   font-weight: 900;
 }
@@ -195,7 +195,7 @@ button.round-button .iconfont {
 .score.muted { color: #3f4946; }
 
 .public-share-hero {
-  padding: 20rpx 0 30rpx;
+  padding: var(--space-legacy-20rpx) 0 var(--space-legacy-30rpx);
 }
 
 .public-brand {
@@ -206,7 +206,7 @@ button.round-button .iconfont {
 }
 
 .public-title {
-  margin-top: 14rpx;
+  margin-top: var(--space-legacy-14rpx);
   color: #1a1c1a;
   font-size: 46rpx;
   font-weight: 900;
@@ -215,14 +215,14 @@ button.round-button .iconfont {
 }
 
 .public-meta {
-  margin-top: 12rpx;
+  margin-top: var(--space-legacy-12rpx);
   color: #6f7976;
   font-size: 24rpx;
   font-weight: 700;
 }
 
 .public-scoreboard {
-  margin-top: 16rpx;
+  margin-top: var(--space-responsive-sm);
   overflow: hidden;
   border-radius: 16rpx;
 }
@@ -231,7 +231,7 @@ button.round-button .iconfont {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 32rpx 34rpx;
+  padding: var(--space-responsive-lg) var(--space-legacy-34rpx);
   background: #f4f8f6;
   border-bottom: 1rpx solid rgba(190, 201, 197, 0.34);
 }
@@ -244,14 +244,14 @@ button.round-button .iconfont {
 }
 
 .public-card-title {
-  margin-top: 8rpx;
+  margin-top: var(--space-responsive-xs);
   color: #1a1c1a;
   font-size: 34rpx;
   font-weight: 900;
 }
 
 .public-readonly-badge {
-  padding: 8rpx 18rpx;
+  padding: var(--space-responsive-xs) var(--space-legacy-18rpx);
   border-radius: 8rpx;
   color: #8e4e14;
   background: rgba(142, 78, 20, 0.12);
@@ -260,7 +260,7 @@ button.round-button .iconfont {
 }
 
 .public-player-list {
-  padding: 8rpx 34rpx 12rpx;
+  padding: var(--space-responsive-xs) var(--space-legacy-34rpx) var(--space-legacy-12rpx);
 }
 
 .public-player-row,
@@ -288,7 +288,7 @@ button.round-button .iconfont {
   flex-shrink: 0;
   width: 46rpx;
   height: 46rpx;
-  margin-right: 22rpx;
+  margin-right: var(--space-legacy-22rpx);
   border-radius: 8rpx;
   color: #1f695d;
   background: rgba(31, 105, 93, 0.1);
@@ -310,7 +310,7 @@ button.round-button .iconfont {
 
 .public-score {
   flex-shrink: 0;
-  margin-left: 20rpx;
+  margin-left: var(--space-legacy-20rpx);
   font-size: 42rpx;
   font-weight: 900;
 }
@@ -324,7 +324,7 @@ button.public-entry-button {
   align-items: center;
   justify-content: center;
   height: 100rpx;
-  margin-top: 32rpx;
+  margin-top: var(--space-responsive-lg);
   font-size: 32rpx;
 }
 
@@ -333,7 +333,7 @@ button.public-entry-button {
   align-items: center;
   justify-content: center;
   width: 100%;
-  margin: 30rpx 0 0;
+  margin: var(--space-legacy-30rpx) 0 0;
   height: 108rpx;
   font-size: 36rpx;
   line-height: 1;
@@ -345,7 +345,7 @@ button.public-entry-button {
 }
 
 .score-entry .button-icon {
-  margin-right: 12rpx;
+  margin-right: var(--space-legacy-12rpx);
   font-size: 40rpx !important;
 }
 
@@ -357,15 +357,15 @@ button.public-entry-button {
 .transfer-list {
   display: flex;
   flex-direction: column;
-  margin-top: 20rpx;
+  margin-top: var(--space-legacy-20rpx);
 }
 
 .transfer-card + .transfer-card {
-  margin-top: 20rpx;
+  margin-top: var(--space-legacy-20rpx);
 }
 
 .transfer-card {
-  padding: 28rpx;
+  padding: var(--space-legacy-28rpx);
   border-radius: 28rpx;
   background: #ffffff;
   box-shadow: 0 8rpx 28rpx rgba(31, 105, 93, 0.06);
@@ -397,7 +397,7 @@ button.public-entry-button {
 .transfer-avatar {
   width: 64rpx;
   height: 64rpx;
-  margin-right: 18rpx;
+  margin-right: var(--space-legacy-18rpx);
   font-size: 28rpx;
   line-height: 64rpx;
 }
@@ -405,7 +405,7 @@ button.public-entry-button {
 .change-avatar {
   width: 34rpx;
   height: 34rpx;
-  margin-right: 8rpx;
+  margin-right: var(--space-responsive-xs);
   font-size: 19rpx;
   line-height: 34rpx;
 }
@@ -424,7 +424,7 @@ button.public-entry-button {
 }
 
 .transfer-original {
-  margin-top: 6rpx;
+  margin-top: var(--space-legacy-6rpx);
   color: #3f4946;
   font-size: 22rpx;
   line-height: 1.4;
@@ -432,8 +432,8 @@ button.public-entry-button {
 
 .transfer-status {
   flex-shrink: 0;
-  margin-left: 12rpx;
-  padding: 7rpx 14rpx;
+  margin-left: var(--space-legacy-12rpx);
+  padding: var(--space-legacy-7rpx) var(--space-legacy-14rpx);
   border-radius: 12rpx;
   color: #1f695d;
   background: #e1f2ed;
@@ -447,14 +447,14 @@ button.public-entry-button {
 }
 
 .transfer-change-panel {
-  margin-top: 18rpx;
-  padding: 18rpx 20rpx;
+  margin-top: var(--space-legacy-18rpx);
+  padding: var(--space-legacy-18rpx) var(--space-legacy-20rpx);
   border-radius: 20rpx;
   background: #f2f7f5;
 }
 
 .transfer-change-label {
-  margin-bottom: 10rpx;
+  margin-bottom: var(--space-legacy-10rpx);
   color: #6f7976;
   font-size: 21rpx;
 }
@@ -467,7 +467,7 @@ button.public-entry-button {
 }
 
 .transfer-change-row + .transfer-change-row {
-  margin-top: 12rpx;
+  margin-top: var(--space-legacy-12rpx);
 }
 
 .change-person {
@@ -498,7 +498,7 @@ button.public-entry-button {
 }
 
 .change-arrow {
-  margin: 0 10rpx;
+  margin: 0 var(--space-legacy-10rpx);
 }
 
 .change-after.positive { color: #1f695d; }
@@ -507,7 +507,7 @@ button.public-entry-button {
 
 .change-effect {
   flex-shrink: 0;
-  padding: 6rpx 10rpx;
+  padding: var(--space-legacy-6rpx) var(--space-legacy-10rpx);
   border-radius: 10rpx;
   font-size: 20rpx;
   font-weight: 800;
@@ -529,14 +529,14 @@ button.public-entry-button {
 
 .transfer-change-note,
 .transfer-reversed-note {
-  margin-top: 8rpx;
+  margin-top: var(--space-responsive-xs);
   color: #6f7976;
   font-size: 20rpx;
 }
 
 .transfer-reverse-button {
   height: 62rpx;
-  margin-top: 16rpx;
+  margin-top: var(--space-responsive-sm);
   border-radius: 14rpx;
   color: #ba1a1a;
   background: #f9ebeb;
@@ -567,7 +567,7 @@ button.finish-button {
   justify-content: center;
   width: auto;
   height: 88rpx;
-  margin: 0 40rpx 20rpx;
+  margin: 0 var(--space-legacy-40rpx) var(--space-legacy-20rpx);
   color: #ffffff;
   background: #ba1a1a;
   font-size: 28rpx;
@@ -581,7 +581,7 @@ button.finish-button:active {
 }
 
 .finish-button .button-icon {
-  margin-right: 12rpx;
+  margin-right: var(--space-legacy-12rpx);
   font-size: 36rpx !important;
 }
 
@@ -605,7 +605,7 @@ button.finish-button:active {
   width: 580rpx;
   background: #ffffff;
   border-radius: 40rpx;
-  padding: 50rpx;
+  padding: var(--space-legacy-50rpx);
   box-shadow: 0 20rpx 60rpx rgba(0,0,0,0.15);
   display: flex;
   flex-direction: column;
@@ -617,7 +617,7 @@ button.finish-button:active {
   color: #1f695d;
   font-size: 36rpx;
   font-weight: 900;
-  margin-bottom: 30rpx;
+  margin-bottom: var(--space-legacy-30rpx);
 }
 
 .qr-image {
@@ -625,14 +625,14 @@ button.finish-button:active {
   height: 360rpx;
   background: #f4f3f1;
   border-radius: 20rpx;
-  margin-bottom: 30rpx;
+  margin-bottom: var(--space-legacy-30rpx);
 }
 
 .invite-popup-hint {
   font-size: 24rpx;
   color: #6f7976;
   text-align: center;
-  margin-bottom: 40rpx;
+  margin-bottom: var(--space-legacy-40rpx);
 }
 
 button.invite-close-btn {
@@ -653,20 +653,20 @@ button.invite-close-btn {
   background: #fffbeb;
   border: 1rpx solid #fef3c7;
   border-radius: 28rpx;
-  padding: 30rpx;
-  margin-bottom: 30rpx;
+  padding: var(--space-legacy-30rpx);
+  margin-bottom: var(--space-legacy-30rpx);
 }
 
 .finish-banner-title {
   font-size: 28rpx;
   font-weight: 900;
   color: #b45309;
-  margin-bottom: 16rpx;
+  margin-bottom: var(--space-responsive-sm);
 }
 
 .finish-banner-actions {
   display: flex;
-  gap: 20rpx;
+  gap: var(--space-legacy-20rpx);
 }
 
 button.finish-banner-btn {
@@ -700,8 +700,8 @@ button.finish-banner-btn {
   text-align: center;
   color: #6f7976;
   font-size: 22rpx;
-  margin-top: 18rpx;
-  margin-bottom: 24rpx;
+  margin-top: var(--space-legacy-18rpx);
+  margin-bottom: var(--space-responsive-md);
 }
 
 .transfer-name-bold {
@@ -719,8 +719,8 @@ button.finish-banner-btn {
   background: #fdf2f2;
   border: 1rpx solid #fde8e8;
   border-radius: 28rpx;
-  padding: 30rpx;
-  margin-bottom: 30rpx;
+  padding: var(--space-legacy-30rpx);
+  margin-bottom: var(--space-legacy-30rpx);
 }
 
 .round-warning-text {
@@ -732,4 +732,4 @@ button.finish-banner-btn {
 }
 
 .bottom-actions { background: #FAF9F6; padding-bottom: env(safe-area-inset-bottom); }
-button.leave-button { background: transparent; color: #6f7976; font-size: 24rpx; margin: 12rpx 40rpx; }
+button.leave-button { background: transparent; color: #6f7976; font-size: 24rpx; margin: var(--space-legacy-12rpx) var(--space-legacy-40rpx); }

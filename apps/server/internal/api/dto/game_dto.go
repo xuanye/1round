@@ -5,6 +5,7 @@ import "time"
 type CreateGameRequest struct {
 	Name            string `json:"name"`
 	MaxParticipants *int   `json:"maxParticipants"`
+	PresetScores    []int  `json:"presetScores"`
 }
 
 type JoinGameRequest struct {
@@ -23,6 +24,7 @@ type CurrentGameResponse struct {
 	OwnerUserID      string    `json:"ownerUserId"`
 	Status           string    `json:"status"`
 	MaxParticipants  *int      `json:"maxParticipants"`
+	PresetScores     []int     `json:"presetScores"`
 	ScoreTransferCnt int       `json:"scoreTransferCount"`
 	Version          int64     `json:"version"`
 	CreatedAt        time.Time `json:"createdAt"`

@@ -1,13 +1,13 @@
 .tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  margin: 6rpx 0 22rpx;
+  margin: var(--space-legacy-6rpx) 0 var(--space-legacy-22rpx);
   border-bottom: 1rpx solid #e5e7eb;
 }
 
 .tab {
   position: relative;
-  padding: 18rpx 0;
+  padding: var(--space-legacy-18rpx) 0;
   color: #6b7280;
   font-size: 28rpx;
   font-weight: 800;
@@ -31,13 +31,13 @@
 
 .rank-card,
 .history-card {
-  padding: 24rpx;
-  margin-bottom: 22rpx;
+  padding: var(--space-responsive-md);
+  margin-bottom: var(--space-legacy-22rpx);
 }
 
 .rank-title,
 .history-head {
-  margin-bottom: 20rpx;
+  margin-bottom: var(--space-legacy-20rpx);
   color: #111827;
   font-size: 28rpx;
   font-weight: 900;
@@ -57,11 +57,11 @@
   display: grid;
   grid-template-columns: 70rpx 1fr 92rpx 120rpx;
   align-items: center;
-  gap: 10rpx;
+  gap: var(--space-legacy-10rpx);
 }
 
 .rank-head {
-  margin-bottom: 8rpx;
+  margin-bottom: var(--space-responsive-xs);
   color: #9ca3af;
   font-size: 22rpx;
 }
@@ -96,7 +96,7 @@
 .player-cell {
   display: flex;
   align-items: center;
-  gap: 12rpx;
+  gap: var(--space-legacy-12rpx);
   min-width: 0;
 }
 
@@ -117,8 +117,8 @@
 .history-row {
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  padding: 18rpx 0;
+  gap: var(--space-responsive-sm);
+  padding: var(--space-legacy-18rpx) 0;
   border-bottom: 1rpx solid #f0f1f3;
 }
 
@@ -127,7 +127,7 @@
 }
 
 .history-empty {
-  padding: 24rpx 0 8rpx;
+  padding: var(--space-responsive-md) 0 var(--space-responsive-xs);
   color: #9ca3af;
   font-size: 24rpx;
   text-align: center;
@@ -153,13 +153,13 @@
 }
 
 .history-meta {
-  margin-top: 6rpx;
+  margin-top: var(--space-legacy-6rpx);
   color: #6b7280;
   font-size: 20rpx;
 }
 
 .status {
-  padding: 5rpx 12rpx;
+  padding: var(--space-legacy-5rpx) var(--space-legacy-12rpx);
   border-radius: 999rpx;
   font-size: 20rpx;
   font-weight: 900;
@@ -168,6 +168,6 @@
 .running { color: #16a34a; background: #dcfce7; }
 .ended { color: #6b7280; background: #f3f4f6; }
 
-.stats-card { padding: 32rpx; margin-bottom: 28rpx; }
-.stats-row { display: flex; justify-content: space-between; padding-top: 20rpx; }
-.stats-value { color: #1f695d; font-size: 40rpx; font-weight: 800; margin-top: 12rpx; }
+.stats-card { padding: var(--space-responsive-lg); margin-bottom: var(--space-legacy-28rpx); }
+.stats-row { display: flex; justify-content: space-between; padding-top: var(--space-legacy-20rpx); }
+.stats-value { color: #1f695d; font-size: 40rpx; font-weight: 800; margin-top: var(--space-legacy-12rpx); }

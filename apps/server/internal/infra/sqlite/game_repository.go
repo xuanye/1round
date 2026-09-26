@@ -3,6 +3,7 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -10,8 +11,12 @@ import (
 )
 
 func (q *Queries) CreateGameSession(ctx context.Context, session domain.GameSession, ownerMember domain.GameMember) error {
-	_, err := q.db.ExecContext(ctx, `INSERT INTO game_sessions (id, name, invite_code, owner_user_id, status, zero_sum_required, round_count, version, max_participants, public_share_token, last_scored_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		session.ID, session.Name, session.InviteCode, session.OwnerUserID, session.Status, 0, session.ScoreTransferCnt, session.Version, nullIntToSQL(session.MaxParticipants), nullStringToSQL(session.PublicShareToken), nullTimeToSQL(session.LastScoredAt), encodeTime(session.CreatedAt), encodeTime(session.UpdatedAt))
+	presetScores, err := json.Marshal(session.PresetScores)
+	if err != nil {
+		return err
+	}
+	_, err = q.db.ExecContext(ctx, `INSERT INTO game_sessions (id, name, invite_code, owner_user_id, status, zero_sum_required, round_count, version, max_participants, public_share_token, last_scored_at, created_at, updated_at, preset_scores) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		session.ID, session.Name, session.InviteCode, session.OwnerUserID, session.Status, 0, session.ScoreTransferCnt, session.Version, nullIntToSQL(session.MaxParticipants), nullStringToSQL(session.PublicShareToken), nullTimeToSQL(session.LastScoredAt), encodeTime(session.CreatedAt), encodeTime(session.UpdatedAt), string(presetScores))
 	if err != nil {
 		return err
 	}
@@ -26,12 +31,12 @@ func (q *Queries) AddGameMember(ctx context.Context, m domain.GameMember) error 
 }
 
 func (q *Queries) GetGameSession(ctx context.Context, id string) (domain.GameSession, error) {
-	row := q.db.QueryRowContext(ctx, `SELECT id, name, invite_code, owner_user_id, status, max_participants, round_count, version, public_share_token, last_scored_at, settled_at, voided_at, created_at, updated_at FROM game_sessions WHERE id = ?`, id)
+	row := q.db.QueryRowContext(ctx, `SELECT id, name, invite_code, owner_user_id, status, max_participants, round_count, version, public_share_token, last_scored_at, settled_at, voided_at, created_at, updated_at, preset_scores FROM game_sessions WHERE id = ?`, id)
 	return scanGame(row)
 }
 
 func (q *Queries) GetGameSessionByInviteCode(ctx context.Context, inviteCode string) (domain.GameSession, error) {
-	row := q.db.QueryRowContext(ctx, `SELECT id, name, invite_code, owner_user_id, status, max_participants, round_count, version, public_share_token, last_scored_at, settled_at, voided_at, created_at, updated_at FROM game_sessions WHERE invite_code = ?`, inviteCode)
+	row := q.db.QueryRowContext(ctx, `SELECT id, name, invite_code, owner_user_id, status, max_participants, round_count, version, public_share_token, last_scored_at, settled_at, voided_at, created_at, updated_at, preset_scores FROM game_sessions WHERE invite_code = ?`, inviteCode)
 	return scanGame(row)
 }
 
@@ -39,7 +44,7 @@ func (q *Queries) GetCurrentGameForUser(ctx context.Context, userID string) (*do
 	row := q.db.QueryRowContext(ctx, `
 		SELECT gs.id, gs.name, gs.invite_code, gs.owner_user_id, gs.status, gs.max_participants,
 		       gs.round_count, gs.version, gs.public_share_token, gs.last_scored_at,
-		       gs.settled_at, gs.voided_at, gs.created_at, gs.updated_at
+		       gs.settled_at, gs.voided_at, gs.created_at, gs.updated_at, gs.preset_scores
 		FROM game_sessions gs
 		JOIN players p ON p.game_session_id = gs.id
 		WHERE p.user_id = ?
@@ -131,15 +136,18 @@ func scanGame(row interface{ Scan(...any) error }) (domain.GameSession, error) {
 	var maxParticipants, publicShareToken, lastScoredAt, settledAt, voidedAt sql.NullString
 	var roundCount int
 	var version int64
-	var createdAt, updatedAt string
+	var createdAt, updatedAt, presetScores string
 	err := row.Scan(&g.ID, &g.Name, &g.InviteCode, &g.OwnerUserID, &g.Status, &maxParticipants,
 		&roundCount, &version, &publicShareToken, &lastScoredAt, &settledAt, &voidedAt,
-		&createdAt, &updatedAt)
+		&createdAt, &updatedAt, &presetScores)
 	if err == sql.ErrNoRows {
 		return g, domain.ErrNotFound
 	}
 	if err != nil {
 		return g, err
+	}
+	if err := json.Unmarshal([]byte(presetScores), &g.PresetScores); err != nil {
+		return g, fmt.Errorf("decode preset scores: %w", err)
 	}
 	g.ScoreTransferCnt = roundCount
 	g.Version = version

@@ -15,6 +15,7 @@ export type GameSession = {
   ownerUserId: string;
   status: 'active' | 'finished';
   maxParticipants: number | null;
+  presetScores?: number[];
   scoreTransferCount: number;
   version: number;
 };
@@ -33,6 +34,7 @@ export type GameSummary = {
   inviteCode: string;
   ownerUserId: string;
   status: 'active' | 'finished';
+  presetScores?: number[];
   scoreTransferCount: number;
   players: Player[];
   scoreTransfers?: ScoreTransfer[];

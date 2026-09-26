@@ -36,7 +36,7 @@
     <!-- Round Warning Banner -->
     <view wx:if="{{roundStatus && roundStatus.pendingPlayerNames.length > 0 && transfers.length > 0}}" class="round-warning-banner card">
       <view class="round-warning-text">
-        <text class="iconfont inline-icon animate-pulse" style="margin-right: 8rpx; color: #ba1a1a;">{{icons.info}}</text>
+        <text class="iconfont inline-icon animate-pulse" style="margin-right: var(--space-responsive-xs); color: #ba1a1a;">{{icons.info}}</text>
         本轮（第{{roundStatus.roundNo}}局）还有 {{uninvolvedNamesText}} 尚未计分/被计分。
       </view>
     </view>
@@ -112,7 +112,7 @@
     <block wx:else>
       <view class="section-row">
       <view class="section-label" style="color: #ba1a1a;">已结算 (只读)</view>
-      <view class="settled-badge" style="background: rgba(186, 26, 26, 0.1); color: #ba1a1a; font-size: 22rpx; font-weight: bold; padding: 4rpx 16rpx; border-radius: 8rpx;">零和已冻结</view>
+      <view class="settled-badge" style="background: rgba(186, 26, 26, 0.1); color: #ba1a1a; font-size: 22rpx; font-weight: bold; padding: var(--space-legacy-4rpx) var(--space-responsive-sm); border-radius: 8rpx;">零和已冻结</view>
       </view>
 
       <!-- All Historical Participants Section -->
@@ -192,7 +192,7 @@
       <view wx:if="{{item.reversedAt}}" class="transfer-reversed-note">此笔计分已由撤销记录冲回</view>
       <button wx:if="{{item.canReverse}}" class="transfer-reverse-button" bindtap="onReverseTransfer" data-transfer-id="{{item.id}}">撤销这笔计分</button>
     </view>
-    <view wx:if="{{transfers.length === 0}}" style="text-align: center; color: var(--text-muted); font-size: 26rpx; padding: 40rpx;">
+    <view wx:if="{{transfers.length === 0}}" style="text-align: center; color: var(--text-muted); font-size: 26rpx; padding: var(--space-legacy-40rpx);">
       暂无计分记录
     </view>
   </view>

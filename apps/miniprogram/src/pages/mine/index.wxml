@@ -1,9 +1,52 @@
-<view class="page tab-page mine-page">
-  <view wx:if="{{error}}" class="card profile-card"><view>{{error}}</view><button bindtap="onShow">重试</button></view>
-  <view wx:else class="card profile-card"><view class="profile-avatar">{{initial}}</view><view class="profile-name">{{displayName}}</view></view>
-  <view class="card menu-card">
-    <button bindtap="openGame">当前牌局 <text>›</text></button>
-    <button bindtap="openHistory">历史牌局 <text>›</text></button>
-    <button bindtap="showHelp">使用帮助 <text>›</text></button>
+<view class="page tab-page mine-page {{fontClass}}">
+  <view wx:if="{{loading}}" class="profile-state" role="status">正在加载资料…</view>
+  <view wx:elif="{{error}}" class="profile-state" role="alert">
+    <text>{{error}}</text>
+    <button class="retry-button" bindtap="onShow" hover-class="row-pressed">重新加载</button>
+  </view>
+  <view wx:else class="profile">
+    <image wx:if="{{avatarUrl && !avatarFailed}}" class="profile-avatar" src="{{avatarUrl}}" mode="aspectFill" binderror="onAvatarError" aria-hidden="true" />
+    <view wx:else class="profile-avatar avatar-fallback" aria-hidden="true">{{initial}}</view>
+    <view class="profile-identity">
+      <view class="profile-name">{{displayName}}</view>
+      <view class="profile-description">和朋友一起，轻松记分。</view>
+    </view>
+  </view>
+
+  <view class="menu-section">
+    <view class="section-heading">数据与记录</view>
+    <button class="menu-row" bindtap="openHistory" hover-class="row-pressed" aria-label="历史牌局">
+      <image class="menu-icon" src="/images/mine/clock.png" aria-hidden="true" />
+      <text class="menu-label">历史牌局</text>
+      <image class="row-chevron" src="/images/mine/chevron-right.png" aria-hidden="true" />
+    </button>
+  </view>
+
+  <view class="menu-section">
+    <view class="section-heading">帮助与反馈</view>
+    <button class="menu-row" bindtap="showHelp" hover-class="row-pressed" aria-label="使用说明">
+      <image class="menu-icon" src="/images/mine/book-open.png" aria-hidden="true" />
+      <text class="menu-label">使用说明</text>
+      <image class="row-chevron" src="/images/mine/chevron-right.png" aria-hidden="true" />
+    </button>
+    <button class="menu-row" open-type="feedback" hover-class="row-pressed" aria-label="意见反馈">
+      <image class="menu-icon" src="/images/mine/message-circle.png" aria-hidden="true" />
+      <text class="menu-label">意见反馈</text>
+      <image class="row-chevron" src="/images/mine/chevron-right.png" aria-hidden="true" />
+    </button>
+    <button class="menu-row" bindtap="showAbout" hover-class="row-pressed" aria-label="关于一局一分，{{version}}">
+      <image class="menu-icon" src="/images/mine/info.png" aria-hidden="true" />
+      <text class="menu-label">关于一局一分</text>
+      <text class="menu-value">{{version}}</text>
+      <image class="row-chevron" src="/images/mine/chevron-right.png" aria-hidden="true" />
+    </button>
+  </view>
+
+  <view class="brand-footer">
+    <view class="brand-signature">
+      <image class="brand-icon" src="/images/tabbar/game-active.png" aria-hidden="true" />
+      <text>一局一分</text>
+    </view>
+    <view class="brand-description">简单记分，尽兴相聚。</view>
   </view>
 </view>

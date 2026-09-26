@@ -21,6 +21,7 @@ function loadSource(file, globals = {}) {
         return loadSource('pages/game-detail/page.ts', globals).exports;
       }
       if (name.endsWith('/preset-scores')) return loadSource('utils/preset-scores.ts', globals).exports;
+      if (name.endsWith('/suggestion-names')) return loadSource('utils/suggestion-names.ts', globals).exports;
       if (name.endsWith('/system-font')) return loadSource('utils/system-font.ts', globals).exports;
       return mockRequire(name);
     },

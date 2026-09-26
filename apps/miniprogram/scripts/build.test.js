@@ -4,26 +4,13 @@ const path = require("path");
 const { spawn } = require("child_process");
 
 const projectRoot = path.resolve(__dirname, "..");
-const envPath = path.join(projectRoot, ".env");
-const localEnvPath = path.join(projectRoot, ".env.local");
 const configOutputPath = path.join(projectRoot, "dist", "utils", "config.js");
 const appJsPath = path.join(projectRoot, "dist", "app.js");
 
-function readIfExists(filePath) {
-  return fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf8") : null;
-}
-
-function restore(filePath, content) {
-  if (content === null) {
-    fs.rmSync(filePath, { force: true });
-    return;
-  }
-  fs.writeFileSync(filePath, content);
-}
-
 // Runs a full build while polling dist/app.js: the entry JS must never
 // disappear, otherwise WeChat DevTools loads a JS-less dist and reports
-// a load failure (removeDist window).
+// a load failure (removeDist window). The API base URL override is passed
+// via process.env instead of .env files so tests never touch local config.
 function runBuildWatchingEntry() {
   return new Promise((resolve, reject) => {
     fs.mkdirSync(path.dirname(appJsPath), { recursive: true });
@@ -32,6 +19,7 @@ function runBuildWatchingEntry() {
     const child = spawn(process.execPath, ["scripts/build.js"], {
       cwd: projectRoot,
       encoding: "utf8",
+      env: { ...process.env, ONEROUND_API_BASE_URL: "http://127.0.0.1:19090" },
     });
 
     let stdout = "";
@@ -56,14 +44,27 @@ function runBuildWatchingEntry() {
   });
 }
 
-const originalEnv = readIfExists(envPath);
-const originalLocalEnv = readIfExists(localEnvPath);
+// Rebuilds without any override so a finished test run leaves dist
+// pointing at the production API, never at a local debug address.
+function runCleanBuild() {
+  const result = require("child_process").spawnSync(process.execPath, ["scripts/build.js"], {
+    cwd: projectRoot,
+    encoding: "utf8",
+    env: (() => {
+      const env = { ...process.env };
+      delete env.ONEROUND_API_BASE_URL;
+      return env;
+    })(),
+  });
+  assert.strictEqual(
+    result.status,
+    0,
+    `clean rebuild failed\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
+  );
+}
 
 (async () => {
   try {
-    fs.writeFileSync(envPath, "ONEROUND_API_BASE_URL=https://1round.xuanye.wang\n");
-    fs.writeFileSync(localEnvPath, "ONEROUND_API_BASE_URL=http://127.0.0.1:19090\n");
-
     const { code, stdout, stderr, polls, missing } = await runBuildWatchingEntry();
     assert.strictEqual(
       code,
@@ -85,8 +86,7 @@ const originalLocalEnv = readIfExists(localEnvPath);
     const { getBaseUrl } = require(configOutputPath);
     assert.strictEqual(getBaseUrl(), "http://127.0.0.1:19090");
   } finally {
-    restore(envPath, originalEnv);
-    restore(localEnvPath, originalLocalEnv);
+    runCleanBuild();
   }
 })().catch((error) => {
   console.error(error);

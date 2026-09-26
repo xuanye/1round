@@ -5,12 +5,14 @@
     <view class="create-description">创建后，邀请牌友加入即可开始记分。</view>
   </view>
   <view class="name-section">
-    <view class="field-label">牌局名称</view>
+    <view class="name-label-row">
+      <view class="field-label">牌局名称</view>
+      <view class="name-counter">{{nameLength}}/12</view>
+    </view>
     <view class="name-control {{nameFocused ? 'is-focused' : ''}}">
       <input class="name-input" value="{{name}}" bindinput="onNameInput" bindfocus="onNameFocus" bindblur="onNameBlur" focus="{{nameFocused}}" disabled="{{submitting}}" placeholder="给这次相聚起个名字" placeholder-class="name-placeholder" maxlength="12" confirm-type="done" cursor-spacing="24" aria-label="牌局名称，最多12字" />
       <button wx:if="{{nameLength > 0}}" class="clear-name" bindtap="clearName" disabled="{{submitting}}" hover-class="control-pressed" aria-label="清空牌局名称"><icon type="clear" size="16" color="#68716D" /></button>
     </view>
-    <view class="name-counter">{{nameLength}}/12</view>
     <view class="suggestion-label">也可以选一个</view>
     <view class="name-suggestions"><button wx:for="{{suggestedNames}}" wx:key="*this" class="name-suggestion {{name === item ? 'is-selected' : ''}}" data-name="{{item}}" bindtap="selectSuggestedName" disabled="{{submitting}}" hover-class="control-pressed" aria-label="使用名称{{item}}">{{item}}</button></view>
   </view>
@@ -21,14 +23,12 @@
       <button wx:for="{{presetOptions}}" wx:key="value" class="preset-chip {{item.selected ? 'is-selected' : ''}}" data-value="{{item.value}}" bindtap="togglePresetScore" disabled="{{submitting}}" hover-class="control-pressed" aria-label="常用分值{{item.value}}{{item.selected ? '，已选中' : '，未选中'}}">{{item.value}}</button>
     </view>
   </view>
-  <view class="after-create">
-    <view class="section-title">创建后</view>
-    <view class="benefit-row"><image class="benefit-icon" src="/images/tabbar/mine-active.png" mode="aspectFit" aria-hidden="true" /><text>你将自动加入本局</text></view>
-    <view class="benefit-row"><image class="benefit-icon" src="/images/home/qr.png" mode="aspectFit" aria-hidden="true" /><text>通过二维码邀请牌友</text></view>
-  </view>
   <view class="create-actions">
     <view wx:if="{{creationError}}" class="creation-error" role="alert">{{creationError}}</view>
     <button class="create-button" bindtap="submit" loading="{{submitting}}" disabled="{{submitting}}" hover-class="create-pressed">{{submitting ? '正在创建' : '创建牌局'}}</button>
-    <view class="create-note">创建成功后进入牌局，等待牌友加入。</view>
+    <view class="create-tips">
+      <view>创建后你将自动加入本局，通过二维码邀请牌友</view>
+      <view class="create-note">创建成功后进入牌局，等待牌友加入。</view>
+    </view>
   </view>
 </view>

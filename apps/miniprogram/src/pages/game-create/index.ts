@@ -3,13 +3,14 @@ import { createGame } from '../../services/game.service';
 import { saveRecentSession } from '../../utils/storage';
 import { getSystemFontClass } from '../../utils/system-font';
 import { DEFAULT_PRESET_SCORES, MAX_PRESET_SCORES, buildPresetOptions, selectedPresetScores } from '../../utils/preset-scores';
+import { buildSuggestedNames } from '../../utils/suggestion-names';
 
 Page({
   data: {
     fontClass: getSystemFontClass(),
     name: '周六朋友局',
     nameLength: 5,
-    suggestedNames: ['朋友小聚', '周末牌局', '家庭聚会'],
+    suggestedNames: buildSuggestedNames(new Date()),
     nameFocused: false,
     submitting: false,
     creationError: '',

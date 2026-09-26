@@ -4,12 +4,17 @@
   "private": true,
   "scripts": {
     "build": "node scripts/build.js",
-    "check": "tsc -p tsconfig.json --noEmit",
-    "test": "node scripts/build.test.js && node scripts/auth-guard.test.js && node scripts/qrcode.test.js && node scripts/scan-to-join.test.js && node scripts/log-regressions.test.js && node scripts/navigation.test.js && node scripts/game-create.test.js && node scripts/preset-scores.test.js && node scripts/suggestion-names.test.js",
+    "check": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
+    "test": "pnpm run build && jest",
     "watch": "node scripts/build.js --watch"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "jest": "^30.5.2",
+    "jest-environment-jsdom": "^30.5.2",
     "miniprogram-api-typings": "^4.0.7",
+    "miniprogram-simulate": "^1.6.2",
+    "ts-jest": "^29.4.14",
     "typescript": "^5.9.3"
   }
 }

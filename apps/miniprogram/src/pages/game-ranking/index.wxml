@@ -1,0 +1,24 @@
+<view class="page game-ranking-page {{fontClass}}">
+  <view class="ranking-name">{{name}}</view>
+  <view wx:if="{{loading}}" class="page-state" role="status">正在加载本局排名…</view>
+  <view wx:elif="{{error}}" class="page-state" role="alert">
+    <view>{{error}}</view>
+    <button class="retry-button" bindtap="loadRanking" hover-class="row-pressed">重新加载</button>
+  </view>
+  <view wx:elif="{{finished}}" class="page-state">
+    <view>本局已结束，请返回牌局查看最终分值</view>
+    <button class="retry-button" bindtap="returnToGame" hover-class="row-pressed">返回牌局</button>
+  </view>
+  <block wx:else>
+    <view class="ranking-description">当前参与者按积分排名，同分按加入顺序排列</view>
+    <view wx:if="{{!players.length}}" class="page-state">暂无当前参与者</view>
+    <view wx:else class="ranking-list">
+      <view wx:for="{{players}}" wx:key="id" class="ranking-row">
+        <text class="rank-number">{{index + 1}}</text>
+        <view class="ranking-avatar">{{item.initial}}</view>
+        <view class="ranking-player"><view class="player-name">{{item.displayName}}</view><text wx:if="{{item.isMe}}" class="player-self">我</text></view>
+        <text class="list-score {{item.scoreTone}} {{item.scoreLabel.length > 7 ? 'compact-score' : ''}}">{{item.scoreLabel}}</text>
+      </view>
+    </view>
+  </block>
+</view>

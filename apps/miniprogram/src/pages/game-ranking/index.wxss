@@ -1,0 +1,12 @@
+@import "../history/index.wxss";
+
+.game-ranking-page { padding: var(--space-xl) var(--page-inset) calc(var(--space-xl) + env(safe-area-inset-bottom)); }
+.ranking-name { color: var(--color-text); font-size: var(--font-section); font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; }
+.ranking-description { margin: var(--space-md) 0 var(--space-xl); color: var(--color-text-secondary); font-size: var(--font-supporting); line-height: 1.5; }
+.ranking-list { border-top: 1px solid var(--color-border); }
+.ranking-row { display: flex; align-items: center; gap: var(--space-md); min-height: 72px; padding: var(--space-md) 0; box-sizing: border-box; border-bottom: 1px solid var(--color-border); }
+.rank-number { width: 20px; flex-shrink: 0; color: var(--color-text-secondary); font-size: var(--font-supporting); text-align: center; font-variant-numeric: tabular-nums; }
+.ranking-avatar { width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; background: var(--color-primary-subtle); color: var(--color-primary); font-size: 18px; font-weight: 500; line-height: 44px; text-align: center; }
+.ranking-player { flex: 1; min-width: 0; }
+.player-name { font-size: var(--font-body); font-weight: 500; line-height: 1.5; overflow-wrap: anywhere; }
+.player-self { color: var(--color-text-secondary); font-size: var(--font-supporting); line-height: 1.5; }

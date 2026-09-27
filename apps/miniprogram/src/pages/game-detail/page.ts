@@ -395,6 +395,7 @@ export function createGameDetailPage() {
     } | null,
     uninvolvedNamesText: '',
     myPlayerId: '',
+    canExit: false,
 
     // Invite Overlay
     showInviteOverlay: false,
@@ -408,6 +409,7 @@ export function createGameDetailPage() {
   },
 
   realtime: null as RealtimeService | null,
+  inviteRequest: 0,
 
   // Swipe-to-reveal state for the undo action (WeChat chat-style).
   swipeTouch: null as { id: string; x: number; y: number; base: number; engaged: boolean } | null,
@@ -613,8 +615,6 @@ export function createGameDetailPage() {
           isMe: isMe,
         };
       });
-      // Scoreboard shows players ranked by score (ties keep join order).
-      participants.sort((a, b) => b.totalScore - a.totalScore);
 
       const roundStatus = summary.roundStatus || null;
       const uninvolvedNamesText = roundStatus && roundStatus.pendingPlayerNames
@@ -642,13 +642,12 @@ export function createGameDetailPage() {
         roundStatus,
         uninvolvedNamesText,
         hasMoreTransfers: true,
-        showAllTransfers: false,
         swipedTransferId: '',
         swipeDragId: '',
         swipeDragX: 0,
         swipeDragging: false,
-        visibleTransfers: [],
         myPlayerId,
+        canExit: !!me && me.totalScore === 0,
       });
 
       // Load first page of transfers
@@ -674,7 +673,17 @@ export function createGameDetailPage() {
     const myPlayerId = currentMyPlayerId || this.data.myPlayerId;
 
     try {
+      const oldestSequence = reload && this.data.showAllTransfers
+        ? this.data.transfers[this.data.transfers.length - 1]?.sequenceNo
+        : undefined;
       const list = await getScoreTransfers(this.data.id, beforeSeq, 20);
+      let hasMore = list.length === 20;
+      // Retain the loaded history range when a room notification refreshes it.
+      while (hasMore && oldestSequence !== undefined && list[list.length - 1].sequenceNo > oldestSequence) {
+        const next = await getScoreTransfers(this.data.id, list[list.length - 1].sequenceNo, 20);
+        list.push(...next);
+        hasMore = next.length === 20;
+      }
       const mapped = list.map(t => {
         const canReverse =
           this.data.game.status === 'active' &&
@@ -689,7 +698,7 @@ export function createGameDetailPage() {
       this.setData({
         transfers: nextTransfers,
         visibleTransfers: active && !this.data.showAllTransfers ? nextTransfers.slice(0, 3) : nextTransfers,
-        hasMoreTransfers: list.length === 20,
+        hasMoreTransfers: hasMore,
         isLoadingTransfers: false,
       });
     } catch (err) {
@@ -988,6 +997,8 @@ export function createGameDetailPage() {
   },
 
   async showInvite() {
+    const requestId = ++this.inviteRequest;
+    this.getTabBar?.()?.setData({ hidden: true });
     this.setData({
       showInviteOverlay: true,
       isLoadingJoinCode: true,
@@ -996,15 +1007,19 @@ export function createGameDetailPage() {
     try {
       await requireLogin();
       const qrCodeUrl = await getJoinMiniProgramCode(this.data.id);
+      if (requestId !== this.inviteRequest) return;
       this.setData({ qrCodeUrl, isLoadingJoinCode: false });
     } catch (err) {
-      this.setData({ isLoadingJoinCode: false, showInviteOverlay: false });
+      if (requestId !== this.inviteRequest) return;
+      this.hideInvite();
       wx.showToast({ title: (err as any).message || '生成分享码失败', icon: 'none' });
     }
   },
 
   hideInvite() {
+    this.inviteRequest++;
     this.setData({ showInviteOverlay: false, isLoadingJoinCode: false });
+    this.getTabBar?.()?.setData({ hidden: false });
   },
 
   none() {},
@@ -1069,6 +1084,10 @@ export function createGameDetailPage() {
     const me = this.data.participants.find(p => p.isMe);
     if (!me) return;
     wx.navigateTo({ url: `/pages/player-manage/index?id=${this.data.id}&displayName=${encodeURIComponent(me.name)}` });
+  },
+
+  openRanking() {
+    wx.navigateTo({ url: `/pages/game-ranking/index?id=${encodeURIComponent(this.data.id)}` });
   },
 
   finish() {

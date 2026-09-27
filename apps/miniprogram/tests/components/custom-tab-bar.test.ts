@@ -60,4 +60,17 @@ describe('custom-tab-bar component', () => {
 
     expect(switchTab).not.toHaveBeenCalled();
   });
+
+  it('removes navigation while hidden and rejects tab activation', async () => {
+    const switchTab = jest.fn();
+    const component = renderTabBar(createWxMock({ switchTab }));
+    component.setData({ hidden: true });
+    expect(component.querySelectorAll('.tab-bar')).toHaveLength(0);
+    component.instance.selectTab({ currentTarget: { dataset: { index: 1 } } });
+    expect(switchTab).not.toHaveBeenCalled();
+    component.setData({ hidden: false });
+    component.querySelectorAll('.tab-item')[1].dispatchEvent('tap');
+    await Promise.resolve();
+    expect(switchTab).toHaveBeenCalledWith({ url: '/pages/ranking/index' });
+  });
 });

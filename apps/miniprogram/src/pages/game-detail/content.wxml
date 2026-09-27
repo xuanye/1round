@@ -58,7 +58,7 @@
     <!-- Scoreboard -->
     <view class="section-head">
       <view class="section-title">当前比分</view>
-      <view class="section-unit">分</view>
+      <button class="section-link" bindtap="openRanking" hover-class="tap-feedback">本局排名<text class="iconfont section-link-icon">{{icons.chevronRight}}</text></button>
     </view>
     <view class="score-list">
       <view wx:for="{{participants}}" wx:key="id" class="score-row" bindtap="{{item.isMe ? 'renameSelf' : ''}}">
@@ -66,7 +66,8 @@
         <view class="score-avatar">{{item.initial}}</view>
         <view class="score-player">
           <view class="score-player-name">{{item.name}}</view>
-          <view wx:if="{{item.isMe}}" class="score-player-self">我</view>
+          <view wx:if="{{item.isMe || item.isCreator}}" class="score-player-self">{{item.isMe ? '我' : ''}}{{item.isMe && item.isCreator ? ' · ' : ''}}{{item.isCreator ? '创建者' : ''}}</view>
+          <view wx:if="{{item.isMe}}" class="score-rename-hint">点击修改昵称</view>
         </view>
         <view class="score-value {{item.scoreTone}}">{{item.score}}</view>
       </view>
@@ -206,11 +207,12 @@
         结束本局
       </button>
       <block wx:else>
-        <button wx:if="{{isHome}}" class="quiet-action" bindtap="exitGame" hover-class="tap-feedback">退出牌局</button>
         <button class="quiet-action" bindtap="finish" hover-class="tap-feedback">申请结束</button>
       </block>
+      <button wx:if="{{isHome}}" class="quiet-action" bindtap="exitGame" disabled="{{!canExit}}" hover-class="tap-feedback">退出牌局</button>
     </block>
   </view>
+  <view wx:if="{{isHome && game.status === 'active' && !canExit}}" class="scoring-hint">当前分值不为 0，暂时不能退出</view>
 
   <!-- Invite QR overlay -->
   <view wx:if="{{showInviteOverlay}}" class="invite-overlay" bindtap="hideInvite">

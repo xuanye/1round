@@ -12,6 +12,7 @@ const protectedPages = [
   'pages/player-manage/index.ts',
   'pages/score-input/index.ts',
   'pages/ranking/index.ts',
+  'pages/game-ranking/index.ts',
   'pages/history/index.ts',
   'pages/mine/index.ts',
 ];

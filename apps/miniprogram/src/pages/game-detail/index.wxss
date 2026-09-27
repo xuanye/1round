@@ -677,6 +677,11 @@ button.section-link {
   font-size: 13px;
   line-height: 1.5;
 }
+.score-rename-hint {
+  color: var(--color-primary);
+  font-size: var(--font-supporting);
+  line-height: 1.5;
+}
 .score-value {
   flex-shrink: 0;
   max-width: 45%;

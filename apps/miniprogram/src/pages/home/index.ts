@@ -46,7 +46,7 @@ const home: WechatMiniprogram.Page.Options<any, any> = {
 
   async onShow() {
     this.setData({ fontClass: getSystemFontClass() });
-    this.getTabBar?.()?.setData({ selected: 0 });
+    this.getTabBar?.()?.setData({ selected: 0, hidden: false });
     this.visible = true;
     await this.refreshHome();
   },
@@ -55,7 +55,8 @@ const home: WechatMiniprogram.Page.Options<any, any> = {
     if (this.loading) return;
     this.loading = true;
     this.realtime?.disconnect();
-    this.setData({ homeState: 'loading', homeError: '', showInviteOverlay: false });
+    this.hideInvite();
+    this.setData({ homeState: 'loading', homeError: '' });
     wx.showLoading({ title: '加载中...' });
     try {
       const user = await requireLogin();
@@ -63,7 +64,7 @@ const home: WechatMiniprogram.Page.Options<any, any> = {
       this.setData({ userName: user.displayName || '老书记' });
       if (current?.id) {
         if (current.id !== this.data.id) {
-          this.setData({ participants: [], transfers: [], visibleTransfers: [], pendingFinishRequest: null, roundStatus: null });
+          this.setData({ participants: [], transfers: [], visibleTransfers: [], showAllTransfers: false, pendingFinishRequest: null, roundStatus: null });
         }
         this.setData({
           id: current.id,
@@ -81,7 +82,7 @@ const home: WechatMiniprogram.Page.Options<any, any> = {
           this.realtime.connect(current.id);
         }
       } else {
-        this.setData({ id: '', participants: [], transfers: [], visibleTransfers: [], homeState: 'ready', recentGames: [] });
+        this.setData({ id: '', participants: [], transfers: [], visibleTransfers: [], showAllTransfers: false, canExit: false, homeState: 'ready', recentGames: [] });
         await this.loadRecentGames();
       }
     } catch (err) {
@@ -94,6 +95,7 @@ const home: WechatMiniprogram.Page.Options<any, any> = {
 
   onHide() {
     this.visible = false;
+    this.hideInvite();
     this.realtime?.disconnect();
   },
 
@@ -153,7 +155,7 @@ const home: WechatMiniprogram.Page.Options<any, any> = {
 
   exitGame() {
     const me = this.data.participants.find(p => p.isMe);
-    if (!me || me.score !== '0') {
+    if (!me || me.totalScore !== 0) {
       wx.showToast({ title: '当前分值不为 0，暂时不能退出', icon: 'none' });
       return;
     }
@@ -175,4 +177,4 @@ const home: WechatMiniprogram.Page.Options<any, any> = {
   },
 };
 
-Page(Object.assign(detail, home));
+Page({ ...detail, ...home });

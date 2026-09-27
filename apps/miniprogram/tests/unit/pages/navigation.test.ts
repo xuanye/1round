@@ -18,6 +18,10 @@ interface NavState {
   routes: unknown[][];
   failCurrent: boolean;
   modal?: { success: (value: { confirm: boolean }) => Promise<void> } & Record<string, any>;
+  transferCount: number;
+  transferRequests: Array<number | undefined>;
+  failInvite: boolean;
+  invitePromise?: Promise<string>;
 }
 
 let mockState: NavState;
@@ -49,7 +53,20 @@ jest.mock('../../../src/services/game.service', () => ({
       roundStatus: null,
     };
   }),
-  getScoreTransfers: jest.fn(async () => []),
+  getScoreTransfers: jest.fn(async (_id: string, before?: number, limit = 20) => {
+    mockState.transferRequests.push(before);
+    const top = Math.min(mockState.transferCount, before === undefined ? Infinity : before - 1);
+    return Array.from({ length: Math.min(top, limit) }, (_, i) => ({
+      id: `t${top - i}`, sequenceNo: top - i, fromPlayerId: 'p2', receiverPlayerIds: ['p1'],
+      amount: 10, text: 'Bob 给 Alice +10', createdAt: '2026-09-26T00:00:00Z',
+      transferKind: 'normal', scoreChanges: [],
+    }));
+  }),
+  getJoinMiniProgramCode: jest.fn(async () => {
+    if (mockState.invitePromise) return mockState.invitePromise;
+    if (mockState.failInvite) throw new Error('二维码加载失败');
+    return '/tmp/invite.png';
+  }),
   getHistory: jest.fn(async () => {
     mockState.historyCalls++;
     return { items: [] };
@@ -92,6 +109,9 @@ function newState(): NavState {
     routes: [],
     failCurrent: false,
     modal: undefined,
+    transferCount: 0,
+    transferRequests: [],
+    failInvite: false,
   };
 }
 
@@ -143,7 +163,9 @@ describe('navigation', () => {
   it('restores tab selection on show and routes tab-bar taps', async () => {
     const { state, home, wx } = harness();
     const selected: number[] = [];
-    home.getTabBar = () => ({ setData: (data: { selected: number }) => selected.push(data.selected) });
+    home.getTabBar = () => ({ setData: (data: { selected?: number }) => {
+      if (data.selected !== undefined) selected.push(data.selected);
+    } });
     await home.onShow();
     expect(selected.pop()).toBe(0);
 
@@ -211,6 +233,76 @@ describe('navigation', () => {
     state.failCurrent = false;
     await home.refreshHome();
     expect(home.data.homeState).toBe('ready');
+  });
+
+  it('keeps join order after scores change and derives zero-score exit permission', async () => {
+    const { state, home } = harness();
+    state.score = -20;
+    await home.onShow();
+    expect(home.data.participants.map((p: any) => p.id)).toEqual(['p1', 'p2']);
+    expect(home.data.participants[0]).toMatchObject({ isMe: true, isCreator: true });
+    expect(home.data.canExit).toBe(false);
+    state.score = 0;
+    await home.loadGameData();
+    expect(home.data.canExit).toBe(true);
+    home.openRanking();
+    expect(state.routes.pop()).toEqual(['page', '/pages/game-ranking/index?id=game-1']);
+  });
+
+  it('preserves expanded history and its loaded range on refresh, resetting for a new game', async () => {
+    const { state, home } = harness();
+    state.transferCount = 45;
+    await home.onShow();
+    expect(home.data.visibleTransfers).toHaveLength(3);
+    home.toggleTransfers();
+    await home.onReachBottom();
+    expect(home.data.visibleTransfers).toHaveLength(40);
+    state.transferCount = 46;
+    await home.loadGameData();
+    expect(home.data.showAllTransfers).toBe(true);
+    expect(home.data.visibleTransfers[0].sequenceNo).toBe(46);
+    expect(home.data.visibleTransfers.some((t: any) => t.sequenceNo === 6)).toBe(true);
+    expect(state.transferRequests).toContain(7);
+    state.current = { id: 'game-2', inviteCode: 'DEF456' };
+    await home.refreshHome();
+    expect(home.data.showAllTransfers).toBe(false);
+    expect(home.data.visibleTransfers).toHaveLength(3);
+  });
+
+  it('hides navigation during invite display and restores it on close, failure, and hide', async () => {
+    const { state, home } = harness();
+    const tabData = { hidden: false };
+    home.getTabBar = () => ({ setData: (data: any) => Object.assign(tabData, data) });
+    await home.onShow();
+    await home.showInvite();
+    expect(home.data.showInviteOverlay).toBe(true);
+    expect(tabData.hidden).toBe(true);
+    home.hideInvite();
+    expect(tabData.hidden).toBe(false);
+    state.failInvite = true;
+    await home.showInvite();
+    expect(home.data.showInviteOverlay).toBe(false);
+    expect(tabData.hidden).toBe(false);
+    state.failInvite = false;
+    await home.showInvite();
+    home.onHide();
+    expect(home.data.showInviteOverlay).toBe(false);
+    expect(tabData.hidden).toBe(false);
+  });
+
+  it('ignores an older invite failure after closing and reopening the overlay', async () => {
+    const { state, home } = harness();
+    let rejectInvite!: (error: Error) => void;
+    state.invitePromise = new Promise<string>((_resolve, reject) => { rejectInvite = reject; });
+    const oldRequest = home.showInvite();
+    await Promise.resolve();
+    home.hideInvite();
+    state.invitePromise = undefined;
+    await home.showInvite();
+    rejectInvite(new Error('旧请求失败'));
+    await oldRequest;
+    expect(home.data.showInviteOverlay).toBe(true);
+    expect(home.data.qrCodeUrl).toBe('/tmp/invite.png');
   });
 
   it('routes game-detail and keeps the public settlement path login-free', async () => {
